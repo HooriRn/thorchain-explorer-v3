@@ -1,0 +1,122 @@
+.card {
+  background-color: var(--card);
+  border-radius: var(--radius);
+  padding: 1rem;
+  border: 1px solid var(--border);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--card-foreground);
+}
+
+.more-link {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--font-size-sm);
+  margin-left: auto;
+}
+
+.more-link svg {
+  fill: currentColor;
+  height: 1rem;
+  width: 1rem;
+}
+
+.more-link:hover {
+  color: var(--active-primary-color);
+}
+
+.row-item-transactions {
+  justify-content: space-between;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .row-item-transactions {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.txs {
+  display: flex;
+  flex-direction: column;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  gap: 0.5rem;
+}
+
+.txs > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: keep-all;
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+  gap: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.txs > span .value {
+  color: var(--primary);
+}
+
+.txs a {
+  cursor: pointer;
+}
+
+.transactions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hr-space {
+  margin: var(--space-8) 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-20) 0;
+}
+
+.timestamp {
+  color: var(--muted-foreground);
+  font-size: var(--font-size-sm);
+}
+
+.txid-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.txid-section small {
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.txid-section a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.txid-section a:hover {
+  color: var(--active-primary-color);
+}

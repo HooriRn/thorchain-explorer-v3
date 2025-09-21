@@ -1,0 +1,277 @@
+
+.responsive-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+@media (max-width: 1200px) {
+  .responsive-container {
+    padding: 0 var(--space-3);
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-container {
+    padding: 0 var(--space-2);
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-container {
+    padding: 0 var(--space-1);
+  }
+}
+
+.responsive-grid {
+  display: grid;
+  gap: var(--space-8);
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+@media (max-width: 1200px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-6);
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-grid {
+    gap: var(--space-3);
+  }
+}
+
+.responsive-flex {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1200px) {
+  .responsive-flex {
+    gap: var(--space-6);
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-flex {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-flex {
+    gap: var(--space-3);
+  }
+}
+
+.responsive-text {
+  font-size: var(--font-size-desktop);
+  line-height: 1.5;
+}
+
+@media (max-width: 1024px) {
+  .responsive-text {
+    font-size: var(--font-size-mobile);
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-text {
+    font-size: var(--font-size-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-text {
+    font-size: var(--font-size-xs);
+  }
+}
+
+.responsive-spacing {
+  padding: var(--space-8);
+  margin: var(--space-8);
+}
+
+@media (max-width: 1200px) {
+  .responsive-spacing {
+    padding: var(--space-6);
+    margin: var(--space-6);
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-spacing {
+    padding: var(--space-4);
+    margin: var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-spacing {
+    padding: var(--space-3);
+    margin: var(--space-3);
+  }
+}
+
+.responsive-card {
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  margin: var(--space-4);
+  min-height: 200px;
+}
+
+@media (max-width: 1200px) {
+  .responsive-card {
+    padding: var(--space-6);
+    margin: var(--space-3);
+    min-height: 180px;
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-card {
+    padding: var(--space-4);
+    margin: var(--space-2);
+    min-height: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-card {
+    padding: var(--space-3);
+    margin: var(--space-1);
+    min-height: 140px;
+    border-radius: var(--radius-md);
+  }
+}
+
+.hide-mobile {
+  display: block;
+}
+
+.show-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none;
+  }
+
+  .show-mobile {
+    display: block;
+  }
+}
+
+.hide-tablet {
+  display: block;
+}
+
+.show-tablet {
+  display: none;
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .hide-tablet {
+    display: none;
+  }
+
+  .show-tablet {
+    display: block;
+  }
+}
+
+.hide-desktop {
+  display: none;
+}
+
+.show-desktop {
+  display: block;
+}
+
+@media (min-width: 1025px) {
+  .hide-desktop {
+    display: block;
+  }
+
+  .show-desktop {
+    display: none;
+  }
+}
+
+.responsive-overflow {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+@media (max-width: 768px) {
+  .responsive-overflow {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}
+
+.responsive-image {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: cover;
+}
+
+.responsive-button {
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-md);
+}
+
+@media (max-width: 768px) {
+  .responsive-button {
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--font-size-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-button {
+    padding: var(--space-2) var(--space-4);
+    font-size: 10px;
+  }
+}
+
+.responsive-chart {
+  width: 100%;
+  height: 400px;
+  min-height: 300px;
+}
+
+@media (max-width: 1200px) {
+  .responsive-chart {
+    height: 350px;
+    min-height: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-chart {
+    height: 300px;
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-chart {
+    height: 250px;
+    min-height: 150px;
+  }
+}

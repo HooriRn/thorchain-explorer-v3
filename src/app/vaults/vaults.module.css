@@ -1,0 +1,347 @@
+.vaultsContainer {
+  padding: 3rem 0rem;
+}
+
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.summaryCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.summaryCard h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.summaryValue {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.hashCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  position: relative;
+}
+
+.statusCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.statusBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  text-align: center;
+}
+
+.activeBadge {
+  background-color: var(--badge-green-bg) !important;
+  color: var(--badge-green-text) !important;
+  border: 1px solid var(--badge-green-text);
+  box-shadow: 0 0 0 1px rgba(44, 190, 140, 0.2);
+}
+
+.retiringBadge {
+  background-color: var(--badge-yellow-bg) !important;
+  color: var(--badge-yellow-text) !important;
+  border: 1px solid var(--badge-yellow-text);
+  box-shadow: 0 0 0 1px rgba(255, 193, 7, 0.2);
+}
+
+.standbyBadge {
+  background-color: var(--badge-gray-bg) !important;
+  color: var(--badge-gray-text) !important;
+  border: 1px solid var(--badge-gray-text);
+  box-shadow: 0 0 0 1px rgba(108, 117, 125, 0.2);
+}
+
+.numericCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.ratioCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.ratio {
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.membershipCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.ageCell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.tssCell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.emptyValue {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.currency {
+  color: var(--primary);
+  font-weight: 600;
+  margin-right: 0.25rem;
+}
+
+.vaultRow {
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.vaultRow:hover {
+  background-color: var(--muted) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.activeRow {
+  border-left: 3px solid var(--success);
+}
+
+.retiringRow {
+  border-left: 3px solid var(--warning);
+}
+
+.activeRow:hover {
+  background-color: var(--success-light) !important;
+}
+
+.retiringRow:hover {
+  background-color: var(--warning-light) !important;
+}
+
+.clickable {
+  cursor: pointer;
+  color: var(--primary);
+  transition: color 0.2s ease;
+}
+
+.clickable:hover {
+  color: var(--primary);
+}
+
+.colorHash {
+  flex-shrink: 0;
+}
+
+.footerStat {
+  text-align: center;
+  margin-top: 2rem;
+  padding: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.footerStat small {
+  opacity: 0.8;
+}
+
+.tableContainer :where(table, thead, tbody, tr, th, td) {
+  background: transparent !important;
+}
+
+.tableContainer tbody tr:nth-child(even) td,
+.tableContainer tbody tr:hover td {
+  background: transparent !important;
+}
+
+.tableContainer thead th {
+  color: var(--sec-font-color) !important;
+  font-weight: 600;
+  font-size: 13px !important;
+}
+
+.tableContainer thead th {
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.tableContainer table {
+  font-size: 14px;
+  min-width: var(--table-min-width);
+}
+
+.tableContainer :where(th, td) {
+  padding: 1rem 0.75rem !important;
+  line-height: 1.6;
+}
+
+.tableContainer :where(th, td) {
+  white-space: normal;
+  word-break: break-word;
+}
+
+.tableContainer td {
+  border-color: var(--border);
+  color: var(--sec-font-color);
+  font-size: 14px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 1rem 0.75rem !important;
+}
+
+.tableContainer tbody tr td {
+  border-bottom-color: var(--border) !important;
+}
+
+.tableContainer thead tr th:nth-child(2),
+.tableContainer tbody tr td:nth-child(2) {
+  padding-left: 1rem !important;
+}
+
+.tableContainer thead tr th:nth-child(7),
+.tableContainer tbody tr td:nth-child(7) {
+  padding-right: 0.75rem !important;
+}
+
+.tableContainer thead tr th:nth-child(8),
+.tableContainer tbody tr td:nth-child(8) {
+  padding-left: 0.75rem !important;
+}
+
+.tableContainer thead tr th:nth-child(2),
+.tableContainer thead tr th:nth-child(7) {
+  overflow: visible !important;
+  white-space: nowrap !important;
+  min-width: 140px;
+}
+
+.tableContainer thead tr th:nth-child(1),
+.tableContainer tbody tr td:nth-child(1) {
+  overflow: visible !important;
+  white-space: nowrap !important;
+  min-width: 260px;
+}
+
+.hashCell > .mono {
+  white-space: nowrap;
+}
+
+.tableContainer tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+@media (max-width: 768px) {
+  .summaryCards {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .vaultsTable {
+    font-size: 0.75rem;
+  }
+
+  .hashCell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .statusCell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .membershipCell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .tableContainer {
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+
+  .tableContainer table {
+    min-width: 1000px;
+  }
+
+  .tableContainer :where(th, td) {
+    padding: 0.75rem 0.5rem !important;
+  }
+
+  .statusBadge {
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
+  }
+
+  .currency {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tableContainer table {
+    min-width: 900px;
+  }
+
+  .tableContainer :where(th, td) {
+    padding: 0.5rem 0.375rem !important;
+  }
+
+  .tableContainer table {
+    font-size: 12px;
+  }
+}
+
+@media print {
+  .tableContainer {
+    overflow: visible !important;
+  }
+
+  .tableContainer table {
+    min-width: auto !important;
+  }
+
+  .vaultRow:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}

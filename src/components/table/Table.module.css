@@ -1,0 +1,285 @@
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: transparent;
+}
+
+.tableContainer :where(table, thead, tbody, tr, th, td) {
+  background: transparent !important;
+}
+
+.tableContainer tbody tr:nth-child(even) td,
+.tableContainer tbody tr:hover td {
+  background: transparent !important;
+}
+
+.tableContainer thead th {
+  color: var(--sec-font-color) !important;
+  font-weight: 600;
+  font-size: 13px !important;
+}
+
+.tableContainer thead th {
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.tableContainer table {
+  font-size: 14px;
+  min-width: 100%;
+  width: 100%;
+}
+
+.tableContainer :where(th, td) {
+  padding: 1rem 0.75rem !important;
+  line-height: 1.6;
+}
+
+.tableContainer :where(th, td) {
+  white-space: normal;
+  word-break: break-word;
+}
+
+.tableContainer td {
+  border-color: var(--border);
+  color: var(--sec-font-color);
+  font-size: 14px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 1rem 0.75rem !important;
+}
+
+.tableContainer tbody tr td {
+  border-bottom-color: var(--border) !important;
+}
+
+.tableContainer tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingContainer p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.emptyContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.emptyContainer p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .tableContainer {
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+
+  .tableContainer table {
+    min-width: 600px;
+  }
+
+  .tableContainer :where(th, td) {
+    padding: 0.75rem 0.5rem !important;
+  }
+
+  .tableContainer table {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tableContainer table {
+    min-width: 500px;
+  }
+
+  .tableContainer :where(th, td) {
+    padding: 0.5rem 0.375rem !important;
+  }
+
+  .tableContainer table {
+    font-size: 12px;
+  }
+}
+
+@media print {
+  .tableContainer {
+    overflow: visible !important;
+  }
+
+  .tableContainer table {
+    min-width: auto !important;
+  }
+}
+
+.mono {
+  font-family: "Roboto Mono", "Courier New", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.right {
+  text-align: right;
+}
+
+.center {
+  text-align: center;
+}
+
+.left {
+  text-align: left;
+}
+
+.clickable {
+  cursor: pointer;
+  color: var(--primary);
+  transition: color 0.2s ease;
+}
+
+.clickable:hover {
+  color: var(--primary-dark);
+}
+
+.emptyValue {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.currency {
+  color: var(--primary);
+  font-weight: 600;
+  margin-right: 0.25rem;
+}
+
+.statusBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.statusIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--success);
+  margin-left: 0.5rem;
+}
+
+.numericCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.ratioCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.ratio {
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.positive {
+  color: var(--success);
+  background-color: var(--success-light);
+}
+
+.negative {
+  color: var(--error);
+  background-color: var(--error-light);
+}
+
+.hashCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  position: relative;
+}
+
+.colorHash {
+  flex-shrink: 0;
+}
+
+.membershipCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.membershipIndicator {
+  display: flex;
+  align-items: center;
+}
+
+.memberDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  margin-left: 0.25rem;
+}
+
+.ageCell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.tssCell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.statusCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}

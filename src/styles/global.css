@@ -1,0 +1,64 @@
+@import "tailwindcss";
+@import "./tooltip.css";
+@import "./color.css";
+@import "./variable.css";
+@import "./_font.css";
+@import "./typography.css";
+@import "./charts.css";
+@import "./navigation.css";
+@import "./responsive.css";
+
+.clickable {
+  text-decoration: none;
+  color: var(--primary);
+  cursor: pointer;
+
+  &.danger {
+    color: var(--sec-font-color);
+  }
+
+  &:hover {
+    color: var(--active-primary-color);
+  }
+}
+
+.not-clickable {
+  color: var(--sec-font-color);
+  cursor: initial;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#__nuxt,
+#__layout,
+main {
+  font-size: var(--font-size-desktop);
+}
+
+@media (max-width: 768px) {
+  html,
+  body,
+  #__nuxt,
+  #__layout,
+  main {
+    font-size: var(--font-size-mobile);
+  }
+}
+
+body {
+  background: linear-gradient(
+    to left top,
+    var(--gradient-left) 0%,
+    var(--gradient-right) 100%
+  );
+  font-family: "Montserrat", sans-serif, system-ui, -apple-system, "Segoe UI",
+    "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-style: normal;
+  font-optical-sizing: auto;
+  color: var(--foreground);
+}

@@ -1,0 +1,230 @@
+.chart-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4);
+}
+
+.chart-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.swap-volume-chart-container,
+.pool-depth-chart-container,
+.earnings-chart-container,
+.lp-earnings-chart-container,
+.affiliate-fee-chart-container,
+.tcy-earnings-chart-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  min-height: 400px;
+}
+
+[data-slot="chart"] {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 300px;
+}
+
+.chartjs-render-monitor {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  padding: 0 var(--space-4);
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.chart-legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chart-legend-label {
+  font-size: 0.875rem;
+  color: var(--foreground);
+}
+
+.pool-depth-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pool-depth-chart {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+}
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chart-card > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-tooltip {
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+}
+
+.chart-tooltip-header {
+  margin-bottom: 4px;
+}
+
+.chart-tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chart-tooltip-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-tooltip-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-tooltip-date {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.chart-tooltip-label {
+  color: var(--muted-foreground);
+}
+
+.chart-tooltip-value {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+@media (max-width: 1024px) {
+  .chart-container {
+    padding: var(--space-3);
+  }
+
+  .swap-volume-chart-container,
+  .pool-depth-chart-container,
+  .earnings-chart-container,
+  .lp-earnings-chart-container,
+  .affiliate-fee-chart-container,
+  .tcy-earnings-chart-container {
+    min-height: 350px;
+  }
+
+  [data-slot="chart"] {
+    min-height: 250px;
+  }
+
+  .chart-legend {
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+    padding: 0 var(--space-3);
+  }
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    padding: var(--space-2);
+  }
+
+  .swap-volume-chart-container,
+  .pool-depth-chart-container,
+  .earnings-chart-container,
+  .lp-earnings-chart-container,
+  .affiliate-fee-chart-container,
+  .tcy-earnings-chart-container {
+    min-height: 300px;
+  }
+
+  [data-slot="chart"] {
+    min-height: 200px;
+  }
+
+  .chart-legend {
+    gap: var(--space-1);
+    margin-bottom: var(--space-3);
+    padding: 0 var(--space-2);
+  }
+
+  .chart-legend-label {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-container {
+    padding: var(--space-1);
+  }
+
+  .swap-volume-chart-container,
+  .pool-depth-chart-container,
+  .earnings-chart-container,
+  .lp-earnings-chart-container,
+  .affiliate-fee-chart-container,
+  .tcy-earnings-chart-container {
+    min-height: 250px;
+  }
+
+  [data-slot="chart"] {
+    min-height: 150px;
+  }
+
+  .chart-legend {
+    gap: var(--space-1);
+    margin-bottom: var(--space-2);
+    padding: 0 var(--space-1);
+  }
+
+  .chart-legend-label {
+    font-size: 0.75rem;
+  }
+
+  .chart-legend-color {
+    width: 10px;
+    height: 10px;
+  }
+}

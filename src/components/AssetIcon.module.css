@@ -1,0 +1,55 @@
+.asset-icon {
+    fill: currentColor;
+    width: 0.7rem;
+    height: 0.7rem;
+  }
+  .icon-asset-container {
+    position: relative;
+    width: var(--asset-width);
+    height: var(--asset-height);
+    margin-right: 1rem;
+  
+    .asset-icon {
+      width: var(--asset-width);
+      height: var(--asset-height);
+      border-radius: 100%;
+    }
+  
+    .chain-asset-icon {
+      border: 1px solid var(--border);
+      width: var(--chain-asset-width);
+      height: var(--chain-asset-height);
+      border-radius: 100%;
+      position: absolute;
+      right: calc(var(--chain-asset-width) * -1 / 3);
+      bottom: calc(var(--chain-asset-width) * -1 / 3);
+    }
+  
+    &.is-factory {
+      width: calc(var(--asset-width) * 1.7);
+    }
+  }
+  
+  .asset-group {
+    width: var(--asset-width);
+    height: var(--asset-height);
+  
+    .left-icon,
+    .right-icon {
+      position: absolute;
+      width: var(--asset-width);
+      height: var(--asset-height);
+    }
+  
+    .left-icon {
+      left: 0;
+    }
+  
+    .right-icon {
+      left: calc(var(--asset-width) / 1.3);
+    }
+  
+    .asset-icon {
+      margin: 0;
+    }
+  }

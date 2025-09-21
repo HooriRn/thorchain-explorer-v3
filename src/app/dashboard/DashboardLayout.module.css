@@ -1,0 +1,511 @@
+.backgroundContainer {
+  justify-content: flex-start;
+  align-items: center;
+  padding: var(--space-16);
+  width: 100%;
+  height: 16rem;
+  position: relative;
+  z-index: 1;
+
+  background: url("/background.svg");
+  background-color: var(--overview-bg);
+  background-size: cover;
+  background-blend-mode: overlay;
+  padding: var(--space-10);
+  margin-bottom: -4.5rem;
+}
+
+@media (max-width: 1024px) {
+  .backgroundContainer {
+    height: 14rem;
+    padding: var(--space-8);
+    margin-bottom: -3.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .backgroundContainer {
+    height: 12rem;
+    padding: var(--space-6);
+    margin-bottom: -3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .backgroundContainer {
+    height: 10rem;
+    padding: var(--space-4);
+    margin-bottom: -2.5rem;
+  }
+}
+
+@media (max-width: 477px) {
+  .backgroundContainer {
+    height: 8rem;
+    padding: var(--space-3);
+    margin-bottom: -1.5rem;
+    z-index: 15;
+  }
+
+  .searchBarContainer {
+    z-index: 20;
+    position: relative;
+  }
+}
+
+@media (max-width: 360px) {
+  .backgroundContainer {
+    height: 8rem;
+    padding: var(--space-3);
+    margin-bottom: -2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .backgroundContainer {
+    background-size: contain;
+    padding: var(--space-0) 3rem;
+  }
+}
+
+.titleSearch {
+  font-family: "Exo 2";
+  font-weight: bold;
+  font-size: var(--font-size-desktop);
+  padding: var(--space-10);
+  color: white;
+}
+
+
+
+
+
+@media (max-width: 480px) {
+  .titleSearch {
+    font-size: 1.5rem;
+    padding: var(--space-4);
+  }
+}
+
+@media (max-width: 360px) {
+  .titleSearch {
+    font-size: 1.25rem;
+    padding: var(--space-3);
+  }
+}
+
+@media (max-width: 320px) {
+  .titleSearch {
+    font-size: 1rem;
+    padding: var(--space-2);
+  }
+}
+
+@media (max-width: 477px) {
+  .titleSearch {
+    font-size: 16px;
+    padding:0px var(--space-16);
+    line-height: 1.2;
+    margin-bottom: var(--space-5);
+  }
+}
+
+.searchContainer {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  max-width: 100%;
+}
+
+.searchBarContainer {
+  display: flex;
+  position: relative;
+  width: 30rem;
+  max-width: 30rem;
+  min-width: 30rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-xl);
+  background-color: var(--card);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  padding: var(--space-5);
+  z-index: 10;
+}
+
+@media (max-width: 768px) {
+  .searchBarContainer {
+    width: 100%;
+    max-width: 100%;
+    min-width: 150px;
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    margin: 0px 16px;
+  }
+}
+
+
+
+@media (max-width: 480px) {
+  .searchBarContainer {
+    width: 100%;
+    max-width: 100%;
+    min-width: 180px;
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+  }
+}
+
+@media (max-width: 477px) {
+  .searchContainer {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .searchBarContainer {
+    width: 100%;
+    max-width: 100%;
+    min-width: 150px;
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    margin: 0px 16px
+  }
+}
+
+.searchBarContainer:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.searchBarContainer:focus-within {
+  border-color: var(--card);
+  border-width: 2px;
+  box-shadow: 0 0 0 2px var(--card), 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.searchBarContainer :global(#search-container) {
+  width: 100% !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.searchBarContainer :global(#search-container.dashboardLayout) {
+  border: 2px solid var(--card) !important;
+  background-color: var(--card) !important;
+  border-radius: var(--radius-xl) !important;
+}
+
+.searchBarContainer :global(.search-bar-input) {
+  background-color: var(--input-bg-color);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--sec-font-color);
+  flex: 1;
+  font-size: 13px;
+  height: 40px;
+  padding-left: 2.5rem;
+  padding-right: 4rem;
+  text-align: left;
+  transition: all 0.3s ease;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.searchBarContainer :global(#search-container.dashboardLayout .searchBarInput) {
+  border-color: var(--card) !important;
+  background-color: var(--card) !important;
+}
+
+.searchBarContainer
+  :global(#search-container.dashboardLayout .searchBarInput.slashFocused) {
+  border-color: var(--card) !important;
+  border-width: 2px !important;
+  box-shadow: 0 0 0 2px var(--card), 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+.searchBarContainer :global(.search-bar-input:focus) {
+  outline: none;
+  border-color: var(--card);
+}
+
+.searchBarContainer :global(#search-container.dashboardLayout:focus-within) {
+  border-color: var(--card) !important;
+  outline: 2px var(--card) solid !important;
+  box-shadow: 0 0 0 2px var(--card), 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+.searchBarContainer
+  :global(#search-container.dashboardLayout.slashFocusActive) {
+  border-color: var(--card) !important;
+  outline: 2px var(--card) solid !important;
+  box-shadow: 0 0 0 2px var(--card), 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+@media (min-width: 1024px) {
+  .searchBarContainer :global(.search-bar-input) {
+    font-size: var(--font-size-sm);
+  }
+}
+
+@media (max-width: 768px) {
+  .searchBarContainer :global(.search-bar-input) {
+    font-size: 12px;
+    padding-left: 2rem;
+    padding-right: 3.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .searchBarContainer :global(.search-bar-input) {
+    font-size: 11px;
+    padding-left: 1.8rem;
+    padding-right: 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .searchBarContainer :global(.search-bar-input) {
+    font-size: 10px;
+    padding-left: 1.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+@media (max-width: 477px) {
+  .searchBarContainer :global(.search-bar-input) {
+    font-size: 9px;
+    padding-left: 1.2rem;
+    padding-right: 2rem;
+  }
+}
+
+.searchBarContainer :global(.search-icon) {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 35px;
+  height: 35px;
+  fill: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  background-color: var(--primary);
+  padding: var(--space-5);
+  border-radius: var(--radius-sm);
+}
+
+@media (max-width: 768px) {
+  .searchBarContainer :global(.search-icon) {
+    width: 30px;
+    height: 30px;
+    right: 0.5rem;
+    padding: var(--space-4);
+  }
+}
+
+@media (max-width: 600px) {
+  .searchBarContainer :global(.search-icon) {
+    width: 28px;
+    height: 28px;
+    right: 0.4rem;
+    padding: var(--space-3);
+  }
+}
+
+@media (max-width: 480px) {
+  .searchBarContainer :global(.search-icon) {
+    width: 25px;
+    height: 25px;
+    right: 0.3rem;
+    padding: var(--space-2);
+  }
+}
+
+@media (max-width: 477px) {
+  .searchBarContainer :global(.search-icon) {
+    width: 22px;
+    height: 22px;
+    right: 0.2rem;
+    padding: var(--space-1);
+  }
+}
+
+.searchBarContainer :global(.search-icon:hover) {
+  background-color: var(--accent);
+}
+
+.searchBarContainer :global(.loading-spinner) {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  background-color: var(--primary);
+  padding: var(--space-5);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.searchBarContainer :global(.loading-spinner .dot) {
+  width: 4px;
+  height: 4px;
+  background-color: #fff;
+  border-radius: 50%;
+  animation: blink 1.2s infinite;
+}
+
+.searchBarContainer :global(.loading-spinner .dot:nth-child(2)) {
+  animation-delay: 0.2s;
+}
+
+.searchBarContainer :global(.loading-spinner .dot:nth-child(3)) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.searchBar {
+  padding-top: 2rem;
+  max-width: 90rem;
+}
+
+.dashboardLayout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--background);
+}
+
+.header {
+  top: 0;
+  position: sticky;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  background: var(--card);
+  grid-area: header;
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-0) var(--space-10);
+}
+
+@media (min-width: 1024px) {
+  .header {
+    padding: var(--space-8) 3rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .header {
+    padding: var(--space-6) 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: var(--space-4) 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: var(--space-3) 0.5rem;
+  }
+}
+
+.navbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-0) var(--space-10);
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: var(--space-4) var(--space-6);
+    min-height: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: var(--space-3) var(--space-4);
+  }
+}
+
+@media (max-width: 360px) {
+  .navbar {
+    padding: var(--space-2) var(--space-3);
+  }
+}
+
+@media (min-width: 1024px) {
+  .navbar {
+    padding: var(--space-8) 3rem;
+  }
+}
+
+.mainContent {
+  padding-bottom: 10rem;
+  grid-area: main;
+  background: linear-gradient(
+    to left top,
+    var(--gradient-left) 0%,
+    var(--gradient-right) 100%
+  );
+}
+
+@media (min-width: 1024px) {
+  .mainContent {
+    padding: var(--space-0) 3rem;
+    padding-bottom: var(--space-32);
+  }
+}
+
+@media (max-width: 1200px) {
+  .mainContent {
+    padding: var(--space-0) 2rem;
+    padding-bottom: var(--space-24);
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    padding: var(--space-0) 1rem;
+    padding-bottom: var(--space-16);
+  }
+}
+
+@media (max-width: 480px) {
+  .mainContent {
+    padding: var(--space-0) 0.5rem;
+    padding-bottom: var(--space-12);
+  }
+}
+
+@media (max-width: 477px) {
+  .mainContent {
+    padding: var(--space-0) 0.25rem;
+    padding-bottom: var(--space-8);
+    padding-top: var(--space-4);
+  }
+}
+.slashFocused {
+  border-color: var(--card) !important;
+  box-shadow: 0 0 0 2px var(--card), 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+}

@@ -1,0 +1,94 @@
+.v-popper--theme-dropdown,
+.v-popper--theme-menu,
+.v-popper--theme-tooltip {
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.v-popper--theme-dropdown .v-popper__inner,
+.v-popper--theme-menu .v-popper__inner,
+.v-popper--theme-tooltip .v-popper__inner {
+  font-family: 'Montserrat', sans-serif;
+  font-size: var(--font-size-sm);
+  color: var(--sec-font-color);
+  background-color: var(--bgt-color);
+  padding: var(--space-10);
+  border: 1px var(--border) solid;
+  border-radius: var(--radius-lg);
+  outline: none;
+  backdrop-filter: blur(5px);
+  margin: 1px;
+}
+
+.v-popper--theme-dropdown .v-popper__arrow-outer,
+.v-popper--theme-menu .v-popper__arrow-outer,
+.v-popper--theme-tooltip .v-popper__arrow-outer,
+.v-popper--theme-dropdown .v-popper__arrow-inner,
+.v-popper--theme-menu .v-popper__arrow-inner,
+.v-popper--theme-tooltip .v-popper__arrow-inner {
+  border-color: var(--border);
+}
+
+.echarts > div:nth-of-type(2) {
+  background-color: var(--bgt-color) !important;
+  backdrop-filter: blur(8px);
+  box-shadow: none;
+}
+.tooltip-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--space-5);
+  gap: 5px;
+}
+
+.tooltip-body {
+  margin-top: var(--space-5);
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+
+  > span {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .tooltip-interface-icon {
+    margin: var(--space-0) var(--space-5);
+    height: 1rem;
+  }
+}
+
+.series-name-color {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tooltip-total {
+  padding-top: var(--space-3);
+  margin-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+.tooltip-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  &.space {
+    justify-content: space-between;
+  }
+}
+
+.data-color {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+}

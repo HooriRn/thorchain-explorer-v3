@@ -1,0 +1,30 @@
+.address-container {
+  display: inline-flex;
+  align-items: center;
+}
+
+.address-container .address {
+  border: 1px solid transparent;
+  padding: var(--space-0) var(--space-4);
+  transition: all 0.2s ease;
+  box-shadow: 0 0 0 1px transparent;
+}
+
+.address-container .address.hovered {
+  color: var(--active-primary-color) !important;
+  border-radius: var(--radius-xs);
+  box-shadow: 0 0 0 1px var(--highlight);
+}
+
+.address-container .no-hover {
+  pointer-events: none;
+}
+
+.mono {
+  font-family: "Roboto Mono";
+  font-weight: 500;
+}
+
+.copy-icon {
+  margin-left: 0.2rem;
+}

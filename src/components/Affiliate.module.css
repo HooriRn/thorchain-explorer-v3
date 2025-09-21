@@ -1,0 +1,40 @@
+.affiliateContent {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-8);
+  }
+  
+  .affiliateLink {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    gap: var(--space-8);
+  }
+  
+  .affiliateDirect {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+  }
+  
+  .executed {
+    display: flex;
+    align-items: center;
+    color: var(--sec-font-color);
+    border-color: var(--border-color);
+    background-color: transparent;
+    gap: var(--space-8);
+  }
+  
+  .executed em {
+    white-space: nowrap;
+    max-width: 78px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .affiliateIcon {
+    height: 1.2rem;
+    max-width: 78px;
+  }
