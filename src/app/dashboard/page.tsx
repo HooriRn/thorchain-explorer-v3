@@ -250,6 +250,14 @@ const OverviewPage = () => {
               setEarningsHistory(plotsData.earning);
             } catch (error) {}
           }
+          // Also source swap history from dashboard-plots (parity with Vue)
+          if (plotsData.swaps) {
+            setSwapHistory(plotsData.swaps);
+            if (plotsData.swaps?.meta) {
+              setTotalSwapVolumeUSD(plotsData.swaps.meta.totalVolumeUSD);
+              setTotalSwapVolume(plotsData.swaps.meta.totalVolume);
+            }
+          }
         }
       }
 

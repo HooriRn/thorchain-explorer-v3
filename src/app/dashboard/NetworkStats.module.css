@@ -3,6 +3,9 @@
   flex-wrap: wrap;
   gap: var(--space-8);
   width: 100%;
+  font-family: "Montserrat", sans-serif, system-ui, -apple-system, "Segoe UI",
+    "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
 
   .stat-item {
     display: flex;
@@ -14,6 +17,10 @@
     }
 
     .value {
+      font-family: "Montserrat", sans-serif, system-ui, -apple-system,
+        "Segoe UI", "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial,
+        sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+        "Noto Color Emoji" !important;
       .extra {
         color: var(--font-color);
         font-size: var(--font-size-xs);
@@ -30,9 +37,12 @@
     .item-detail {
       display: flex;
       flex-direction: column;
-      gap: 0.3rem;
       .value {
-        font-size: var(--font-size-desktop);
+        font-family: "Montserrat", sans-serif, system-ui, -apple-system,
+          "Segoe UI", "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial,
+          sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+          "Noto Color Emoji" !important;
+        font-size: 18px;
         font-weight: bold;
         color: var(--sec-font-color);
         @media (max-width: 1024px) {

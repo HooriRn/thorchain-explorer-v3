@@ -285,10 +285,19 @@ const EChartsWrapper: React.FC<EChartsWrapperProps> = ({
       };
     }
 
-    return {
+    const merged = {
       ...chartConfig,
       ...options,
-    };
+    } as any;
+
+    if (options?.tooltip) {
+      merged.tooltip = {
+        ...chartConfig.tooltip,
+        ...options.tooltip,
+      };
+    }
+
+    return merged;
   }, [type, data, options, theme]);
 
   return (

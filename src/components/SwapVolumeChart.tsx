@@ -132,7 +132,20 @@ const SwapVolumeChart: React.FC<SwapVolumeChartProps> = ({
       return [];
     }
 
-    swapVolumeData.intervals.forEach((interval: any, index: number) => {
+    const intervals: any[] = swapVolumeData.intervals;
+    const lastIndex = intervals.length - 1;
+    const nowUtcStart = moment().utc().startOf("day");
+    const hoursSinceUtcDayStart = moment().utc().diff(nowUtcStart, "hours");
+
+    const toNumber = (val: any): number => {
+      if (typeof val === "number") return val;
+      if (val === null || val === undefined) return 0;
+      const cleaned = String(val).replace(/[,\s]/g, "");
+      const n = Number(cleaned);
+      return isNaN(n) ? 0 : n;
+    };
+
+    intervals.forEach((interval: any, index: number) => {
       const startTime = interval.startTime;
       const endTime = interval.endTime;
 
@@ -142,21 +155,61 @@ const SwapVolumeChart: React.FC<SwapVolumeChartProps> = ({
       } else {
         const timestamp = Math.floor((~~endTime + ~~startTime) / 2) * 1e3;
         const dateMoment = moment(timestamp);
-
-        if (dateMoment.isValid()) {
-          date = dateMoment.format("dddd, MMM D");
-        } else {
-          date = moment().format("dddd, MMM D");
-        }
+        date = dateMoment.isValid()
+          ? dateMoment.format("dddd, MMM D")
+          : moment().format("dddd, MMM D");
       }
 
-      const totalVolume = (interval.totalVolumeUSD || 0) / 100; 
-      const eodVolume = (interval.EODVolume || 0) / 100; 
-      const count =
-        interval.totalCount ||
-        interval.fromTradeCount ||
-        interval.toTradeCount ||
+      const volumeUsdRaw =
+        interval.totalVolumeUSD !== undefined &&
+        interval.totalVolumeUSD !== null
+          ? interval.totalVolumeUSD
+          : interval.volumeUSD !== undefined && interval.volumeUSD !== null
+          ? interval.volumeUSD
+          : null;
+
+      let totalVolume = 0;
+      if (volumeUsdRaw !== null) {
+        totalVolume = toNumber(volumeUsdRaw) / 100;
+      } else if (interval.totalVolume !== undefined) {
+        totalVolume = toNumber(interval.totalVolume);
+      }
+
+      let eodVolume = 0;
+      if (volumeUsdRaw !== null) {
+        eodVolume = toNumber(interval.EODVolume) / 100;
+      } else {
+        eodVolume = 0;
+      }
+
+      let count =
+        toNumber(interval.totalCount) ||
+        toNumber(interval.count) ||
+        toNumber(interval.fromTradeCount) + toNumber(interval.toTradeCount) ||
+        toNumber(interval.fromTxCount) + toNumber(interval.toTxCount) ||
         0;
+
+      if (index === lastIndex) {
+        if (hoursSinceUtcDayStart < 6) {
+          const recent = intervals.slice(-4, -1); 
+          const recentSum = recent.reduce((sum: number, it: any) => {
+            const itUsd =
+              it.totalVolumeUSD !== undefined && it.totalVolumeUSD !== null
+                ? toNumber(it.totalVolumeUSD) / 100
+                : it.volumeUSD !== undefined && it.volumeUSD !== null
+                ? toNumber(it.volumeUSD) / 100
+                : it.totalVolume !== undefined
+                ? toNumber(it.totalVolume)
+                : 0;
+            return sum + itUsd;
+          }, 0);
+          const recentAvg = recentSum / 3;
+          eodVolume = Math.max(recentAvg - totalVolume, 0);
+        } else {
+          eodVolume =
+            volumeUsdRaw !== null ? toNumber(interval.EODVolume) / 100 : 0;
+        }
+      }
 
       const dataPoint: SwapVolumeData = {
         date,
@@ -175,12 +228,45 @@ const SwapVolumeChart: React.FC<SwapVolumeChartProps> = ({
     if (!chartData || chartData.length === 0)
       return { labels: [], datasets: [] };
 
+    const labels = chartData.map((item) => item.date);
+    const totalData = chartData.map((item, idx) => {
+      const isLast = idx === chartData.length - 1;
+      return isLast
+        ? {
+            value: item.totalVolume,
+            itemStyle: {
+              color: "#F3BA2F",
+              borderRadius: [0, 0, 0, 0],
+            },
+          }
+        : {
+            value: item.totalVolume,
+            itemStyle: {
+              borderRadius: [8, 8, 0, 0],
+            },
+          };
+    });
+    const eodData = chartData.map((item, idx) => {
+      const isLast = idx === chartData.length - 1;
+      return isLast
+        ? {
+            value: item.eodVolume,
+            itemStyle: {
+              color: "transparent",
+              borderColor: "#F3BA2F",
+              borderWidth: 1,
+              borderRadius: [8, 8, 0, 0],
+            },
+          }
+        : 0;
+    });
+
     return {
-      labels: chartData.map((item) => item.date),
+      labels,
       datasets: [
         {
           label: "Total Volume",
-          data: chartData.map((item) => item.totalVolume),
+          data: totalData,
           backgroundColor: getSeriesColor("totalVolume"),
           borderColor: getSeriesColor("totalVolume"),
           borderWidth: 1,
@@ -191,10 +277,11 @@ const SwapVolumeChart: React.FC<SwapVolumeChartProps> = ({
             bottomRight: 0,
           },
           borderSkipped: false,
+          stack: "Total",
         },
         {
           label: "EOD Volume",
-          data: chartData.map((item) => item.eodVolume),
+          data: eodData,
           backgroundColor: getSeriesColor("eodVolume"),
           borderColor: getSeriesColor("eodVolume"),
           borderWidth: 1,
@@ -205,6 +292,7 @@ const SwapVolumeChart: React.FC<SwapVolumeChartProps> = ({
             bottomRight: 0,
           },
           borderSkipped: false,
+          stack: "Total",
         },
       ],
     };
@@ -290,6 +378,64 @@ const SwapVolumeChart: React.FC<SwapVolumeChartProps> = ({
         options={{
           ...chartOptions,
           countData: chartData.map((item) => item.count),
+          tooltip: {
+            trigger: "axis",
+            axisPointer: { type: "shadow" },
+            formatter: (params: any) => {
+              if (!params || params.length === 0) return "";
+              const dataIndex = params[0].dataIndex;
+              const date = chartData[dataIndex]?.date || "";
+              const total = params.find(
+                (p: any) => p.seriesName === "Total Volume"
+              );
+              const eod = params.find(
+                (p: any) => p.seriesName === "EOD Volume"
+              );
+              const countVal = chartData[dataIndex]?.count ?? 0;
+
+              const extractVal = (p: any) =>
+                p
+                  ? typeof p.value === "object"
+                    ? p.value?.value
+                    : p.value
+                  : 0;
+              const totalVal = extractVal(total) || 0;
+              const eodVal = extractVal(eod) || 0;
+
+              const fmt = (v: number) => {
+                if (v >= 1e9) return `$${(v / 1e9).toFixed(1)}B`;
+                if (v >= 1e6) return `$${(v / 1e6).toFixed(1)}M`;
+                if (v >= 1e3) return `$${(v / 1e3).toFixed(1)}K`;
+                return `$${v.toFixed(0)}`;
+              };
+
+              return `
+                <div class="tooltip-header">
+                  <div class="data-color" style="background-color: ${
+                    total?.color || "#63fdd9"
+                  }"></div>
+                  ${date}
+                </div>
+                <div class="tooltip-body">
+                  <span>
+                    <span>Volume</span>
+                    <b>${fmt(totalVal)}</b>
+                  </span>
+                  ${
+                    eodVal
+                      ? `<span><span>Volume (EOD)</span><b>${fmt(
+                          totalVal + eodVal
+                        )}</b></span>`
+                      : ""
+                  }
+                  <span>
+                    <span>Count</span>
+                    <b>${Number(countVal).toLocaleString()}</b>
+                  </span>
+                </div>
+              `;
+            },
+          },
         }}
         height="400px"
       />
