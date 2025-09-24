@@ -76,29 +76,36 @@ const Table: React.FC<TableProps> = ({
     getTheme(),
     {
       Table: `
-        font-size: 14px;
+        font-size: 16px;
         border: none;
         background: transparent;
+        border-collapse: collapse;
+        table-layout: auto;
+          text-align: right;
+
         ${customTheme?.Table || ""}
       `,
       Header: `
         background: transparent;
         border-bottom: 1px solid var(--border) !important;
         position: relative;
+        text-align: right;
+        color: var(--font-color);
         ${customTheme?.Header || ""}
       `,
       HeaderCell: `
         color: var(--sec-font-color);
         font-weight: 600;
         font-size: 13px;
-        padding: 1rem 0.75rem;
         border: none;
         border-bottom: 1px solid var(--border) !important;
         background: transparent;
+        color: var(--font-color);
         ${customTheme?.HeaderCell || ""}
       `,
       Body: `
         background: transparent;
+          text-align: right;
         ${customTheme?.Body || ""}
       `,
       Row: `
@@ -122,7 +129,6 @@ const Table: React.FC<TableProps> = ({
       Cell: `
         color: var(--sec-font-color);
         font-size: 14px;
-        padding: 1rem 0.75rem;
         border: none;
         background: transparent;
         vertical-align: middle;
