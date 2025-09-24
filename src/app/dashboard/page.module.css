@@ -13,6 +13,14 @@
   }
 }
 
+@media (max-width: 924px) {
+  .cards-container {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+}
+
 @media (max-width: 768px) {
   .cards-container {
     grid-template-columns: 1fr;
@@ -65,6 +73,14 @@
 @media (max-width: 1200px) {
   .latest-data-container {
     gap: var(--space-6);
+  }
+}
+
+@media (max-width: 924px) {
+  .latest-data-container {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin-top: 0.25rem;
   }
 }
 
@@ -193,6 +209,14 @@
 @media (max-width: 1200px) {
   .chart-inner-container {
     gap: var(--space-6);
+  }
+}
+
+@media (max-width: 924px) {
+  .chart-inner-container {
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
   }
 }
 

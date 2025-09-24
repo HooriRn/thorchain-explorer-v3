@@ -250,7 +250,6 @@ const OverviewPage = () => {
               setEarningsHistory(plotsData.earning);
             } catch (error) {}
           }
-          // Also source swap history from dashboard-plots (parity with Vue)
           if (plotsData.swaps) {
             setSwapHistory(plotsData.swaps);
             if (plotsData.swaps?.meta) {
@@ -828,12 +827,10 @@ const OverviewPage = () => {
       } else if (poolMode === "affiliates-fees") {
         router.push("/charts/affiliates");
       } else {
-        // Default fallback
         router.push("/charts/earnings");
       }
     } catch (error) {
       console.error("Navigation error:", error);
-      // Fallback navigation
       router.push("/charts/earnings");
     }
   };

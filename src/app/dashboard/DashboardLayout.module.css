@@ -376,8 +376,9 @@
 }
 
 .searchBar {
-  padding-top: 2rem;
-  max-width: 90rem;
+  margin: auto;
+    max-width: 90rem;
+    padding-top: 2rem;
 }
 
 .dashboardLayout {
@@ -502,4 +503,30 @@
 .slashFocused {
   border-color: var(--card) !important;
   box-shadow: 0 0 0 2px var(--card), 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+
+.footer {
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  padding: var(--space-4) var(--space-6);
+  margin-top: auto;
+}
+
+@media (min-width: 1024px) {
+  .footer {
+    padding: var(--space-6) 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: var(--space-4) 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    padding: var(--space-3) 0.5rem;
+  }
 }
