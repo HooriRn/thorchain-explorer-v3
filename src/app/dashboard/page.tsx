@@ -144,7 +144,6 @@ const OverviewPage = () => {
         fetchDashboardData(),
         fetchTCYInfo(),
         fetchPoolsData(),
-        fetchSwapHistory(),
         fetchEarningsData(),
         fetchAffiliateData(),
         fetchNetworkData(),
@@ -220,20 +219,6 @@ const OverviewPage = () => {
         } else {
         }
       } else {
-      }
-    } catch (error) {}
-  };
-
-  const fetchSwapHistory = async () => {
-    try {
-      const swapResponse = await fetch("/api/swap-history");
-      if (swapResponse.ok) {
-        const swapData = await swapResponse.json();
-        if (swapData.success && swapData.data) {
-          setSwapHistory(swapData.data);
-          setTotalSwapVolumeUSD(swapData.data?.meta?.totalVolumeUSD);
-          setTotalSwapVolume(swapData.data?.meta?.totalVolume);
-        }
       }
     } catch (error) {}
   };

@@ -190,7 +190,7 @@ const EarningsChart: React.FC<EarningsChartProps> = ({
 
       const volumeUSDData = earningsData.volumeUSDData;
       const affiliateFee =
-        volumeUSDData && volumeUSDData[index] ? volumeUSDData[index] / 1e2 : 0;
+        volumeUSDData && volumeUSDData[index] ? volumeUSDData[index] : 0;
 
       const dataPoint: EarningsData = {
         date,
@@ -278,10 +278,11 @@ const EarningsChart: React.FC<EarningsChartProps> = ({
     try {
       const intervals = (data as any)?.intervals || [];
       if (Array.isArray(intervals) && intervals.length >= 1) {
+        const lastInterval = intervals[intervals.length - 1];
+        const runePrice = +(lastInterval?.runePriceUSD || 0);
+
         let EODValue =
-          ((+intervals[intervals.length - 1]?.EODLiquidityEarnings || 0) *
-            +(intervals[intervals.length - 1]?.runePriceUSD || 0)) /
-            1e8 || 0;
+          ((+lastInterval?.EODLiquidityEarnings || 0) * runePrice) / 1e8;
 
         if (intervals.length >= 2) {
           const lastTotalEarning =
@@ -297,11 +298,17 @@ const EarningsChart: React.FC<EarningsChartProps> = ({
           }
         }
 
+        const volumeUSDData = (data as any)?.volumeUSDData || [];
+        if (Array.isArray(volumeUSDData) && volumeUSDData.length) {
+          const affiliateEOD = volumeUSDData[volumeUSDData.length - 1] || 0;
+          EODValue += affiliateEOD / 1e2; 
+        }
+
         eodSeriesData[lastIdx] = {
           value: EODValue > 0 ? EODValue : 0,
           itemStyle: {
             color: "transparent",
-            borderColor: "#F3BA2F",
+            borderColor: "#f3ba2f",
             borderWidth: 1,
             borderRadius: [8, 8, 0, 0],
           },
@@ -347,21 +354,21 @@ const EarningsChart: React.FC<EarningsChartProps> = ({
         },
       },
       {
-        name: "Affiliate Fee",
-        type: "bar",
-        stack: "Total",
-        data: makeSeriesData((item) => item.affiliateFee, 4),
-        itemStyle: {
-          color: getSeriesColor("affiliateFee"),
-        },
-      },
-      {
         name: "TCY Stake Reward",
         type: "bar",
         stack: "Total",
-        data: makeSeriesData((item) => item.tcyStakeReward, 5),
+        data: makeSeriesData((item) => item.tcyStakeReward, 4),
         itemStyle: {
           color: getSeriesColor("tcyStakeReward"),
+        },
+      },
+      {
+        name: "Affiliate Fee",
+        type: "bar",
+        stack: "Total",
+        data: makeSeriesData((item) => item.affiliateFee, 5),
+        itemStyle: {
+          color: getSeriesColor("affiliateFee"),
         },
       },
     ];
@@ -404,15 +411,13 @@ const EarningsChart: React.FC<EarningsChartProps> = ({
 
         let affiliateEOD = 0;
         if (Array.isArray(volumeUSDData) && volumeUSDData.length) {
-          affiliateEOD = Number(volumeUSDData[lastIdx] || 0) / 1e2;
+          affiliateEOD = Number(volumeUSDData[lastIdx] || 0);
           if (!affiliateEOD) {
             const last3 = volumeUSDData.slice(-3);
             if (last3.length) {
               affiliateEOD =
-                last3.reduce(
-                  (s: number, v: any) => s + Number(v || 0) / 1e2,
-                  0
-                ) / last3.length;
+                last3.reduce((s: number, v: any) => s + Number(v || 0), 0) /
+                last3.length;
             }
           }
         }
@@ -459,6 +464,7 @@ const EarningsChart: React.FC<EarningsChartProps> = ({
         formatter: function (params: any[]) {
           if (!params || !params.length) return "";
           const idx = params[0].dataIndex ?? 0;
+          const isLastItem = idx === chartData.length - 1;
 
           const valueOf = (p: any) =>
             typeof p?.value === "object" && p?.value !== null
@@ -467,7 +473,10 @@ const EarningsChart: React.FC<EarningsChartProps> = ({
 
           const items = params.filter(
             (p: any) =>
-              p && p.seriesName !== "EOD Earning" && p.seriesName !== "EOD"
+              p &&
+              p.seriesName !== "EOD Earning" &&
+              p.seriesName !== "EOD" &&
+              p.seriesName !== "Affiliate Fee"
           );
           const sumGross = items.reduce(
             (a: number, p: any) => a + valueOf(p),
@@ -483,57 +492,248 @@ const EarningsChart: React.FC<EarningsChartProps> = ({
           const affiliateEOD = Number(affiliateEODArr?.[idx] || 0);
 
           const header = `<div class="tooltip-header">${params[0].name}</div>`;
-          const bodyLines = items
-            .map(
-              (p: any) => `
-            <span class="tooltip-item space">
-              <span class="series-name-color">
-                <span class="data-color" style="background-color: ${
-                  p.color
-                };"></span>
-                <span>${p.seriesName}</span>
-              </span>
-              <span>${format(valueOf(p))}</span>
-            </span>`
-            )
+
+          if (isLastItem) {
+            const bondEarning = items.find(
+              (p: any) => p.seriesName === "Bond Earning"
+            );
+            const lpEarning = items.find(
+              (p: any) => p.seriesName === "LP Earning"
+            );
+            const devFundEarning = items.find(
+              (p: any) => p.seriesName === "Dev Fund Earning"
+            );
+            const systemBurn = items.find(
+              (p: any) => p.seriesName === "System Burn"
+            );
+            const tcyStakeReward = items.find(
+              (p: any) => p.seriesName === "TCY Stake Reward"
+            );
+
+            const EODValue = eodCore + (affVal ? 0 : affiliateEOD);
+            const grossEodValue = sumGross + EODValue - affiliateEOD;
+
+            const bodyLines = [
+              bondEarning
+                ? `
+                <span class="tooltip-item space">
+                  <span class="series-name-color">
+                    <span class="data-color" style="background-color: ${
+                      bondEarning.color
+                    };"></span>
+                    <span>Bond Earning</span>
+                  </span>
+                  <span>${format(valueOf(bondEarning))}</span>
+                </span>`
+                : "",
+              lpEarning
+                ? `
+                <span class="tooltip-item space">
+                  <span class="series-name-color">
+                    <span class="data-color" style="background-color: ${
+                      lpEarning.color
+                    };"></span>
+                    <span>LP Earning</span>
+                  </span>
+                  <span>${format(valueOf(lpEarning))}</span>
+                </span>`
+                : "",
+              devFundEarning
+                ? `
+                <span class="tooltip-item space">
+                  <span class="series-name-color">
+                    <span class="data-color" style="background-color: ${
+                      devFundEarning.color
+                    };"></span>
+                    <span>Dev Fund Earning</span>
+                  </span>
+                  <span>${format(valueOf(devFundEarning))}</span>
+                </span>`
+                : "",
+              systemBurn
+                ? `
+                <span class="tooltip-item space">
+                  <span class="series-name-color">
+                    <span class="data-color" style="background-color: ${
+                      systemBurn.color
+                    };"></span>
+                    <span>System Burn</span>
+                  </span>
+                  <span>${format(valueOf(systemBurn))}</span>
+                </span>`
+                : "",
+              tcyStakeReward
+                ? `
+                <span class="tooltip-item space">
+                  <span class="series-name-color">
+                    <span class="data-color" style="background-color: ${
+                      tcyStakeReward.color
+                    };"></span>
+                    <span>TCY Stake Reward</span>
+                  </span>
+                  <span>${format(valueOf(tcyStakeReward))}</span>
+                </span>`
+                : "",
+              `
+                <span class="tooltip-item space" style="border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px;">
+                  <span>Gross System Income</span>
+                  <span>${format(sumGross)}</span>
+                </span>`,
+              `
+                <span class="tooltip-item space">
+                  <span>Gross System Income (EOD)</span>
+                  <span>${format(grossEodValue)}</span>
+                </span>`,
+              affSeries && affSeries.value !== undefined
+                ? `
+                <span class="tooltip-item space" style="border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px;">
+                  <span class="series-name-color">
+                    <span class="data-color" style="background-color: ${
+                      affSeries.color
+                    };"></span>
+                    <span>Affiliate Fee(EOD)</span>
+                  </span>
+                  <span>${
+                    affVal
+                      ? format(affVal)
+                      : affiliateEOD
+                      ? `${format(affiliateEOD)} (EOD)`
+                      : "-"
+                  }</span>
+                </span>`
+                : "",
+            ]
+              .filter((line) => line.trim() !== "")
+              .join("");
+
+            return `
+            ${header}
+            <div class="tooltip-body">
+              ${bodyLines}
+            </div>`;
+          }
+
+          // Default formatting for other items
+          const bondEarning = items.find(
+            (p: any) => p.seriesName === "Bond Earning"
+          );
+          const lpEarning = items.find(
+            (p: any) => p.seriesName === "LP Earning"
+          );
+          const devFundEarning = items.find(
+            (p: any) => p.seriesName === "Dev Fund Earning"
+          );
+          const systemBurn = items.find(
+            (p: any) => p.seriesName === "System Burn"
+          );
+          const tcyStakeReward = items.find(
+            (p: any) => p.seriesName === "TCY Stake Reward"
+          );
+
+          // Calculate Gross System Income by filtering out EOD Earning and Affiliate Fee
+          const grossSystemIncomeItems = items.filter(
+            (p: any) =>
+              p.seriesName !== "EOD Earning" &&
+              p.seriesName !== "EOD" &&
+              p.seriesName !== "Affiliate Fee"
+          );
+          const grossSystemIncome = grossSystemIncomeItems.reduce(
+            (a: number, p: any) => a + valueOf(p),
+            0
+          );
+
+          const bodyLines = [
+            bondEarning
+              ? `
+                <span class="tooltip-item space">
+                  <span class="series-name-color">
+                    <span class="data-color" style="background-color: ${
+                      bondEarning.color
+                    };"></span>
+                    <span>Bond Earning</span>
+                  </span>
+                  <span>${format(valueOf(bondEarning))}</span>
+                </span>`
+              : "",
+            lpEarning
+              ? `
+                <span class="tooltip-item space">
+                  <span class="series-name-color">
+                    <span class="data-color" style="background-color: ${
+                      lpEarning.color
+                    };"></span>
+                    <span>LP Earning</span>
+                  </span>
+                  <span>${format(valueOf(lpEarning))}</span>
+                </span>`
+              : "",
+            devFundEarning
+              ? `
+                <span class="tooltip-item space">
+                  <span class="series-name-color">
+                    <span class="data-color" style="background-color: ${
+                      devFundEarning.color
+                    };"></span>
+                    <span>Dev Fund Earning</span>
+                  </span>
+                  <span>${format(valueOf(devFundEarning))}</span>
+                </span>`
+              : "",
+            systemBurn
+              ? `
+                <span class="tooltip-item space">
+                  <span class="series-name-color">
+                    <span class="data-color" style="background-color: ${
+                      systemBurn.color
+                    };"></span>
+                    <span>System Burn</span>
+                  </span>
+                  <span>${format(valueOf(systemBurn))}</span>
+                </span>`
+              : "",
+            tcyStakeReward
+              ? `
+                <span class="tooltip-item space">
+                  <span class="series-name-color">
+                    <span class="data-color" style="background-color: ${
+                      tcyStakeReward.color
+                    };"></span>
+                    <span>TCY Stake Reward</span>
+                  </span>
+                  <span>${format(valueOf(tcyStakeReward))}</span>
+                </span>`
+              : "",
+            `
+              <span class="tooltip-item space" style="border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px;">
+                <span>Gross System Income</span>
+                <span>${format(grossSystemIncome)}</span>
+              </span>`,
+            affSeries && affSeries.value !== undefined
+              ? `
+              <span class="tooltip-item space" style="border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px;">
+                <span class="series-name-color">
+                  <span class="data-color" style="background-color: ${
+                    affSeries.color
+                  };"></span>
+                  <span>Affiliate Fee</span>
+                </span>
+                <span>${
+                  affVal
+                    ? format(affVal)
+                    : affiliateEOD
+                    ? `${format(affiliateEOD)} (EOD)`
+                    : "-"
+                }</span>
+              </span>`
+              : "",
+          ]
+            .filter((line) => line.trim() !== "")
             .join("");
-
-          const grossLine = `
-          <span class="tooltip-item space" style="border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px;">
-            <span>Gross System Income</span>
-            <span>${format(sumGross)}</span>
-          </span>`;
-
-          const grossEodValue =
-            sumGross + eodCore + (affVal ? 0 : affiliateEOD);
-          const showEod = eodCore || (!affVal && affiliateEOD);
-          const grossEodLine = showEod
-            ? `
-            <span class="tooltip-item space">
-              <span>Gross System Income (EOD)</span>
-              <span>${format(grossEodValue)}</span>
-            </span>`
-            : "";
-
-          const affiliateLine = `
-          <span class="tooltip-item space" style="border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px;">
-            <span>Affiliate Fee</span>
-            <span>${
-              affVal
-                ? format(affVal)
-                : affiliateEOD
-                ? `${format(affiliateEOD)} (EOD)`
-                : "-"
-            }</span>
-          </span>`;
 
           return `
           ${header}
           <div class="tooltip-body">
             ${bodyLines}
-            ${grossLine}
-            ${grossEodLine}
-            ${affiliateLine}
           </div>`;
         },
       },

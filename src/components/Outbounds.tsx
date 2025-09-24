@@ -73,12 +73,20 @@ const OutboundSwapsCard = () => {
             outputAsset = swap.out?.find((s: any) => s.affiliate !== true);
           }
 
+          let formattedDate = "Invalid Date";
+          if (swap.date && !isNaN(swap.date)) {
+            const momentDate = moment(swap.date / 1e6);
+            if (momentDate.isValid()) {
+              formattedDate = momentDate.format("MMM D, HH:mm");
+            }
+          }
+
           return {
             type: swap.type,
             in: swap.in || [],
             out: swap.out || [],
             metadata: swap.metadata,
-            date: moment(swap.date / 1e6).format("MMM D, HH:MM"),
+            date: formattedDate,
             txID: swap.in?.[0]?.txID,
             inputAsset: {
               address: swap.in?.[0]?.address,
@@ -106,12 +114,20 @@ const OutboundSwapsCard = () => {
               outputAsset = swap.out?.find((s: any) => s.affiliate !== true);
             }
 
+            let formattedDate = "Invalid Date";
+            if (swap.date && !isNaN(swap.date)) {
+              const momentDate = moment(swap.date / 1e6);
+              if (momentDate.isValid()) {
+                formattedDate = momentDate.format("MMM D, HH:mm");
+              }
+            }
+
             return {
               type: swap.type,
               in: swap.in || [],
               out: swap.out || [],
               metadata: swap.metadata,
-              date: moment(swap.date / 1e6).format("MMM D, HH:MM"),
+              date: formattedDate,
               txID: swap.in?.[0]?.txID,
               inputAsset: {
                 address: swap.in?.[0]?.address,
@@ -145,12 +161,20 @@ const OutboundSwapsCard = () => {
                   );
                 }
 
+                let formattedDate = "Invalid Date";
+                if (swap.date && !isNaN(swap.date)) {
+                  const momentDate = moment(swap.date / 1e6);
+                  if (momentDate.isValid()) {
+                    formattedDate = momentDate.format("MMM D, HH:mm");
+                  }
+                }
+
                 return {
                   type: swap.type,
                   in: swap.in || [],
                   out: swap.out || [],
                   metadata: swap.metadata,
-                  date: moment(swap.date / 1e6).format("MMM D, HH:MM"),
+                  date: formattedDate,
                   txID: swap.in?.[0]?.txID,
                   inputAsset: {
                     address: swap.in?.[0]?.address,
@@ -224,6 +248,20 @@ const OutboundSwapsCard = () => {
       const remHeight = h - chainsHeight.THOR;
       if (remHeight <= 0) return "Ready";
       return moment.duration(remHeight * 6, "seconds").humanize();
+    }
+    return "";
+  };
+
+  const getEstimatedTime = (height: number | string) => {
+    if (chainsHeight?.THOR) {
+      const h = typeof height === "string" ? parseInt(height, 10) : height;
+      if (typeof h !== "number" || isNaN(h)) return "";
+
+      const estimatedTime = moment().subtract(
+        (chainsHeight.THOR - h) * 6,
+        "seconds"
+      );
+      return moment.duration(moment().diff(estimatedTime)).humanize();
     }
     return "";
   };
@@ -511,7 +549,20 @@ const OutboundSwapsCard = () => {
                               )}
                             </div>
                             <div className={styles["right-part"]}>
-                              {o.height && (
+                              {o.height &&
+                                getOutboundEta(o.height) !== "Ready" && (
+                                  <div>
+                                    <span
+                                      style={{
+                                        color: "var(--sec-font-color)",
+                                        fontSize: "10px",
+                                      }}
+                                    >
+                                      {getOutboundEta(o.height)} remaining
+                                    </span>
+                                  </div>
+                                )}
+                              {o.height && getEstimatedTime(o.height) && (
                                 <div>
                                   <span
                                     style={{
@@ -519,7 +570,31 @@ const OutboundSwapsCard = () => {
                                       fontSize: "10px",
                                     }}
                                   >
-                                    {getOutboundEta(o.height)}
+                                    {getEstimatedTime(o.height)}
+                                  </span>
+                                </div>
+                              )}
+                              {(o.date || o.timestamp || o.created_at) && (
+                                <div>
+                                  <span
+                                    style={{
+                                      color: "var(--sec-font-color)",
+                                      fontSize: "10px",
+                                    }}
+                                  >
+                                    {(() => {
+                                      const dateValue =
+                                        o.date || o.timestamp || o.created_at;
+                                      if (!dateValue || isNaN(dateValue))
+                                        return "No Date";
+
+                                      const momentDate = moment(
+                                        dateValue / 1e6
+                                      );
+                                      return momentDate.isValid()
+                                        ? momentDate.format("MMM D, HH:mm")
+                                        : "Invalid Date";
+                                    })()}
                                   </span>
                                 </div>
                               )}
