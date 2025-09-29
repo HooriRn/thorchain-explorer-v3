@@ -472,7 +472,7 @@ export class ThornodeAPI {
 
   async getTradeAssets(): Promise<TradeAsset[]> {
     const response = await apiClient.getExternal<TradeAsset[]>(
-      `${this.config.THORNODE_URL}thorchain/trade_assets`
+      `${this.config.THORNODE_URL}thorchain/trade/units`
     );
     return response.data;
   }

@@ -1,7 +1,8 @@
 "use client";
 
-import React from 'react';
-import Link from 'next/link';
+import React from "react";
+import Link from "next/link";
+import styles from "./Nav.module.css";
 
 interface NavItem {
   mode: string;
@@ -27,7 +28,7 @@ const Nav: React.FC<NavProps> = ({
   extraClasses = [],
   preText,
   hide,
-  onActiveModeChange
+  onActiveModeChange,
 }) => {
   const filteredNav = navItems.filter((n) => n.hide !== true);
 
@@ -38,21 +39,19 @@ const Nav: React.FC<NavProps> = ({
   };
 
   return (
-    <div className={`nav-headers box ${extraClasses.join(' ')}`}>
-      {preText && (
-        <span className="pre-text">
-          {preText}
-        </span>
-      )}
+    <div
+      className={`${styles.navHeaders} ${styles.box} ${extraClasses.join(" ")}`}
+    >
+      {preText && <span className={styles.preText}>{preText}</span>}
       {filteredNav.map((navItem) => {
         const isActive = activeMode && activeMode === navItem.mode;
-        
+
         if (isLink && navItem.link) {
           return (
             <Link
               key={navItem.mode}
               href={navItem.link}
-              className={`nav-item ${isActive ? 'active' : ''}`}
+              className={`${styles.navItem} ${isActive ? styles.active : ""}`}
             >
               {navItem.text}
             </Link>
@@ -62,7 +61,7 @@ const Nav: React.FC<NavProps> = ({
         return (
           <div
             key={navItem.mode}
-            className={`nav-item ${isActive ? 'active' : ''}`}
+            className={`${styles.navItem} ${isActive ? styles.active : ""}`}
             onClick={() => handleClick(navItem.mode)}
           >
             {navItem.text}
@@ -73,4 +72,4 @@ const Nav: React.FC<NavProps> = ({
   );
 };
 
-export default Nav; 
+export default Nav;
