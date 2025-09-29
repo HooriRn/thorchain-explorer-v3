@@ -48,6 +48,10 @@
   font-size: var(--font-size-sm);
 }
 
+.mono {
+  font-family: "Roboto Mono", monospace;
+}
+
 .divider {
   margin: var(--space-8) var(--space-0);
   opacity: 0.65;

@@ -9,6 +9,7 @@ import {
   formatPercent,
 } from "@/utils/format";
 import UnknownIcon from "@/assets/images/unknown.svg";
+import { Skeleton } from "@/components/ui/Skeleton";
 import styles from "./PooledView.module.css";
 
 interface PeriodData {
@@ -176,14 +177,8 @@ const PooledView: React.FC = () => {
       });
 
       const currentPeriod = newTotalInfo[period] as PeriodData;
-      const ve =
-        currentPeriod.volume > 0
-          ? currentPeriod.liquidityFees / currentPeriod.volume
-          : 0;
-      const ep =
-        newTotalInfo.pooled > 0
-          ? currentPeriod.earnings / newTotalInfo.pooled
-          : 0;
+      const ve = currentPeriod.liquidityFees / currentPeriod.volume;
+      const ep = currentPeriod.earnings / newTotalInfo.pooled;
 
       currentPeriod.earningsAPR = ep * ppy;
       currentPeriod.avgFee = ve * 1e4;
@@ -227,8 +222,12 @@ const PooledView: React.FC = () => {
           <UnknownIcon className={styles["header-icon"]} title={tooltip} />
         )}
       </span>
-      <span className={`${styles["value"]} mono`}>
-        {loading ? "..." : value}
+      <span className={`${styles["value"]} ${styles["mono"]}`}>
+        {loading ? (
+          <Skeleton variant="text" width="80px" height="10px" />
+        ) : (
+          value
+        )}
       </span>
     </div>
   );
@@ -265,7 +264,11 @@ const PooledView: React.FC = () => {
         />
         <StatItem
           title="24hr Fee Ratio:"
-          value={`${number(totalInfo.day.avgFee, "0.00")} BP`}
+          value={`${
+            isNaN(totalInfo.day.avgFee)
+              ? "NaN"
+              : number(totalInfo.day.avgFee, "0.00")
+          } BP`}
           loading={loading}
           tooltip="Average Fee in basis point (Fees / Volume)"
         />
@@ -294,7 +297,11 @@ const PooledView: React.FC = () => {
         />
         <StatItem
           title="7D Fee Ratio:"
-          value={`${number(totalInfo.week.avgFee, "0.00")} BP`}
+          value={`${
+            isNaN(totalInfo.week.avgFee)
+              ? "NaN"
+              : number(totalInfo.week.avgFee, "0.00")
+          } BP`}
           loading={loading}
         />
       </div>
@@ -322,7 +329,11 @@ const PooledView: React.FC = () => {
         />
         <StatItem
           title="30D Fee Ratio:"
-          value={`${number(totalInfo.month.avgFee, "0.00")} BP`}
+          value={`${
+            isNaN(totalInfo.month.avgFee)
+              ? "NaN"
+              : number(totalInfo.month.avgFee, "0.00")
+          } BP`}
           loading={loading}
         />
       </div>
@@ -350,7 +361,11 @@ const PooledView: React.FC = () => {
         />
         <StatItem
           title="Year Fee Ratio:"
-          value={`${number(totalInfo.year.avgFee, "0.00")} BP`}
+          value={`${
+            isNaN(totalInfo.year.avgFee)
+              ? "NaN"
+              : number(totalInfo.year.avgFee, "0.00")
+          } BP`}
           loading={loading}
         />
       </div>

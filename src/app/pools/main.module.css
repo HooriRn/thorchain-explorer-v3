@@ -23,7 +23,6 @@
 .numericCell {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   min-width: 0;
 }
 
@@ -191,6 +190,18 @@
   text-align: left;
   border-bottom: 1px solid var(--border-color);
   font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.vgt-table th:nth-child(2),
+.vgt-table th:nth-child(3),
+.vgt-table th:nth-child(4),
+.vgt-table th:nth-child(5),
+.vgt-table th:nth-child(6),
+.vgt-table th:nth-child(7),
+.vgt-table th:nth-child(8),
+.vgt-table th:nth-child(9) {
+  text-align: right;
 }
 
 .vgt-table td {

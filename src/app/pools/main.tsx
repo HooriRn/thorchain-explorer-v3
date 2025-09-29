@@ -110,7 +110,6 @@ const PoolsMain: React.FC = () => {
 
   const columns: TableColumn[] = [
     createCustomColumn<PoolData>("Asset", {
-      minWidth: 200,
       sortKey: "asset",
       renderCell: (item: PoolData) => (
         <div className={styles["assetCell"]}>
@@ -120,7 +119,6 @@ const PoolsMain: React.FC = () => {
       ),
     }),
     createCustomColumn<PoolData>("USD Price", {
-      minWidth: 120,
       sortKey: "price",
       renderCell: (item: PoolData) => (
         <div className={styles["numericCell"]}>
@@ -129,7 +127,6 @@ const PoolsMain: React.FC = () => {
       ),
     }),
     createCustomColumn<PoolData>("Volume 24H", {
-      minWidth: 120,
       sortKey: "volume",
       renderCell: (item: PoolData) => (
         <div className={styles["numericCell"]}>
@@ -138,7 +135,6 @@ const PoolsMain: React.FC = () => {
       ),
     }),
     createCustomColumn<PoolData>("Depth", {
-      minWidth: 120,
       sortKey: "depth",
       renderCell: (item: PoolData) => (
         <div className={styles["numericCell"]}>
@@ -147,7 +143,6 @@ const PoolsMain: React.FC = () => {
       ),
     }),
     createCustomColumn<PoolData>("Balances", {
-      minWidth: 150,
       sortKey: "balances",
       renderCell: (item: PoolData) => (
         <div className={styles["balancesCell"]}>
@@ -175,7 +170,6 @@ const PoolsMain: React.FC = () => {
       ),
     }),
     createCustomColumn<PoolData>("Trade Asset Depth", {
-      minWidth: 150,
       sortKey: "trading",
       renderCell: (item: PoolData) => {
         return (
@@ -193,7 +187,6 @@ const PoolsMain: React.FC = () => {
       },
     }),
     createCustomColumn<PoolData>("RUNEPool Share", {
-      minWidth: 150,
       sortKey: "polShare",
       renderCell: (item: PoolData) => (
         <div className={styles["numericCell"]}>
@@ -209,7 +202,6 @@ const PoolsMain: React.FC = () => {
       ),
     }),
     createCustomColumn<PoolData>("Volume/Depth", {
-      minWidth: 120,
       sortKey: "vd",
       renderCell: (item: PoolData) => (
         <div className={styles["numericCell"]}>
@@ -218,13 +210,10 @@ const PoolsMain: React.FC = () => {
       ),
     }),
     createCustomColumn<PoolData>("Est. Yr. Earnings", {
-      minWidth: 150,
       sortKey: "estEarnings",
       renderCell: (item: PoolData) => (
         <div className={styles["numericCell"]}>
-          <span className={styles["mono"]}>
-            {formattedPrice(item.estEarnings)}
-          </span>
+          <span className={styles["mono"]}>$0</span>
         </div>
       ),
     }),
@@ -422,7 +411,13 @@ const PoolsMain: React.FC = () => {
 
   const customTheme = {
     Table: `
-      --data-table-library_grid-template-columns: 200px 120px 120px 120px 150px 195px 188px 120px 150px;
+      --data-table-library_grid-template-columns: auto auto auto auto auto auto auto auto auto;
+    `,
+    HeaderCell: `
+      text-align: left;
+    `,
+    Cell: `
+      text-align: right;
     `,
   };
 
