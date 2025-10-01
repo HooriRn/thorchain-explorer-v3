@@ -7,6 +7,7 @@ import UnknownIcon from "../assets/images/unknown.svg";
 import RightArrow from "../assets/images/arrow-right.svg";
 import Card from "./ui/Card";
 import { Skeleton } from "./ui/Skeleton";
+import GlassmorphismTooltip from "./GlassmorphismTooltip";
 import { formatTrendCurrency } from "../utils/format";
 import styles from "./InfoCard.module.css";
 
@@ -220,12 +221,16 @@ const InfoCard: React.FC<InfoCardProps> = ({
                                     <>
                                       {item.name}
                                       {item.extraInfo && (
-                                        <UnknownIcon
-                                          className={styles["header-icon"]}
-                                          title={item.extraInfo}
-                                          width={12}
-                                          height={12}
-                                        />
+                                        <GlassmorphismTooltip
+                                          content={item.extraInfo}
+                                          placement="top"
+                                        >
+                                          <UnknownIcon
+                                            className={styles["header-icon"]}
+                                            width={12}
+                                            height={12}
+                                          />
+                                        </GlassmorphismTooltip>
                                       )}
                                     </>
                                   )}
