@@ -191,7 +191,7 @@ const SwapVolumeChart: React.FC<SwapVolumeChartProps> = ({
 
       if (index === lastIndex) {
         if (hoursSinceUtcDayStart < 6) {
-          const recent = intervals.slice(-4, -1); 
+          const recent = intervals.slice(-4, -1);
           const recentSum = recent.reduce((sum: number, it: any) => {
             const itUsd =
               it.totalVolumeUSD !== undefined && it.totalVolumeUSD !== null

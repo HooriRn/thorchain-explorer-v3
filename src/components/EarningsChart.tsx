@@ -301,7 +301,7 @@ const EarningsChart: React.FC<EarningsChartProps> = ({
         const volumeUSDData = (data as any)?.volumeUSDData || [];
         if (Array.isArray(volumeUSDData) && volumeUSDData.length) {
           const affiliateEOD = volumeUSDData[volumeUSDData.length - 1] || 0;
-          EODValue += affiliateEOD / 1e2; 
+          EODValue += affiliateEOD / 1e2;
         }
 
         eodSeriesData[lastIdx] = {

@@ -549,19 +549,6 @@ const OutboundSwapsCard = () => {
                               )}
                             </div>
                             <div className={styles["right-part"]}>
-                              {o.height &&
-                                getOutboundEta(o.height) !== "Ready" && (
-                                  <div>
-                                    <span
-                                      style={{
-                                        color: "var(--sec-font-color)",
-                                        fontSize: "10px",
-                                      }}
-                                    >
-                                      {getOutboundEta(o.height)} remaining
-                                    </span>
-                                  </div>
-                                )}
                               {o.height && getEstimatedTime(o.height) && (
                                 <div>
                                   <span

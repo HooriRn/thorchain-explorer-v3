@@ -2,7 +2,7 @@
 
 import React from "react";
 import PieChart from "@/components/PieChart";
-import { formatTrendNumber } from "@/utils/format";
+import { formatVueNumber } from "@/utils/format";
 import { useTheme } from "@/lib/store";
 
 interface AllocationData {
@@ -30,13 +30,8 @@ const TcyAllocationPieChart: React.FC<TcyAllocationPieChartProps> = ({
       pieData={allocationPie}
       type="doughnut"
       formatter={(value: number, name: string) => {
-        const total = allocationPie.reduce((sum, item) => sum + item.value, 0);
-        const percentage = ((value / total) * 100).toFixed(2);
-        const formattedValue =
-          value >= 1e6
-            ? `${(value / 1e6).toFixed(2)} Million TCY`
-            : `${formatTrendNumber(value, { decimals: 2 })} TCY`;
-        return `${formattedValue} (${percentage}%)`;
+        const formattedValue = `${formatVueNumber(value, "0,0.00a")} TCY`;
+        return `${name}: ${formattedValue}`;
       }}
       height="180px"
       extra={{
@@ -66,10 +61,7 @@ const TcyAllocationPieChart: React.FC<TcyAllocationPieChartProps> = ({
             const name = params.name;
             const percentage = params.percent;
 
-            const formattedValue =
-              value >= 1e6
-                ? `${(value / 1e6).toFixed(2)}M TCY`
-                : `${formatTrendNumber(value, { decimals: 2 })} TCY`;
+            const formattedValue = `${formatVueNumber(value, "0,0.00a")} TCY`;
 
             return `${name}: ${formattedValue} (${percentage.toFixed(2)}%)`;
           },

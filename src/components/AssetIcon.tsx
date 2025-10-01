@@ -81,7 +81,7 @@ const AssetIcon: React.FC<AssetIconProps> = ({
     if (chain) {
       return true;
     } else if (assetToChain(asset) !== assetStr) {
-      return false;
+      return true;
     }
     return false;
   };

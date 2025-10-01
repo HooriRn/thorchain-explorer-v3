@@ -327,3 +327,55 @@ export const formatTotalAmount = (
     maximumFractionDigits: decimals,
   }).format(convertedValue);
 };
+
+/**
+ * Vue.js $options.filters.number equivalent
+ * Formats numbers with patterns like '0,0.00a' (comma separator, decimals, abbreviated)
+ * @param value - The number to format
+ * @param pattern - Format pattern (e.g., '0,0.00a', '0,0', '0.00')
+ * @returns Formatted string
+ */
+export const formatVueNumber = (
+  value: number | string | null | undefined,
+  pattern: string = "0,0.00a"
+): string => {
+  if (value === null || value === undefined || value === "") {
+    return "0";
+  }
+
+  const numValue = typeof value === "string" ? parseFloat(value) : value;
+
+  if (isNaN(numValue)) {
+    return "0";
+  }
+
+  if (pattern.includes("a")) {
+    if (numValue >= 1e9) {
+      return (numValue / 1e9).toFixed(1) + "B";
+    } else if (numValue >= 1e6) {
+      return (numValue / 1e6).toFixed(1) + "M";
+    } else if (numValue >= 1e3) {
+      return (numValue / 1e3).toFixed(1) + "K";
+    }
+  }
+
+  if (pattern.includes(",")) {
+    const parts = pattern.split(".");
+    if (parts.length > 1) {
+      const decimalCount = parts[1].replace("a", "").length;
+      return new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: decimalCount,
+        maximumFractionDigits: decimalCount,
+      }).format(numValue);
+    } else {
+      return new Intl.NumberFormat("en-US").format(numValue);
+    }
+  }
+
+  if (pattern.includes(".")) {
+    const decimalCount = pattern.split(".")[1]?.replace("a", "").length || 0;
+    return numValue.toFixed(decimalCount);
+  }
+
+  return numValue.toString();
+};

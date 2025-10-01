@@ -8,6 +8,7 @@ import {
   getConstants,
   earnings,
   getChainsHeight,
+  getStats,
 } from "@/lib/api";
 import {
   formatNumber,
@@ -31,6 +32,7 @@ import {
   useRunePrice,
   useChainsHeight,
   useSetChainsHeight,
+  useSetRunePrice,
 } from "@/lib/store";
 import styles from "./tcy.module.css";
 
@@ -121,11 +123,13 @@ const TCYPage: React.FC = () => {
   const [mimir, setMimir] = useState<Mimir | null>(null);
   const [networkConst, setNetworkConst] = useState<Constants | null>(null);
   const [earningsHistory, setEarningsHistory] = useState<any>(null);
+  const [rawEarningsData, setRawEarningsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const theme = useTheme();
   const runePrice = useRunePrice();
   const chainsHeight = useChainsHeight();
   const setChainsHeight = useSetChainsHeight();
+  const setRunePrice = useSetRunePrice();
 
   useEffect(() => {
     if (!chainsHeight || !chainsHeight.THOR) {
@@ -152,22 +156,27 @@ const TCYPage: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [tcyData, mimirData, constantsData, earningsData] =
+        const [tcyData, mimirData, constantsData, earningsData, statsData] =
           await Promise.all([
             getTcyInfo(),
             getMimir(),
             getConstants(),
             earnings("day", 30),
+            getStats(),
           ]);
 
         setTcyInfo(tcyData as TCYInfo);
         setMimir(mimirData as Mimir);
         setNetworkConst(constantsData as Constants);
 
-        const formattedEarnings = formatEarnings(
-          earningsData as unknown as EarningsData
-        );
-        setEarningsHistory(formattedEarnings);
+        if (statsData?.data?.runePriceUSD) {
+          setRunePrice(Number.parseFloat(statsData.data.runePriceUSD));
+        }
+
+        setTcyInfo(tcyData as TCYInfo);
+        setMimir(mimirData as Mimir);
+        setNetworkConst(constantsData as Constants);
+        setRawEarningsData(earningsData as unknown as EarningsData);
       } catch (error) {
       } finally {
         setLoading(false);
@@ -175,14 +184,21 @@ const TCYPage: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [setRunePrice]);
 
-  const formatEarnings = (data: EarningsData) => {
+  useEffect(() => {
+    if (rawEarningsData && runePrice > 0 && tcyInfo) {
+      const formattedEarnings = formatEarnings(rawEarningsData, tcyInfo);
+      setEarningsHistory(formattedEarnings);
+    }
+  }, [runePrice, rawEarningsData, tcyInfo]);
+
+  const formatEarnings = (data: EarningsData, tcyData?: TCYInfo) => {
     if (!data?.intervals) return null;
 
     const xAxis: string[] = [];
-    const pe: number[] = [];
-    const pf: number[] = [];
+    const pe: any[] = [];
+    const pf: any[] = [];
 
     data.intervals.forEach((interval, index) => {
       const startTime = interval.startTime;
@@ -210,10 +226,23 @@ const TCYPage: React.FC = () => {
         10 ** 8;
 
       if (index === data.intervals.length - 1) {
-        pe.push(((tcyInfo?.tcy_stake_eod || 0) / 1e8) * runePrice || earnings);
-        pf.push(
-          ((tcyInfo?.tcy_pool_eod || 0) / 1e8) * runePrice || liquidityFee
-        );
+        const stakeValue =
+          tcyData?.tcy_stake_eod && runePrice && runePrice > 0
+            ? (tcyData.tcy_stake_eod / 1e8) * runePrice
+            : earnings;
+        const poolValue =
+          tcyData?.tcy_pool_eod && runePrice && runePrice > 0
+            ? (tcyData.tcy_pool_eod / 1e8) * runePrice
+            : liquidityFee;
+
+        pe.push({
+          value: stakeValue,
+          itemStyle: { color: "#F3BA2F" },
+        });
+        pf.push({
+          value: poolValue,
+          itemStyle: { color: "#F3BA2F" },
+        });
       } else {
         pe.push(earnings);
         pf.push(liquidityFee);

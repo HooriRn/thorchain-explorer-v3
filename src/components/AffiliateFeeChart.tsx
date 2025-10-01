@@ -363,7 +363,7 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
     const lastAllZero = seriesNames.every(
       (name) => ((chartData[lastIdx]?.[name] as number) || 0) === 0
     );
-    const effectiveLength = lastAllZero && n > 0 ? n - 1 : n; 
+    const effectiveLength = lastAllZero && n > 0 ? n - 1 : n;
 
     const series = seriesNames.map((name, index) => ({
       name,
