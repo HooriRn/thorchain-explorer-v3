@@ -32,7 +32,6 @@ export const number = (value: number, pattern: string = "0,0") => {
     return new Intl.NumberFormat("en-US").format(value);
   }
 
-  // Handle decimal patterns like "0.00"
   if (pattern.includes(".")) {
     const decimalPlaces = pattern.split(".")[1]?.length || 0;
     return value.toFixed(decimalPlaces);

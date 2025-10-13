@@ -69,7 +69,6 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
   );
 
   const CustomTooltip = useMemo(() => {
-    console.log("CustomTooltip render:", customTooltip);
     if (!customTooltip) return null;
 
     return (
@@ -402,8 +401,6 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
           color: "transparent",
         },
         formatter: function (params: any, ticket: string, callback: any) {
-          console.log("Tooltip triggered:", params);
-
           if (!params || params.length === 0) {
             setCustomTooltip(null);
             return "";
@@ -477,7 +474,6 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
             y: tooltipY,
           };
 
-          console.log("Setting custom tooltip:", tooltipData);
           setCustomTooltip(tooltipData);
 
           return "";

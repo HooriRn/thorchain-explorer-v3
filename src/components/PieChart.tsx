@@ -217,6 +217,7 @@ const PieChart: React.FC<PieChartProps> = ({
         data={chartData}
         options={{
           ...chartOptions,
+          ...extraSeries,
           tooltip: {
             ...chartOptions.tooltip,
             formatter: formatter

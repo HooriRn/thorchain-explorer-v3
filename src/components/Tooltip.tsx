@@ -30,7 +30,6 @@ const Tooltip: React.FC<TooltipProps> = ({
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
 
-      // Estimate tooltip dimensions if not available yet
       const estimatedTooltipWidth = tooltipRect?.width || 200;
       const estimatedTooltipHeight = tooltipRect?.height || 40;
 
@@ -53,9 +52,7 @@ const Tooltip: React.FC<TooltipProps> = ({
           break;
       }
 
-      // Enhanced viewport boundary detection with proper centering
       if (position === "top" || position === "bottom") {
-        // Center horizontally but ensure it doesn't go off-screen
         const halfTooltipWidth = estimatedTooltipWidth / 2;
         if (left - halfTooltipWidth < margin) {
           left = margin + halfTooltipWidth;
@@ -63,7 +60,6 @@ const Tooltip: React.FC<TooltipProps> = ({
           left = viewportWidth - margin - halfTooltipWidth;
         }
       } else {
-        // For left/right, ensure vertical centering doesn't go off-screen
         const halfTooltipHeight = estimatedTooltipHeight / 2;
         if (top - halfTooltipHeight < margin) {
           top = margin + halfTooltipHeight;
@@ -72,7 +68,6 @@ const Tooltip: React.FC<TooltipProps> = ({
         }
       }
 
-      // Final boundary checks
       if (top < margin) top = margin;
       if (top + estimatedTooltipHeight > viewportHeight - margin) {
         top = viewportHeight - estimatedTooltipHeight - margin;
@@ -86,7 +81,6 @@ const Tooltip: React.FC<TooltipProps> = ({
     }
   }, [isVisible, position]);
 
-  // Recalculate position after tooltip is rendered to get accurate dimensions
   useEffect(() => {
     if (isVisible && tooltipRef.current && triggerRef.current) {
       const triggerRect = triggerRef.current.getBoundingClientRect();
@@ -117,9 +111,7 @@ const Tooltip: React.FC<TooltipProps> = ({
           break;
       }
 
-      // Enhanced viewport boundary detection with proper centering
       if (position === "top" || position === "bottom") {
-        // Center horizontally but ensure it doesn't go off-screen
         const halfTooltipWidth = tooltipRect.width / 2;
         if (left - halfTooltipWidth < margin) {
           left = margin + halfTooltipWidth;
@@ -127,7 +119,6 @@ const Tooltip: React.FC<TooltipProps> = ({
           left = viewportWidth - margin - halfTooltipWidth;
         }
       } else {
-        // For left/right, ensure vertical centering doesn't go off-screen
         const halfTooltipHeight = tooltipRect.height / 2;
         if (top - halfTooltipHeight < margin) {
           top = margin + halfTooltipHeight;
@@ -136,7 +127,6 @@ const Tooltip: React.FC<TooltipProps> = ({
         }
       }
 
-      // Final boundary checks
       if (top < margin) top = margin;
       if (top + tooltipRect.height > viewportHeight - margin) {
         top = viewportHeight - tooltipRect.height - margin;

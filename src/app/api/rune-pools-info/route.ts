@@ -10,8 +10,6 @@ export async function GET(request: NextRequest) {
       data: runePoolsInfo,
     });
   } catch (error) {
-    console.error("Error fetching rune pools info:", error);
-
     return NextResponse.json(
       {
         success: false,

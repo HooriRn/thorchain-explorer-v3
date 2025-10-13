@@ -1,37 +1,43 @@
 "use client";
 
 import * as React from "react";
-import * as ProgressPrimitive from "@radix-ui/react-progress";
+import styles from "./progress.module.css";
 
-import { cn } from "@/lib/utils";
+interface ProgressProps {
+  width: number;
+  height?: string;
+  extraText?: string;
+  color?: string;
+  className?: string;
+}
 
 function Progress({
+  width,
+  height = "10px",
+  extraText,
+  color = "var(--primary-color)",
   className,
-  value,
-  ...props
-}: React.ComponentProps<typeof ProgressPrimitive.Root>) {
+}: ProgressProps) {
+  const vars = {
+    "--bar-height": height,
+  } as React.CSSProperties;
+
   return (
-    <ProgressPrimitive.Root
-      data-slot="progress"
-      className={cn(
-        "relative h-2 w-full overflow-hidden rounded-full",
-        className
-      )}
-      style={{
-        backgroundColor: "var(--border)",
-        border: "1px solid var(--border)",
-      }}
-      {...props}
+    <div
+      className={`${styles["progress-wrapper"]} ${className || ""}`}
+      style={vars}
     >
-      <ProgressPrimitive.Indicator
-        data-slot="progress-indicator"
-        className="h-full w-full flex-1 transition-all duration-300 ease-in-out"
+      <div
+        className={styles["progress-bar"]}
         style={{
-          transform: `translateX(-${100 - (value || 0)}%)`,
-          backgroundColor: "var(--primary)",
+          width: (width > 100 ? 100 : width) + "%",
+          background: color,
         }}
       />
-    </ProgressPrimitive.Root>
+      {extraText && (
+        <span className={styles["progress-text"]}>{extraText}</span>
+      )}
+    </div>
   );
 }
 

@@ -48,10 +48,11 @@
   --badge-gray-text: #6c757d;
   --badge-green-bg: rgba(44, 190, 140, 0.1);
   --badge-green-text: #2cbe8c;
-
+  --red: rgb(155 28 28);
   --badge-padding: 0.25rem 0.5rem;
   --badge-border-radius: 0.5rem;
   --badge-font-size: 0.75rem;
+  --green: #81c784;
   --badge-font-weight: 500;
 }
 
@@ -64,7 +65,8 @@
   --popover: oklch(0.21 0.006 285.885);
   --popover-foreground: oklch(0.985 0 0);
   --bgt-color: rgba(25, 28, 30, 0.7);
-
+  --green: #21c187;
+  --red: #f04832;
   --gradient-left: #14191f;
   --gradient-right: #101317;
   --font-color: #9f9f9f;

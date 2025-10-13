@@ -1,0 +1,221 @@
+.version-progress {
+  text-align: center;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.checkmark {
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--primary);
+}
+.sec-color {
+  color: var(--sec-font-color);
+}
+
+.grid-network {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-gap: 0.5rem;
+  gap: 0.5rem;
+}
+
+.chain-table {
+  width: 100%;
+}
+
+.chain-table th {
+  text-align: left;
+  color: var(--sec-font-color);
+  text-wrap: nowrap;
+}
+
+.chain-table td {
+  color: var(--font-color);
+  text-wrap: nowrap;
+}
+
+.asset-cell {
+  display: flex;
+}
+
+.chain-col {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.chain-status .status-header {
+  color: var(--sec-font-color);
+}
+
+.monitor-cell {
+  width: 100px !important;
+}
+
+.vgt-table {
+  width: 100%;
+}
+
+.net-table {
+  border-collapse: collapse;
+}
+
+.net-table th,
+.net-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.net-table th {
+  background-color: var(--bg-secondary);
+  font-weight: 600;
+}
+
+.mono {
+  font-family: "Courier New", monospace;
+}
+
+.center {
+  text-align: center;
+}
+
+.th-center {
+  text-align: center;
+}
+
+.sec-color {
+  color: var(--sec-font-color);
+}
+
+.progress-card h3 {
+  color: var(--font-color);
+}
+
+.table-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.progress-container {
+  margin-bottom: 1rem;
+}
+
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Ensure table takes full width */
+.tableContainer [data-table-library_table] {
+  width: 100%;
+  min-width: 100%;
+}
+
+.tableContainer [data-table-library_header] {
+  width: 100%;
+}
+
+.tableContainer [data-table-library_body] {
+  width: 100%;
+}
+
+.tableContainer [data-table-library_row] {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.tableContainer [data-table-library_cell] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  min-height: 40px;
+  text-align: center;
+}
+
+.hashCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  position: relative;
+}
+
+.numericCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.right {
+  text-align: right;
+}
+
+.footerStat {
+  margin-top: 1rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.tableRow {
+  border-bottom: 1px solid var(--border);
+}
+
+.tableRow:hover {
+  background-color: var(--muted);
+}
+
+.assetItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.assetItem span {
+  font-weight: 500;
+  color: var(--font-color);
+}
+
+.chainCol {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.statusCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tableIcon {
+  height: 1rem;
+  width: 1rem;
+  fill: currentColor;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tableIcon svg {
+  height: 100%;
+  width: 100%;
+  fill: inherit;
+}
+
+.tableContainer :global(.css-1bcw7up-CELL_CONTAINER_STYLE-Cell) > div {
+  -webkit-flex: none;
+  -ms-flex: 1;
+  flex: none;
+}

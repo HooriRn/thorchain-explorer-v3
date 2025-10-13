@@ -10,6 +10,7 @@ interface EChartsWrapperProps {
   data: any;
   options?: any;
   height?: string;
+  width?: string;
   className?: string;
 }
 
@@ -18,6 +19,7 @@ const EChartsWrapper: React.FC<EChartsWrapperProps> = ({
   data,
   options = {},
   height = "300px",
+  width = "100%",
   className = "",
 }) => {
   const theme = useTheme();
@@ -183,18 +185,61 @@ const EChartsWrapper: React.FC<EChartsWrapperProps> = ({
             radius: type === "doughnut" ? ["40%", "70%"] : "70%",
             center: options?.center || ["50%", "50%"],
             label: {
-              show: options?.label?.show || false,
+              show:
+                options?.label?.show !== undefined ? options.label.show : false,
               position: options?.label?.position || "inside",
-              formatter: options?.label?.formatter || "{b}: {c} ({d}%)",
-              fontSize: options?.label?.fontSize || 12,
+              formatter:
+                options?.label?.formatter ||
+                function (params: any) {
+                  return `{a|${params.name}: ${params.value}}`;
+                },
+              distanceToLabelLine: options?.label?.distanceToLabelLine || 5,
               color: options?.label?.color || "var(--font-color)",
+              fontSize: options?.label?.fontSize || 12,
+              fontFamily: options?.label?.fontFamily || "Montserrat",
+              textStyle: {
+                color:
+                  options?.label?.textStyle?.color ||
+                  options?.label?.color ||
+                  "var(--font-color)",
+                fontSize:
+                  options?.label?.textStyle?.fontSize ||
+                  options?.label?.fontSize ||
+                  12,
+                fontFamily:
+                  options?.label?.textStyle?.fontFamily ||
+                  options?.label?.fontFamily ||
+                  "Montserrat",
+              },
+              rich: {
+                a: {
+                  color:
+                    options?.label?.rich?.a?.color ||
+                    options?.label?.textStyle?.color ||
+                    options?.label?.color ||
+                    "var(--font-color)",
+                  fontSize:
+                    options?.label?.rich?.a?.fontSize ||
+                    options?.label?.textStyle?.fontSize ||
+                    options?.label?.fontSize ||
+                    12,
+                  fontFamily:
+                    options?.label?.rich?.a?.fontFamily ||
+                    options?.label?.textStyle?.fontFamily ||
+                    options?.label?.fontFamily ||
+                    "Montserrat",
+                },
+              },
             },
             labelLine: {
-              show: options?.labelLine?.show || false,
+              show:
+                options?.labelLine?.show !== undefined
+                  ? options.labelLine.show
+                  : false,
               length: options?.labelLine?.length || 15,
               length2: options?.labelLine?.length2 || 10,
               lineStyle: {
-                color: options?.labelLine?.lineStyle?.color || "#666666",
+                color: options?.labelLine?.lineStyle?.color || "#999999",
                 width: options?.labelLine?.lineStyle?.width || 1,
               },
             },
@@ -301,7 +346,7 @@ const EChartsWrapper: React.FC<EChartsWrapperProps> = ({
   }, [type, data, options, theme]);
 
   return (
-    <div style={{ height }} className={className}>
+    <div style={{ height, width }} className={className}>
       <ReactECharts
         option={chartOptions}
         style={{ height: "100%", width: "100%" }}

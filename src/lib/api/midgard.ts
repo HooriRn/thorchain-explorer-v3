@@ -1,5 +1,6 @@
 import { apiClient } from "./client";
 import { getNetworkConfig, getCurrentNetwork } from "./config";
+import { getInfraEarnings } from "./infra";
 
 export interface Stats {
   [key: string]: any;
@@ -185,12 +186,11 @@ export class MidgardAPI {
   }
 
   async getEarningHistory(count = 30): Promise<EarningsHistory[]> {
-    if (this.network === "mainnet") {
-      const { getInfraEarnings } = await import("./infra");
-      return getInfraEarnings({
-        interval: "day",
+    if (process.env.NETWORK === 'mainnet') {
+      return await getInfraEarnings({
+        interval: 'day',
         count,
-      });
+      })
     }
     const response = await apiClient.get<EarningsHistory[]>(
       `history/earnings?interval=day&count=${count || 60}`
@@ -269,6 +269,7 @@ export class MidgardAPI {
     return response.data;
   }
 }
+
 
 export const midgardAPI = new MidgardAPI();
 

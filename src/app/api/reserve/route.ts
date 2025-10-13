@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTradeAssets } from "@/lib/api";
+import { getReserveHistory } from "@/lib/api";
 
 export async function GET(request: NextRequest) {
   try {
-    const tradeAssets = await getTradeAssets();
+    const reserveData = await getReserveHistory();
 
     return NextResponse.json({
       success: true,
-      data: tradeAssets,
+      data: reserveData,
     });
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to fetch trade assets",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: "Failed to fetch reserve data",
       },
       { status: 500 }
     );

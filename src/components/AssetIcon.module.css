@@ -7,7 +7,7 @@
     position: relative;
     width: var(--asset-width);
     height: var(--asset-height);
-  
+    margin-right: 0.5rem;
     .asset-icon {
       width: var(--asset-width);
       height: var(--asset-height);

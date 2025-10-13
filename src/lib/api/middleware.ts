@@ -434,7 +434,7 @@ export class MiddlewareAPI {
 
   async getReserveHistory(): Promise<ReserveHistory[]> {
     const response = await apiClient.getExternal<ReserveHistory[]>(
-      `${this.config.SERVER_URL}api/reserveHistory`
+      `${this.config.SERVER_URL}api/reserve`
     );
     return response.data;
   }

@@ -13,8 +13,6 @@ export async function GET(request: NextRequest) {
       data: poolsHistory,
     });
   } catch (error) {
-    console.error("Error fetching pools history:", error);
-
     return NextResponse.json(
       {
         success: false,

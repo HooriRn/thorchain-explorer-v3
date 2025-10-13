@@ -85,13 +85,6 @@ const PooledView: React.FC = () => {
         (res) => res.json()
       );
 
-      console.log("PooledView API responses:", {
-        day: poolsDataDay,
-        week: poolsDataWeek,
-        month: poolsDataMonth,
-        year: poolsDataYear,
-      });
-
       return {
         day: poolsDataDay.success ? poolsDataDay.data : poolsDataDay,
         week: poolsDataWeek.success ? poolsDataWeek.data : poolsDataWeek,
@@ -99,7 +92,6 @@ const PooledView: React.FC = () => {
         year: poolsDataYear.success ? poolsDataYear.data : poolsDataYear,
       };
     } catch (error) {
-      console.error("PooledView API error:", error);
       return undefined;
     } finally {
       setLoading(false);
@@ -107,8 +99,6 @@ const PooledView: React.FC = () => {
   };
 
   const getTotalInfo = (poolDatum: any) => {
-    console.log("PooledView poolDatum:", poolDatum);
-
     const newTotalInfo: TotalInfo = {
       pooled: 0,
       day: {
@@ -147,14 +137,10 @@ const PooledView: React.FC = () => {
 
     const updatePeriod = (period: keyof TotalInfo, ppy: number) => {
       if (!poolDatum) {
-        console.log(`No poolDatum for period: ${period}`);
         return;
       }
 
-      console.log(`Processing period: ${period}`, poolDatum[period]);
-
       if (!poolDatum[period]?.pools) {
-        console.log(`No pools data for period: ${period}`);
         return;
       }
 
@@ -182,13 +168,6 @@ const PooledView: React.FC = () => {
 
       currentPeriod.earningsAPR = ep * ppy;
       currentPeriod.avgFee = ve * 1e4;
-
-      console.log(`${period} Fee Ratio calculation:`, {
-        liquidityFees: currentPeriod.liquidityFees,
-        volume: currentPeriod.volume,
-        ve: ve,
-        avgFee: currentPeriod.avgFee,
-      });
     };
 
     updatePeriod("day", 365);
@@ -196,7 +175,6 @@ const PooledView: React.FC = () => {
     updatePeriod("month", 12);
     updatePeriod("year", 1);
 
-    console.log("Final newTotalInfo:", newTotalInfo);
     setTotalInfo(newTotalInfo);
   };
 

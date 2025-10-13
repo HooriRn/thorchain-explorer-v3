@@ -339,9 +339,6 @@ const PoolsMain: React.FC = () => {
         );
 
         const volume = (+p.volume24h / 10 ** 8) * currentRunePrice;
-        console.log(
-          `Pool ${p.asset}: volume24h=${p.volume24h}, runePrice=${currentRunePrice}, volume=${volume}`
-        );
 
         return {
           status: p.status,

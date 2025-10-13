@@ -613,7 +613,6 @@ const EarningsChart: React.FC<EarningsChartProps> = ({
             </div>`;
           }
 
-          // Default formatting for other items
           const bondEarning = items.find(
             (p: any) => p.seriesName === "Bond Earning"
           );
@@ -630,7 +629,6 @@ const EarningsChart: React.FC<EarningsChartProps> = ({
             (p: any) => p.seriesName === "TCY Stake Reward"
           );
 
-          // Calculate Gross System Income by filtering out EOD Earning and Affiliate Fee
           const grossSystemIncomeItems = items.filter(
             (p: any) =>
               p.seriesName !== "EOD Earning" &&
