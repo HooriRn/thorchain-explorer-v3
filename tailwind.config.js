@@ -12,6 +12,9 @@ export const content = [
 export const darkMode = ["class"];
 export const theme = {
   extend: {
+    fontFamily: {
+      sans: ['Montserrat', 'sans-serif'],
+    },
     colors: {
       background: "var(--background)",
       foreground: "var(--foreground)",

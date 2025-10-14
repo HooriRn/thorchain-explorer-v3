@@ -81,8 +81,7 @@ const Table: React.FC<TableProps> = ({
         background: transparent;
         border-collapse: collapse;
         table-layout: auto;
-          text-align: right;
-
+        text-align: right;
         ${customTheme?.Table || ""}
       `,
       Header: `
@@ -101,11 +100,18 @@ const Table: React.FC<TableProps> = ({
         border-bottom: 1px solid var(--border) !important;
         background: transparent;
         color: var(--font-color);
+        min-width: auto;
+         width: auto;
+
+         &:first-child {
+          text-align: left;
+        }
+
         ${customTheme?.HeaderCell || ""}
       `,
       Body: `
         background: transparent;
-          text-align: right;
+        text-align: right;
         ${customTheme?.Body || ""}
       `,
       Row: `
@@ -124,7 +130,6 @@ const Table: React.FC<TableProps> = ({
         &:not(:last-of-type) > .td {
           border-bottom: 1px solid var(--border) !important;
         }
-        ${customTheme?.Row || ""}
       `,
       Cell: `
         color: var(--sec-font-color);

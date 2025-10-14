@@ -135,6 +135,7 @@ export {
   getAffiliateHistory,
   getAffiliateStats,
   getInfraRUJIMerge,
+  getRUJIStats,
   getTcyInfo,
   getDenoms,
   getContracts,

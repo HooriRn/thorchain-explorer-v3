@@ -222,7 +222,7 @@ const ReserveBreakdownCard: React.FC<ReserveBreakdownCardProps> = ({
           "Network Fee",
           "Gas Reimbursement",
           "Reward Emission",
-          "Income Burn", // Added income burn to legend
+          "Income Burn",
           "Total Income",
         ],
       },
@@ -231,7 +231,7 @@ const ReserveBreakdownCard: React.FC<ReserveBreakdownCardProps> = ({
         getChartColor(1, getCurrentChartTheme(theme)),
         getChartColor(2, getCurrentChartTheme(theme)),
         getChartColor(3, getCurrentChartTheme(theme)),
-        getChartColor(4, getCurrentChartTheme(theme)), // Income burn color
+        getChartColor(4, getCurrentChartTheme(theme)),
         getChartColor(5, getCurrentChartTheme(theme)),
       ],
       grid: {

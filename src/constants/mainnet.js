@@ -125,6 +125,10 @@ export const mainnetNav = {
       link: "/rujira",
       submenu: [
         {
+          name: "Ruji",
+          link: "/rujira",
+        },
+        {
           name: "Secured Assets",
           link: "/rujira/secured",
         },

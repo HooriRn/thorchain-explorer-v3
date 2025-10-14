@@ -28,7 +28,7 @@
 @media (max-width: 480px) {
   .page-container {
     padding: 0 var(--space-1);
-    gap: var(--space-3);
+    gap: var(--space-10);
   }
 }
 

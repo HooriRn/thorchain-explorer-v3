@@ -112,7 +112,6 @@
   overflow-x: auto;
 }
 
-/* Ensure table takes full width */
 .tableContainer [data-table-library_table] {
   width: 100%;
   min-width: 100%;

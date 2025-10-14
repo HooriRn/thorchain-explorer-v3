@@ -362,8 +362,8 @@ const NetworkPage: React.FC = () => {
           activeNodes,
           uptodateNodes,
           metaReserve: reserveHistoryRes?.value?.meta || {},
-          reserveHistory: reserveHistoryRes?.value || null, // Raw reserve history data
-          earningHistory: null, // Will be set after earning history is fetched
+          reserveHistory: reserveHistoryRes?.value || null,
+          earningHistory: null,
           chainsHeight: chainsHeightRes?.value || {},
           loading: false,
         };

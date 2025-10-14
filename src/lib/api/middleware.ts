@@ -468,6 +468,13 @@ export class MiddlewareAPI {
     return response.data;
   }
 
+  async getRUJIStats(): Promise<any> {
+    const response = await apiClient.getExternal(
+      `${this.config.SERVER_URL}api/rujiStats`
+    );
+    return response.data;
+  }
+
   async getDenoms(): Promise<Denom[]> {
     const response = await apiClient.getExternal<Denom[]>(
       `${this.config.SERVER_URL}api/denoms`
@@ -562,6 +569,7 @@ export const getReserveHistory = () => middlewareAPI.getReserveHistory();
 export const getVotes = (period = "30d") => middlewareAPI.getVotes(period);
 export const getBurnedBlocks = () => middlewareAPI.getBurnedBlocks();
 export const getInfraRUJIMerge = () => middlewareAPI.getInfraRUJIMerge();
+export const getRUJIStats = () => middlewareAPI.getRUJIStats();
 export const getExecutionQuality = () => middlewareAPI.getExecutionQuality();
 export const getAffiliateHistory = (params?: Record<string, any>) =>
   middlewareAPI.getAffiliateHistory(params);
