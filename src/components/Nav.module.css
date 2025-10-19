@@ -1,25 +1,22 @@
 .navHeaders {
-  background-color: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  margin: 0 10px 10px;
-  padding: 3px;
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-10);
 }
 
 .preText {
   color: var(--sec-font-color);
-  padding: 0 0.625rem;
-  margin: auto 0;
+  padding: var(--space-0) var(--space-10);
+    margin: auto var(--space-0);
 }
 
 .navItem {
-  border-radius: 5px;
-  color: var(--font-color);
   cursor: pointer;
-  margin: 0 0.1rem;
-  padding: 8px 12px;
-  -webkit-text-decoration: none;
+  padding: var(--space-8) var(--space-12);
+  margin: var(--space-0) 0.1rem;
+  color: var(--font-color);
   text-decoration: none;
+  border-radius: var(--radius-s);
 }
 
 .navItem.active,
@@ -37,11 +34,17 @@
 }
 
 .box {
-  background-color: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  margin: 0 10px 10px;
-  padding: 3px;
+  padding: var(--space-3);
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-width: 1px;
+    margin: var(--space-0) var(--space-10) var(--space-10) var(--space-10);
+    border-radius: var(--radius-s);
+}
+@media (min-width: 1024px) {
+  .navHeaders.box {
+    margin: 0 0 0.625rem 0;
+  }
 }
 
 .navHeaders.box .navItem.active,
@@ -49,8 +52,4 @@
   color: var(--primary);
 }
 
-@media (min-width: 1024px) {
-  .navHeaders.box {
-    margin: 0 0 0.625rem 0;
-  }
-}
+

@@ -343,14 +343,14 @@ export class MiddlewareAPI {
 
   async getAffiliateSwapsWeekly(): Promise<AffiliateSwap[]> {
     const response = await apiClient.getExternal<AffiliateSwap[]>(
-      `${this.config.SERVER_URL}api/affiliateSwapsWeekly`
+      `${this.config.SERVER_URL}api/weeklyLeaderboard`
     );
     return response.data;
   }
 
   async getAffiliateSwapsDaily(): Promise<AffiliateSwap[]> {
     const response = await apiClient.getExternal<AffiliateSwap[]>(
-      `${this.config.SERVER_URL}api/affiliateSwapsDaily`
+      `${this.config.SERVER_URL}api/dailyLeaderboard`
     );
     return response.data;
   }

@@ -1,0 +1,396 @@
+.burnContainer {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.burnCard {
+  flex: 1;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1rem 2rem;
+  font-size: 1.875rem;
+  color: var(--sec-font-color);
+  max-width: 50rem;
+  margin: 0 0.625rem;
+}
+
+.burnCard h3 {
+  font-size: 1.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.burnIcon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  fill: #ffa86b;
+}
+
+.totalResData {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 1rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.burnedValue {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: auto;
+}
+
+.burnedValue h1 {
+  margin: 0.5rem;
+  font-size: 3rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .burnedValue h1 {
+    font-size: 4rem;
+  }
+}
+
+.totalBurnedContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.burnedItem {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.totalBurned {
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: var(--sec-font-color);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.unitSwitcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 53px;
+  height: 27px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border);
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 19px;
+  width: 21px;
+  border-radius: 50%;
+  left: 4px;
+  bottom: 4px;
+  background-color: var(--sec-font-color);
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: #ffa86b;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.unitLabel {
+  font-size: 0.875rem;
+  color: var(--font-color);
+  margin-left: 0.625rem;
+}
+
+.burnChart {
+  height: 200px;
+  min-height: 200px;
+  width: 100%;
+}
+
+.intervalButtons {
+  display: flex;
+  align-items: center;
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.3125rem;
+  gap: 0.125rem;
+  width: 21rem;
+  margin-top: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .intervalButtons {
+    width: 28rem;
+  }
+}
+
+.intervalButtons button {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  flex: 1;
+  padding: 0.625rem 0.25rem;
+  font-size: 1.125rem;
+  color: var(--bs-secondary-color);
+  background-color: transparent;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.intervalButtons button.active {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  margin: 1.5px 0.3125rem;
+  background-color: var(--border);
+  color: #ffa86b;
+}
+
+.intervalButtons button:hover {
+  color: #ffa86b;
+}
+
+.balanceDetails {
+  align-items: center;
+  text-align: center;
+  max-width: 50rem;
+  margin: 0.5rem auto;
+}
+
+.blockCard {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 0.5rem 1rem;
+  max-width: 50rem;
+  margin: 1rem 0.625rem;
+}
+
+@media (min-width: 1024px) {
+  .blockCard {
+    margin: 1rem auto;
+  }
+}
+
+.blockItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+  margin: 0.625rem;
+  animation: blockEnter 1s ease-out;
+}
+
+.blockInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.blockInfo .height {
+  font-size: 1.125rem;
+  color: var(--sec-font-color);
+}
+
+.rightSection {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+}
+
+.burnInfo {
+  color: #ffa86b;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.loaderItem {
+  margin: 2rem 0;
+}
+@keyframes blockEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.blockEnter {
+  opacity: 0;
+  transform: translateY(-30px);
+}
+
+.blockEnterActive {
+  transition: all 1s;
+}
+
+.blockEnterActive .blockInfo .height {
+  color: #ffa86b;
+}
+.headerClass {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tableStatCard {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  min-width: 200px;
+  text-align: center;
+}
+
+.tableStatCard .name {
+  font-size: 0.875rem;
+  color: var(--font-color);
+  margin-bottom: 0.5rem;
+}
+
+.tableStatCard .value {
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: var(--sec-font-color);
+}
+.errorContainer {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.errorMessage {
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  max-width: 50rem;
+  text-align: center;
+  color: #dc2626;
+}
+
+.errorMessage p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+}
+
+.retryButton {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.retryButton:hover {
+  background-color: #b91c1c;
+}
+
+.noDataMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--sec-font-color);
+  font-size: 0.875rem;
+}
+
+.noDataMessage p {
+  margin: 0;
+  text-align: center;
+}
+.burnChart :global(.tooltip-header) {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.burnChart :global(.data-color) {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.burnChart :global(.tooltip-body) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.burnChart :global(.tooltip-body span) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.burnChart :global(.tooltip-body b) {
+  color: #ffa86b;
+  font-weight: bold;
+}
+@media (min-width: 1024px) {
+  .burnCard {
+    margin: auto;
+  }
+}
