@@ -441,7 +441,7 @@ export class MiddlewareAPI {
 
   async getVotes(period = "30d"): Promise<Vote[]> {
     const response = await apiClient.getExternal<Vote[]>(
-      `${this.config.SERVER_URL}api/votes`,
+      `${this.config.SERVER_URL}votes`,
       { period }
     );
     return response.data;

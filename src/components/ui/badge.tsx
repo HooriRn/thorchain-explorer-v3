@@ -22,6 +22,7 @@ const badgeVariants = cva(
         info: "border-transparent",
         gray: "border-transparent",
         green: "border-transparent",
+        red: "border-transparent",
       },
     },
     defaultVariants: {
@@ -79,6 +80,12 @@ function Badge({
           ...baseStyles,
           backgroundColor: "var(--badge-green-bg)",
           color: "var(--badge-green-text)",
+        };
+      case "red":
+        return {
+          ...baseStyles,
+          border: "1px solid var(--badge-red-bg)",
+          borderRadius: "999px",
         };
     }
   };

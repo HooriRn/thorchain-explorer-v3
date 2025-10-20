@@ -1,0 +1,18 @@
+.voteList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.moreButton {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: var(--font-size-xs, 12px);
+  transition: color 0.3s ease;
+}
+
+.moreButton:hover {
+  color: var(--primary-color-dark);
+}

@@ -1,0 +1,170 @@
+.votesContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-16, 1rem);
+}
+
+.votesContainer :global(.card-container) {
+  min-width: 100%;
+  margin: var(--space-0);
+}
+
+@media (min-width: 768px) {
+  .votesContainer :global(.card-container) {
+    min-width: 520px;
+  }
+}
+
+.searchContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vote-search-container {
+  display: flex;
+  flex: 1;
+  margin: 8px 10px;
+  position: relative;
+}
+
+.searchInput {
+  background-color: var(--card);
+  border: 1px solid var(--border) !important;
+  border-radius: 8px;
+  color: var(--sec-font-color);
+  flex: 1;
+  font-size: 15px;
+  font-weight: 450;
+  margin: 2px;
+  outline: none;
+  padding: 12px;
+}
+
+.searchIcon {
+  height: 24px;
+  position: absolute;
+  width: 20px;
+  fill: var(--font-color);
+  background: var(--card);
+  box-sizing: content-box;
+  cursor: pointer;
+  padding-left: 5px;
+  right: 0.8rem;
+  top: calc(50% - 0.8rem);
+  transition: fill 0.3s ease;
+}
+
+.recentVotesHeader {
+  color: var(--sec-font-color);
+  margin: var(--space-18, 1.2rem) var(--space-12, 0.75rem);
+}
+
+.recentVotesContainer {
+  display: flex;
+  flex-direction: row;
+  overflow: auto;
+  padding-bottom: var(--space-8, 0.5rem);
+  margin-bottom: var(--space-8, 0.5rem);
+  gap: var(--space-8, 0.5rem);
+  margin-left: var(--space-10, 1rem);
+  margin-right: var(--space-10, 1rem);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--card);
+}
+
+.recentVoteCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 10px);
+  padding: var(--space-16, 1rem);
+  min-width: 250px;
+  flex: 0 0 auto;
+}
+
+.recentVoteContent {
+  display: flex;
+  gap: 0.5rem;
+  flex-direction: column;
+}
+
+.voteValue {
+  font-size: var(--font-size-md, 16px);
+  font-weight: 600;
+  color: var(--sec-font-color);
+}
+
+.keyName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-sm, 13px);
+}
+
+.voteDate {
+  font-size: var(--font-size-sm, 13px);
+  color: var(--sec-font-color);
+  margin-top: var(--space-8, 0.5rem);
+}
+
+.danger {
+  background: rgba(231, 76, 60, 0.12);
+  border-color: #e74c3c;
+}
+
+.cardBody {
+  padding: var(--space-16, 1rem);
+}
+
+.voteSection {
+  margin-bottom: var(--space-16, 1rem);
+}
+
+.progressSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progressOvertext {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-sm, 13px);
+}
+
+.keyName {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.keyName b {
+  color: var(--sec-font-color);
+}
+
+.keyName small {
+  color: var(--font-color);
+}
+
+.voteFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-8, 0.5rem);
+  flex-wrap: wrap;
+  gap: var(--space-8, 0.5rem);
+}
+
+.change24h {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--sec-font-color);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.current-badge {
+  font-weight: 700 !important;
+  justify-content: center;
+  line-height: 1;
+  padding: 2px 5px;
+}
