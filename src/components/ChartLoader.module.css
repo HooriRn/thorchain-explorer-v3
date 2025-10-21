@@ -1,6 +1,5 @@
 .chartLoaderContainer {
   width: 100%;
-  min-height: 400px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -18,7 +17,6 @@
   flex: 1;
   display: flex;
   align-items: stretch;
-  min-height: 350px;
 }
 
 .chartAreaSkeleton {
@@ -26,7 +24,6 @@
   display: flex;
   align-items: flex-end;
   position: relative;
-  min-height: 350px;
   padding-bottom: 0;
 }
 

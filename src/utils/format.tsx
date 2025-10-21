@@ -60,6 +60,36 @@ export const formatUSDValue = (value: number) => {
   return `$${formatNumber(value, { decimalScale: 2 })}`;
 };
 
+/**
+ * Formats USD values with proper zero handling
+ * Always shows $0.00 instead of $<0.01
+ * @param value - The USD value to format
+ * @returns Formatted USD string
+ */
+export const formatUSDValueFixed = (
+  value: number | string | null | undefined
+): string => {
+  if (value === null || value === undefined || value === "") {
+    return "$0.00";
+  }
+
+  const numValue = typeof value === "string" ? parseFloat(value) : value;
+
+  if (isNaN(numValue)) {
+    return "$0.00";
+  }
+
+  if (numValue === 0) {
+    return "$0.00";
+  }
+
+  if (numValue < 0.01) {
+    return "$0.00";
+  }
+
+  return `$${numValue.toFixed(2)}`;
+};
+
 export interface TrendFilterOptions {
   decimals?: number;
   compact?: boolean;
@@ -143,10 +173,10 @@ export const formatTrendNumber = (
   }
 
   if (numValue > 0) {
-    return currency ? `${currencySymbol}<0.01` : "<0.01";
+    return currency ? `${currencySymbol}0.00` : "0.00";
   }
 
-  return currency ? `${currencySymbol}0` : "0";
+  return currency ? `${currencySymbol}0.00` : "0.00";
 };
 
 /**

@@ -7,6 +7,7 @@
 @import "./charts.css";
 @import "./navigation.css";
 @import "./responsive.css";
+@import './normalize.css';
 
 .clickable {
   text-decoration: none;

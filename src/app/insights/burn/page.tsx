@@ -3,11 +3,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import moment from "moment";
-import { useRunePrice, useTheme } from "@/lib/store";
+import { useRunePrice, useSetRunePrice, useTheme } from "@/lib/store";
 import RuneAsset from "@/components/RuneAsset";
 import CardsHeader from "@/components/CardsHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import ChartLoader from "@/components/ChartLoader";
+import Rune from "@/assets/images/rune.svg";
+import { getDuration } from "@/utils/global";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), {
   ssr: false,
@@ -33,7 +35,11 @@ const SkeletonItem: React.FC<{
     </div>
   );
 };
-import { formatVueNumber, formatTrendCurrency } from "@/utils/format";
+import {
+  formatVueNumber,
+  formatTrendCurrency,
+  formatUSDValueFixed,
+} from "@/utils/format";
 import { api } from "@/lib/api";
 import BurnIcon from "@/assets/images/burn.svg";
 import styles from "./burn.module.css";
@@ -127,6 +133,7 @@ const BurnPage: React.FC = () => {
   const [retryCount, setRetryCount] = useState(0);
 
   const runePrice = useRunePrice();
+  const setRunePrice = useSetRunePrice();
   const intervals = {
     "24h": "24H",
     "7d": "7D",
@@ -140,10 +147,6 @@ const BurnPage: React.FC = () => {
   }, [selectedUnit, totalBurned, runePrice]);
   const toggleUnit = useCallback(() => {
     setSelectedUnit((prev) => (prev === "rune" ? "dollar" : "rune"));
-  }, []);
-
-  const getDuration = useCallback((timestamp: number) => {
-    return moment().diff(moment(timestamp * 1000), "seconds");
   }, []);
 
   const formatBurn = useCallback((data: any, intervalType: string) => {
@@ -244,26 +247,56 @@ const BurnPage: React.FC = () => {
     return {
       tooltip: {
         trigger: "axis",
+        backgroundColor: "transparent",
+        borderColor: "transparent",
+        textStyle: {
+          color: "transparent",
+        },
+        extraCssText:
+          "background-color: var(--bgt-color) !important; backdrop-filter: blur(8px); box-shadow: none; border: 1px var(--border) solid; border-radius: var(--radius-lg); padding: var(--space-10); font-family: 'Montserrat', sans-serif; font-size: var(--font-size-sm); color: var(--sec-font-color);",
         formatter: (param: any) => {
-          return `
+          if (!param || param.length === 0) return "";
+
+          const dataIndex = param[0].dataIndex;
+          const date = validLabels[dataIndex] || "";
+
+          let tooltipContent = `
             <div class="tooltip-header">
-              <div class="data-color" style="background-color: ${
-                param[0]?.color || "#ff9962"
-              }"></div>
-              ${param[0]?.name || "Burned Rune"}
+              <span>${date}</span>
             </div>
             <div class="tooltip-body">
-              ${param
-                .map(
-                  (p: any) => `<span>
-                    <span>${p.seriesName}</span>
-                    <b>${
-                      p.value ? formatVueNumber(p.value, "0,0.00") : "-"
-                    } RUNE</b>
-                  </span>`
-                )
-                .join("")}
-            </div>`;
+          `;
+
+          param.forEach((p: any) => {
+            const value = p.value || 0;
+            const label = p.seriesName || "Burned Rune";
+
+            let formattedValue = "";
+            if (value >= 1e9) {
+              formattedValue = `${(value / 1e9).toFixed(1)}B RUNE`;
+            } else if (value >= 1e6) {
+              formattedValue = `${(value / 1e6).toFixed(1)}M RUNE`;
+            } else if (value >= 1e3) {
+              formattedValue = `${(value / 1e3).toFixed(1)}K RUNE`;
+            } else {
+              formattedValue = `${formatVueNumber(value, "0,0.00")} RUNE`;
+            }
+
+            tooltipContent += `
+              <span class="tooltip-item space">
+                <span class="series-name-color">
+                  <span class="data-color" style="background-color: ${
+                    p.color || "#ff9962"
+                  };"></span>
+                  <span>${label}</span>
+                </span>
+                <span>${formattedValue}</span>
+              </span>
+            `;
+          });
+
+          tooltipContent += `</div>`;
+          return tooltipContent;
         },
       },
       legend: {
@@ -326,20 +359,24 @@ const BurnPage: React.FC = () => {
       uncirculatedSupply !== undefined &&
       runePrice
     ) {
-      setGeneralStatsDetails([
+      const statsDetails = [
         {
           name: "Total Supply",
           value: `${formatVueNumber(totalSupply, "0.00a")} RUNE`,
-          extraText: formatTrendCurrency(totalSupply * runePrice),
+          extraText: `$${formatVueNumber(totalSupply * runePrice, "0,0.00")}`,
           description: "Total RUNE breakdown (click for more info)",
           link: "/network",
         },
         {
           name: "Reserve",
           value: `${formatVueNumber(uncirculatedSupply, "0.00a")} RUNE`,
-          extraText: formatTrendCurrency(uncirculatedSupply * runePrice),
+          extraText: `$${formatVueNumber(
+            uncirculatedSupply * runePrice,
+            "0,0.00"
+          )}`,
         },
-      ]);
+      ];
+      setGeneralStatsDetails(statsDetails);
     }
   }, [totalSupply, uncirculatedSupply, runePrice]);
 
@@ -391,31 +428,35 @@ const BurnPage: React.FC = () => {
             ),
           };
         }
+        let currentTotalSupply = 500000000; 
+
         try {
-          const supplyData = await api.thornode.getSupply();
-          setTotalSupply(+supplyData.data.amount.amount / 1e8);
+          const supplyData = await fetch("/api/supply");
+          const supplyDataJson = await supplyData.json();
+          currentTotalSupply = +supplyDataJson.data.amount.amount / 1e8;
+          setTotalSupply(currentTotalSupply);
         } catch (supplyError) {
           console.warn("Failed to fetch supply data:", supplyError);
-          setTotalSupply(500000000); // Fallback value
+          setTotalSupply(500000000);
         }
-        try {
-          const uncirculatedData = await api.thornode.getBalance(
-            "thor1dheycdevq39qlkxs2a6wuuzyn4aqxhve4qxtxt"
-          );
 
-          const runeBalance = uncirculatedData.data.result.find(
+        try {
+          const uncirculatedData = await fetch(
+            "/api/balance?address=thor1dheycdevq39qlkxs2a6wuuzyn4aqxhve4qxtxt"
+          );
+          const uncirculatedDataJson = await uncirculatedData.json();
+          const runeBalance = uncirculatedDataJson.data.result.find(
             (item: any) => item.denom === "rune"
           );
-
           const uncirculated = runeBalance
             ? Number(runeBalance.amount) / 1e8
             : 0;
           setUncirculatedSupply(uncirculated);
-          setCirculatingSupply((totalSupply || 500000000) - uncirculated);
+          setCirculatingSupply(currentTotalSupply - uncirculated);
         } catch (balanceError) {
           console.warn("Failed to fetch balance data:", balanceError);
           setUncirculatedSupply(0);
-          setCirculatingSupply(totalSupply || 500000000);
+          setCirculatingSupply(500000000);
         }
 
         const chartData = formatBurn(
@@ -456,8 +497,21 @@ const BurnPage: React.FC = () => {
           });
         }
 
+        if (!runePrice || runePrice === 0) {
+          try {
+            const runePriceData = await api.insights.getRunePrice();
+            if (runePriceData && runePriceData.length > 0) {
+              setRunePrice(Number.parseFloat(runePriceData[0].price));
+            }
+          } catch (runePriceError) {
+            console.warn("Failed to fetch rune price:", runePriceError);
+          }
+        }
+
         setChartLoading(false);
-        updateStatsDetails();
+        setTimeout(() => {
+          updateStatsDetails();
+        }, 100);
         setRetryCount(0);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -468,7 +522,7 @@ const BurnPage: React.FC = () => {
           setApiError(`Connection failed. Retrying... (${retryAttempt + 1}/3)`);
           setTimeout(() => {
             fetchData(intervalKey, retryAttempt + 1);
-          }, 2000 * (retryAttempt + 1)); // Exponential backoff
+          }, 2000 * (retryAttempt + 1)); 
         } else {
           setApiError(
             "Unable to connect to the network. Please check your connection and try again."
@@ -521,6 +575,16 @@ const BurnPage: React.FC = () => {
     if (!isClient) return;
     updateStatsDetails();
   }, [isClient, updateStatsDetails]);
+
+  useEffect(() => {
+    if (
+      totalSupply !== undefined &&
+      uncirculatedSupply !== undefined &&
+      runePrice
+    ) {
+      updateStatsDetails();
+    }
+  }, [totalSupply, uncirculatedSupply, runePrice, updateStatsDetails]);
   const renderErrorState = () => {
     if (!apiError) return null;
 
@@ -546,11 +610,13 @@ const BurnPage: React.FC = () => {
       return (
         <h1>
           {selectedUnit === "rune" ? (
-            <RuneAsset showIcon={false} />
+            <>
+              <Rune className={styles.runeCur}></Rune>
+              {formatVueNumber(totalBurned, "0,0.00")}
+            </>
           ) : (
-            <span>$</span>
+            `$${formatVueNumber(displayTotalBurned!, "0,0.00")}`
           )}
-          {formatVueNumber(displayTotalBurned!, "0,0.00")}
         </h1>
       );
     }
@@ -563,16 +629,18 @@ const BurnPage: React.FC = () => {
         <div className={styles.burnedItem}>
           <div className={styles.totalBurned}>
             {selectedUnit === "rune" ? (
-              <SkeletonItem
-                loading={!totalBurned24h}
-                style={{ minWidth: "100px" }}
-              >
-                {formatVueNumber(totalBurned24h!, "0,0.00")}
+              <>
+                <SkeletonItem
+                  loading={!totalBurned24h}
+                  style={{ minWidth: "70px" }}
+                >
+                  {formatVueNumber(totalBurned24h!, "0,0.00")}
+                </SkeletonItem>
                 <RuneAsset showIcon={false} />
-              </SkeletonItem>
+              </>
             ) : (
               <span>
-                {formatTrendCurrency((totalBurned24h || 0) * runePrice)}
+                ${formatVueNumber((totalBurned24h || 0) * runePrice, "0,0.00")}
               </span>
             )}
           </div>
@@ -584,16 +652,18 @@ const BurnPage: React.FC = () => {
         <div className={styles.burnedItem}>
           <div className={styles.totalBurned}>
             {selectedUnit === "rune" ? (
-              <SkeletonItem
-                loading={!totalBurned7d}
-                style={{ minWidth: "100px" }}
-              >
-                {formatVueNumber(totalBurned7d!, "0,0.00")}
+              <>
+                <SkeletonItem
+                  loading={!totalBurned7d}
+                  style={{ minWidth: "70px" }}
+                >
+                  {formatVueNumber(totalBurned7d!, "0,0.00")}
+                </SkeletonItem>
                 <RuneAsset showIcon={false} />
-              </SkeletonItem>
+              </>
             ) : (
               <span>
-                {formatTrendCurrency((totalBurned7d || 0) * runePrice)}
+                ${formatVueNumber((totalBurned7d || 0) * runePrice, "0,0.00")}
               </span>
             )}
           </div>
@@ -605,16 +675,18 @@ const BurnPage: React.FC = () => {
         <div className={styles.burnedItem}>
           <div className={styles.totalBurned}>
             {selectedUnit === "rune" ? (
-              <SkeletonItem
-                loading={!totalBurned30d}
-                style={{ minWidth: "100px" }}
-              >
-                {formatVueNumber(totalBurned30d!, "0,0.00")}
+              <>
+                <SkeletonItem
+                  loading={!totalBurned30d}
+                  style={{ minWidth: "75px" }}
+                >
+                  {formatVueNumber(totalBurned30d!, "0,0.00")}
+                </SkeletonItem>
                 <RuneAsset showIcon={false} />
-              </SkeletonItem>
+              </>
             ) : (
               <span>
-                {formatTrendCurrency((totalBurned30d || 0) * runePrice)}
+                ${formatVueNumber((totalBurned30d || 0) * runePrice, "0,0.00")}
               </span>
             )}
           </div>
@@ -634,9 +706,9 @@ const BurnPage: React.FC = () => {
               Burned RUNE
             </h3>
             <div className={styles.totalResData}>
-              <div className={styles.burnedValue}>
+              <h1 className={styles.burnedValue}>
                 <Skeleton height="4rem" width="12rem" />
-              </div>
+              </h1>
             </div>
             <div className={styles.totalBurnedContainer}>
               <div className={styles.unitSwitcher}>
@@ -771,7 +843,9 @@ const BurnPage: React.FC = () => {
                     {formatVueNumber(block.blockHeight, "0,0")}
                   </span>
                   <small className={styles.duration}>
-                    {getDuration(block.timestamp)} Seconds
+                    {parseInt(getDuration(block.timestamp)) < 0
+                      ? `${getDuration(block.timestamp)} Seconds`
+                      : `-${getDuration(block.timestamp)} Seconds`}
                   </small>
                 </div>
                 <div className={styles.rightSection}>
@@ -780,7 +854,7 @@ const BurnPage: React.FC = () => {
                     {block.burnedAmount / 1e8}
                   </div>
                   <small>
-                    {formatTrendCurrency(
+                    {formatUSDValueFixed(
                       (block.burnedAmount / 1e8) * runePrice
                     )}
                   </small>

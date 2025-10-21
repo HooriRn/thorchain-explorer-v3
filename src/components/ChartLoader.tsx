@@ -58,7 +58,10 @@ const ChartLoader: React.FC<ChartLoaderProps> = ({
   };
 
   return (
-    <div className={styles.chartLoaderContainer}>
+    <div
+      className={styles.chartLoaderContainer}
+      style={{ height: `${height}px`, minHeight: `${height}px` }}
+    >
       <div className={styles.chartSkeleton}>
         <div className={styles.chartContentSkeleton}>
           <div className={styles.chartAreaSkeleton}>
