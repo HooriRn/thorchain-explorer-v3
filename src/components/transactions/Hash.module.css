@@ -1,0 +1,19 @@
+.transaction-hash {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clickable {
+  cursor: pointer;
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.clickable:hover {
+  text-decoration: underline;
+}
+
+.mono {
+  font-family: monospace;
+}

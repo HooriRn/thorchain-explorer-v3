@@ -237,19 +237,16 @@ const Leaderboard: React.FC = () => {
         onActiveModeChange={handlePeriodChange}
       />
 
-      {/* Only show CardsHeader when data is available and not loading */}
       {!isLoading && currentOverallInfo && currentOverallInfo.length > 0 && (
         <CardsHeader tableGeneralStats={currentOverallInfo} />
       )}
 
-      {/* Show loading state */}
       {isLoading && (
         <div className={styles.loadingContainer}>
           <div className={styles.loadingText}>Loading {period} data...</div>
         </div>
       )}
 
-      {/* Only show tables when data is available and not loading */}
       {!isLoading &&
         currentAffiliateData &&
         currentAffiliateData.length > 0 && (
@@ -286,7 +283,6 @@ const Leaderboard: React.FC = () => {
           </>
         )}
 
-      {/* Show message when no data is available */}
       {!isLoading &&
         (!currentAffiliateData || currentAffiliateData.length === 0) && (
           <div className={styles.noDataContainer}>

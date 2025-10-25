@@ -39,9 +39,12 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching top swaps:", error);
 
-    return NextResponse.json({
-      success: true,
-      data: [],
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to fetch top swaps",
+      },
+      { status: 500 }
+    );
   }
 }
