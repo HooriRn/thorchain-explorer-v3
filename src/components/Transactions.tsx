@@ -13,6 +13,7 @@ import Hash from "./transactions/Hash";
 import SendIcon from "@/assets/images/send.svg";
 import AlertIcon from "@/assets/images/alert.svg";
 import ReceiveIcon from "@/assets/images/receive.svg";
+import { formatNumber } from "@/utils/format";
 import styles from "./Transactions.module.css";
 
 interface Transaction {
@@ -138,26 +139,10 @@ const Transactions: React.FC<TransactionsProps> = ({
       return actions;
     }
 
-    console.log("txs structure:", txs);
-    if (txs.actions && txs.actions.length > 0) {
-      console.log("First action structure:", txs.actions[0]);
-      console.log("First action.in:", txs.actions[0].in);
-      console.log("First action.out:", txs.actions[0].out);
-    }
-
     const suspiciousTxs = checkSuspiciousTxs(txs);
 
     for (let i = 0; i < txs?.actions?.length; i++) {
       const t = txs?.actions[i];
-
-      console.log(`Action ${i}:`, {
-        hasIn: !!t.in,
-        inIsArray: Array.isArray(t.in),
-        inLength: t.in?.length,
-        hasOut: !!t.out,
-        outIsArray: Array.isArray(t.out),
-        outLength: t.out?.length,
-      });
 
       const fromAddr = t.in?.find((e: any) => e.address)?.address || "";
       const toAddr =
@@ -274,7 +259,7 @@ const Transactions: React.FC<TransactionsProps> = ({
             className={styles.clickable}
             onClick={() => router.push(`/block/${item.height}`)}
           >
-            {item.height}
+            {formatNumber(item.height)}
           </button>
         ),
       },
@@ -354,15 +339,15 @@ const Transactions: React.FC<TransactionsProps> = ({
     const widths = [];
     widths.push("200px");
     widths.push("120px");
-    widths.push("100px");
+    widths.push("124px");
     widths.push("120px");
     if (owner !== undefined) {
       widths.push("80px");
     }
     widths.push("250px");
-    widths.push("450px");
+    widths.push("auto");
     for (let i = 0; i < additionalColumns; i++) {
-      widths.push("150px");
+      widths.push("auto");
     }
 
     const gridTemplateColumns = widths.join(" ");
@@ -372,10 +357,13 @@ const Transactions: React.FC<TransactionsProps> = ({
         --data-table-library_grid-template-columns: ${gridTemplateColumns};
       `,
       HeaderCell: `
-        text-align: left;
+        text-align: -webkit-center;
+         &:last-child {
+          text-align: right;
+        }
       `,
       Cell: `
-        text-align: left;
+        text-align: right;
       `,
     };
   }, [owner, additionalProps.length]);

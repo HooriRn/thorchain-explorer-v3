@@ -19,6 +19,7 @@ interface NavProps {
   preText?: string;
   hide?: boolean;
   onActiveModeChange?: (mode: string) => void;
+  children?: React.ReactNode;
 }
 
 const Nav: React.FC<NavProps> = ({
@@ -29,6 +30,7 @@ const Nav: React.FC<NavProps> = ({
   preText,
   hide,
   onActiveModeChange,
+  children,
 }) => {
   const filteredNav = navItems.filter((n) => n.hide !== true);
 
@@ -68,6 +70,7 @@ const Nav: React.FC<NavProps> = ({
           </div>
         );
       })}
+      {children}
     </div>
   );
 };

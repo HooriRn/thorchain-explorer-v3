@@ -12,6 +12,13 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    if (typeof topSwaps === "object" && (topSwaps as any).actions) {
+      return NextResponse.json({
+        success: true,
+        data: (topSwaps as any).actions,
+      });
+    }
+
     if (Array.isArray(topSwaps)) {
       return NextResponse.json({
         success: true,

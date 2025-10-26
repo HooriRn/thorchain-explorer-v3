@@ -95,13 +95,14 @@ const Table: React.FC<TableProps> = ({
       HeaderCell: `
         color: var(--sec-font-color);
         font-weight: 600;
-        font-size: 13px;
-        border: none;
+        font-size: 14px;
         border-bottom: 1px solid var(--border) !important;
+        padding: .75em 1.5em .75em .75em;
         background: transparent;
         color: var(--font-color);
         min-width: auto;
-         width: auto;
+        width: auto;
+        
 
          &:first-child {
           text-align: left;

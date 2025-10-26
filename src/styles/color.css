@@ -34,7 +34,8 @@
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.705 0.015 286.067);
   --overview-bg: #42ae95;
-
+  --highlight: #03a9f4;
+  --active-primary-color: #3d9ff0;
   --skeleton-bg: #d1d5db;
   --skeleton-bg-dark: #9ca3af;
 
@@ -67,6 +68,8 @@
   --popover-foreground: oklch(0.985 0 0);
   --bgt-color: rgba(25, 28, 30, 0.7);
   --green: #21c187;
+  --highlight: #03a9f4;
+  --active-primary-color: #3da6f0;
   --red: #f04832;
   --gradient-left: #14191f;
   --gradient-right: #101317;

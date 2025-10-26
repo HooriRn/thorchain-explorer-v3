@@ -12,6 +12,7 @@ import { smallBaseAmountFormatWithCur } from "@/utils/global";
 import FileDownloadIcon from "@/assets/images/file-download.svg";
 import styles from "./swaps.module.css";
 import Transactions from "@/components/Transactions";
+import Header from "@/components/Header";
 
 interface SwapData {
   in?: Array<{
@@ -121,27 +122,35 @@ const SwapsPage: React.FC = () => {
 
   const getTopSwaps = async (period: string) => {
     try {
-      const response = await fetch("/api/transactions?limit=50");
+      let apiEndpoint = "/api/top-swap";
+
+      switch (period) {
+        case "day":
+          apiEndpoint = "/api/top-swap";
+          break;
+        case "week":
+          apiEndpoint = "/api/top-swap-weekly";
+          break;
+        case "month":
+          apiEndpoint = "/api/top-swap-monthly";
+          break;
+        default:
+          apiEndpoint = "/api/top-swap";
+      }
+
+      const response = await fetch(apiEndpoint);
       const data = await response.json();
 
       if (data.success && data.data) {
-        const swapTransactions =
-          data.data.actions?.filter(
-            (action: any) =>
-              action.type === "swap" ||
-              action.type === "addLiquidity" ||
-              action.type === "withdraw"
-          ) || [];
-
         return {
           success: true,
-          data: swapTransactions,
+          data: data.data,
         };
       }
 
       return { success: false, data: [] };
     } catch (error) {
-      console.error("Error fetching transactions:", error);
+      console.error("Error fetching top swaps:", error);
       return { success: false, data: [] };
     }
   };
@@ -218,22 +227,21 @@ const SwapsPage: React.FC = () => {
     <Page error={false} fluid={false}>
       <Swap />
       <div className={styles["header-top-swap"]}>
-        <div className={styles.header}>
-          <h2>Top Swaps</h2>
-        </div>
+        <Header title="Top Swaps" />
         <Nav
           activeMode={tablePeriod}
           navItems={tablePeriods}
           preText="Period :"
           onActiveModeChange={setTablePeriod}
-        />
-        <div
-          className={styles["csv-download"]}
-          title="Download CSV"
-          onClick={() => downloadSwaps(swaps || [])}
         >
-          <FileDownloadIcon className={styles["clickable"]} />
-        </div>
+          <div
+            className={styles["csv-download"]}
+            title="Download CSV"
+            onClick={() => downloadSwaps(swaps || [])}
+          >
+            <FileDownloadIcon className={styles["clickable"]} />
+          </div>
+        </Nav>
         <Transactions
           txs={{ actions: swaps || [] }}
           loading={loading}

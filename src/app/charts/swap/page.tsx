@@ -265,11 +265,10 @@ const SwapChartPage: React.FC = () => {
         },
       },
       grid: {
-        left: "3%",
-        right: "3%",
-        bottom: "3%",
-        top: "15%",
-        containLabel: true,
+        left: "0%",
+        right: "0%",
+        top: "0%",
+        bottom:"0%"
       },
       xAxis: {
         type: "category",
@@ -459,15 +458,21 @@ const SwapChartPage: React.FC = () => {
           )}
         </div>
       </div>
-      <Card title="Swaps Volume" isLoading={loading}>
-        <div
-          className={styles["csv-download"]}
-          title="Download CSV"
-          onClick={downloadSwapChart}
-        >
-          <FileDownloadIcon className={styles.clickable} />
-        </div>
-        {swapHistory ? (
+      <Card
+        title="Swaps Volume"
+        header={
+          <div
+            className={styles["csv-download"]}
+            title="Download CSV"
+            onClick={downloadSwapChart}
+          >
+            <FileDownloadIcon className={styles.clickable} />
+          </div>
+        }
+      >
+        {loading ? (
+          <ChartLoader barCount={30} />
+        ) : swapHistory ? (
           <ReactECharts
             option={swapHistory}
             style={{ height: "400px", width: "100%" }}

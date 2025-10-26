@@ -6,7 +6,7 @@
 
 .clickable {
   cursor: pointer;
-  color: var(--primary-color);
+  color: var(--primary);
   text-decoration: none;
 }
 
@@ -15,5 +15,5 @@
 }
 
 .mono {
-  font-family: monospace;
+  font-family: "Roboto Mono"!important;
 }
