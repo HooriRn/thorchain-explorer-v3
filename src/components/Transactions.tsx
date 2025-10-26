@@ -356,12 +356,6 @@ const Transactions: React.FC<TransactionsProps> = ({
       Table: `
         --data-table-library_grid-template-columns: ${gridTemplateColumns};
       `,
-      HeaderCell: `
-        text-align: -webkit-center;
-         &:last-child {
-          text-align: right;
-        }
-      `,
       Cell: `
         text-align: right;
       `,
