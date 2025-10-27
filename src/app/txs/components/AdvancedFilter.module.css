@@ -26,6 +26,25 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
 }
 
+.modal-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: var(--card);
+  border-radius: var(--radius-xs);
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-xs);
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+  opacity: 0.8;
+}
+
 .modal-content > div {
   padding: var(--space-18);
 }
@@ -39,9 +58,9 @@
 }
 
 .modal-header h3 {
-  font-size: var(--font-size-md);
-  margin: var(--space-0);
   color: var(--sec-font-color);
+  font-size: 18px;
+  margin: 0;
 }
 
 .advanced-filter {
@@ -111,11 +130,35 @@
   gap: 15px;
 }
 
+.input-fields::-webkit-scrollbar {
+  width: 8px;
+}
+
+.input-fields::-webkit-scrollbar-track {
+  background-color: var(--card);
+  border-radius: var(--radius-xs);
+}
+
+.input-fields::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: var(--radius-xs);
+}
+
+.input-fields::-webkit-scrollbar-thumb:hover {
+  background-color: var(--border);
+}
+
 .input-row {
   display: flex;
   justify-content: space-between;
   gap: 15px;
   flex-wrap: wrap;
+  width: 100%;
+}
+
+.input-row > * {
+  flex: 1;
+  min-width: 0;
 }
 
 .input-group {
@@ -129,10 +172,10 @@
 }
 
 .input-group label {
-  font-size: var(--font-size-desktop);
-  font-weight: bold;
-  color: var(--sec-font-color);
-  margin-bottom: var(--space-8);
+    color: var(--sec-font-color);
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
 }
 
 .input-group input {
@@ -173,23 +216,16 @@
 }
 
 .button-group button {
-  padding: var(--space-10) var(--space-16);
-  font-size: var(--font-size-sm);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
+  align-items: center;
+  background-color: var(--card);
   border: 1px solid var(--border);
-  transition: all 0.3s ease;
-}
-
-.button-group button:first-child {
-  background-color: var(--primary);
-  color: white;
-  border: none;
-}
-
-.button-group button:last-child {
-  background-color: transparent;
+  border-radius: var(--radius-lg);
   color: var(--font-color);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  margin-left: var(--space-8);
+  padding: var(--space-10) var(--space-20);
 }
 
 .button-group .disabled-btn {

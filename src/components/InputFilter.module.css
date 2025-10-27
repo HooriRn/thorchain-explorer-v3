@@ -1,0 +1,210 @@
+.formGroup {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: var(--space-8, 8px);
+  font-size: var(--font-size-desktop, 1rem);
+  font-weight: bold;
+  color: var(--sec-font-color);
+}
+
+.tagsInput {
+  align-items: center;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  max-height: 100px;
+  overflow-y: auto;
+  position: relative;
+  scrollbar-width: none;
+}
+
+.tagsInput::-webkit-scrollbar {
+  display: none;
+}
+
+.tagsInput {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.inputContainer {
+  display: inline-flex;
+  align-items: center;
+  flex-grow: 1;
+  position: relative;
+}
+
+.inputContainer input {
+  flex-grow: 1;
+  height: 38px;
+  color: var(--sec-font-color);
+  background-color: var(--card);
+  border-radius: var(--radius-lg, 12px);
+  border: none;
+  padding: var(--space-8, 8px);
+  font-size: var(--font-size-sm, 0.875rem);
+  background-color: transparent;
+  outline: none;
+}
+
+.enterIconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--card);
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  width: 1.7rem;
+  height: 1.3rem;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  overflow: visible;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.enterIconContainerVisible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.enterIconContainerHidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.enterIcon {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.5rem;
+  transform: scale(0.5) scaleX(-1);
+  pointer-events: all;
+  color: var(--sec-font-color);
+  transition: color 0.2s;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.enterIcon:hover {
+  color: var(--primary);
+}
+
+.enterIconVisible {
+  opacity: 1;
+}
+
+.enterIconHidden {
+  opacity: 0;
+}
+
+.tagBadge {
+  align-items: center;
+  display: flex;
+  font-size: 12px;
+  height: 17px;
+  justify-content: center;
+  margin-left: 5px;
+  margin-top: 2px;
+}
+
+.removeTag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--sec-font-color);
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-left: var(--space-8, 8px);
+  transition: color 0.2s ease;
+}
+
+.removeTag:hover {
+  color: var(--primary);
+}
+
+.wrap {
+  flex-wrap: wrap;
+}
+
+.noWrap {
+  flex-wrap: wrap;
+}
+
+.suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: var(--card);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-md, 8px);
+  margin-top: var(--space-2, 2px);
+  padding: var(--space-8, 8px) 0;
+  z-index: 1000;
+  overflow: auto;
+  max-height: 200px;
+  animation: slideDown 0.3s ease forwards;
+  list-style: none;
+}
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.suggestions li {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--space-12, 12px) var(--space-16, 16px);
+  font-size: var(--font-size-s, 0.9rem);
+  color: var(--sec-font-color);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  line-height: 1.5;
+}
+
+.suggestions li:hover {
+  color: var(--primary);
+  background-color: var(--active-bg-color);
+}
+
+.suggestions li .assetIcon {
+  margin-right: var(--space-14, 14px);
+}
+
+.suggestions::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.suggestions::-webkit-scrollbar-track {
+  background-color: var(--border);
+}
+
+.suggestions::-webkit-scrollbar-thumb {
+  background-color: var(--font-color);
+  border-radius: var(--radius-sm, 4px);
+}

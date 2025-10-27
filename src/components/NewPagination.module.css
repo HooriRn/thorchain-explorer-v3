@@ -1,0 +1,51 @@
+.overflowAuto {
+  overflow: auto;
+}
+
+.customPagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  gap: 8px;
+}
+
+.pageItem {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-s);
+  background-color: var(--card);
+  color: var(--font-color);
+  padding: var(--space-8) var(--space-12);
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-size: var(--font-size-sm);
+  min-width: 40px;
+  text-align: center;
+}
+
+.pageItem:hover:not(:disabled) {
+  background-color: var(--active-bg-color);
+  color: var(--sec-font-color);
+}
+
+.pageItem:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageItem.active {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.pageItem.active:hover {
+  background-color: var(--primary);
+  opacity: 0.9;
+}
+
+.ellipsis {
+  padding: var(--space-8);
+  color: var(--font-color);
+}

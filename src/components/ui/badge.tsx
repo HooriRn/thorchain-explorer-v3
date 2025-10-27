@@ -31,13 +31,20 @@ const badgeVariants = cva(
   }
 );
 
+interface BadgeProps
+  extends React.ComponentProps<"span">,
+    VariantProps<typeof badgeVariants> {
+  asChild?: boolean;
+  style?: React.CSSProperties;
+}
+
 function Badge({
   className,
   variant,
   asChild = false,
+  style: userStyle,
   ...props
-}: React.ComponentProps<"span"> &
-  VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
+}: BadgeProps) {
   const Comp = asChild ? Slot : "span";
 
   const getCustomStyles = () => {
@@ -48,46 +55,50 @@ function Badge({
       fontWeight: "var(--badge-font-weight)",
     };
 
+    let variantStyles = {};
+
     switch (variant) {
       case "orange":
-        return {
-          ...baseStyles,
+        variantStyles = {
           backgroundColor: "var(--badge-orange-bg)",
           color: "var(--badge-orange-text)",
         };
+        break;
       case "yellow":
-        return {
-          ...baseStyles,
+        variantStyles = {
           backgroundColor: "var(--badge-yellow-bg)",
           color: "var(--badge-yellow-text)",
         };
+        break;
       case "info":
-        return {
-          ...baseStyles,
+        variantStyles = {
           backgroundColor: "var(--badge-info-bg)",
           color: "var(--badge-info-text)",
         };
+        break;
       case "gray":
-        return {
-          ...baseStyles,
+        variantStyles = {
           backgroundColor: "var(--badge-gray-bg)",
           color: "var(--badge-gray-text)",
         };
-      default:
-        return baseStyles;
+        break;
       case "green":
-        return {
-          ...baseStyles,
+        variantStyles = {
           backgroundColor: "var(--badge-green-bg)",
           color: "var(--badge-green-text)",
         };
+        break;
       case "red":
-        return {
-          ...baseStyles,
+        variantStyles = {
           border: "1px solid var(--badge-red-bg)",
           borderRadius: "999px",
         };
+        break;
+      default:
+        break;
     }
+
+    return { ...baseStyles, ...variantStyles, ...userStyle };
   };
 
   return (

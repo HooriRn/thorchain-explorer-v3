@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Head from "next/head";
 import { pick } from "lodash";
 import Page from "@/components/PageContainer";
 import Transactions from "@/components/Transactions";
 import CrossIcon from "@/assets/images/cross.svg";
 import AdvancedFilter from "./components/AdvancedFilter";
+import NewPagination from "@/components/NewPagination";
+import Pagination from "@/components/Pagination";
 import { getActions } from "@/lib/api";
 import styles from "./page.module.css";
 
@@ -200,6 +203,13 @@ const TxsPage: React.FC = () => {
   useEffect(() => {
     const query = Object.fromEntries(searchParams.entries());
     fetchData(query);
+
+    const pageParam = searchParams.get("page");
+    if (pageParam) {
+      setCurrentPage(parseInt(pageParam));
+    } else {
+      setCurrentPage(1);
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -214,80 +224,95 @@ const TxsPage: React.FC = () => {
   }, []);
 
   return (
-    <Page error={false} fluid={false}>
-      <div className={styles["transactions-container"]}>
-        <div className={styles["top-bar"]}>
-          <button
-            className={styles["mobile-filter-btn"]}
-            onClick={() => setShowFilters(true)}
-          >
-            Quick Filters
-          </button>
-          <div
-            className={`${styles["action-types"]} ${styles["desktop-filters"]}`}
-          >
-            {filtersList.map((filter, index) => (
-              <div
-                key={index}
-                className={`${styles["action-type"]} ${
-                  isActive(filter) ? styles.active : ""
-                }`}
-                onClick={() => applyFilter(filter)}
-              >
-                {filter.label}
-              </div>
-            ))}
+    <>
+      <Head>
+        <title>THORChain Network Explorer | Transaction</title>
+      </Head>
+      <Page error={false} fluid={false}>
+        <div className={styles["transactions-container"]}>
+          <div className={styles["top-bar"]}>
+            <button
+              className={styles["mobile-filter-btn"]}
+              onClick={() => setShowFilters(true)}
+            >
+              Quick Filters
+            </button>
+            <div
+              className={`${styles["action-types"]} ${styles["desktop-filters"]}`}
+            >
+              {filtersList.map((filter, index) => (
+                <div
+                  key={index}
+                  className={`${styles["action-type"]} ${
+                    isActive(filter) ? styles.active : ""
+                  }`}
+                  onClick={() => applyFilter(filter)}
+                >
+                  {filter.label}
+                </div>
+              ))}
+            </div>
+
+            <AdvancedFilter />
           </div>
 
-          <AdvancedFilter />
-        </div>
-
-        {showFilters && (
-          <div className={styles["mobile-filter-modal"]}>
-            <div className={styles["modal-content"]}>
-              <div className={styles["modal-header"]}>
-                <h3>Quick Filters</h3>
-                <CrossIcon
-                  className={styles["close-btn"]}
-                  onClick={toggleModal}
-                />
-              </div>
-              <div className={styles["action-types"]}>
-                {filtersList.map((filter, index) => (
-                  <div
-                    key={index}
-                    className={`${styles["action-type"]} ${
-                      isActive(filter) ? styles.active : ""
-                    }`}
-                    onClick={() => applyFilter(filter)}
-                  >
-                    {filter.label}
-                  </div>
-                ))}
+          {showFilters && (
+            <div className={styles["mobile-filter-modal"]}>
+              <div className={styles["modal-content"]}>
+                <div className={styles["modal-header"]}>
+                  <h3>Quick Filters</h3>
+                  <CrossIcon
+                    className={styles["close-btn"]}
+                    onClick={toggleModal}
+                  />
+                </div>
+                <div className={styles["action-types"]}>
+                  {filtersList.map((filter, index) => (
+                    <div
+                      key={index}
+                      className={`${styles["action-type"]} ${
+                        isActive(filter) ? styles.active : ""
+                      }`}
+                      onClick={() => applyFilter(filter)}
+                    >
+                      {filter.label}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+          )}
+
+          <div>
+            {error ? (
+              <div className={styles["error-container"]}>
+                Can't Fetch the actions! Please Try again Later.
+              </div>
+            ) : (
+              <Transactions txs={txs} loading={loading} />
+            )}
           </div>
-        )}
 
-        <div>
-          {error ? (
-            <div className={styles["error-container"]}>
-              Can't Fetch the actions! Please Try again Later.
-            </div>
-          ) : (
-            <Transactions txs={txs} loading={loading} />
+          {txs && txs.actions && count > -1 && (
+            <NewPagination
+              totalRows={count}
+              perPage={30}
+              currentPage={currentPage}
+              onChange={onPageChange}
+            />
+          )}
+
+          {txs && txs.actions && count === -1 && (
+            <Pagination
+              loading={loading}
+              meta={txs.actions}
+              onNextPage={goNext}
+              onPrevPage={goPrev}
+            />
           )}
         </div>
-
-        {txs && txs.actions && count > -1 && (
-          <div>{/* NewPagination component would go here */}</div>
-        )}
-
-        {txs && txs.actions && count === -1 && (
-          <div>{/* Pagination component would go here */}</div>
-        )}
-      </div>
-    </Page>
+      </Page>
+    </>
   );
 };
 

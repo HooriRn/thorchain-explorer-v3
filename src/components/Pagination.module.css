@@ -1,0 +1,60 @@
+.paginationContainer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+}
+
+.divider {
+  margin: var(--space-0) var(--space-5);
+  height: 30px;
+  width: 1px;
+  background-color: var(--border);
+}
+
+.navIcons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: var(--space-0) var(--space-5);
+  padding: var(--space-10) var(--space-8);
+  border-radius: var(--radius-sm);
+  background-color: var(--card-bg-color);
+  color: var(--font-color);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.navIcons svg {
+  fill: var(--font-color);
+  width: 0.75rem;
+  height: 0.75rem;
+  margin: 0 var(--space-4);
+}
+
+.navIcons:hover {
+  background-color: var(--active-bg-color);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  color: var(--sec-font-color);
+  transform: translateY(-2px);
+}
+
+.navIcons:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.mono {
+  font-family: "Courier New", Courier, monospace;
+}
+
+.page {
+  color: var(--font-color);
+  line-height: 2rem;
+  margin: var(--space-0) 1rem;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}

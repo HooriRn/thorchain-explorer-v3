@@ -1,0 +1,163 @@
+/* Global styles for react-datepicker */
+.react-datepicker-popper {
+  z-index: 10000 !important;
+}
+
+.react-datepicker {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md, 8px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  font-family: inherit !important;
+  color: var(--sec-font-color) !important;
+  font: 14px / 1.5 "Helvetica Neue", Helvetica, Arial, "Microsoft Yahei", sans-serif;
+}
+
+.react-datepicker__header {
+  background-color: var(--card) !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding-top: 0.75rem !important;
+}
+
+.react-datepicker__current-month {
+  color: var(--sec-font-color) !important;
+  font-weight: bold !important;
+}
+
+.react-datepicker__day-name {
+  color: var(--sec-font-color) !important;
+  font-weight: bold !important;
+}
+
+.react-datepicker__day {
+  color: var(--sec-font-color) !important;
+  outline: none !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: var(--active-bg-color) !important;
+  color: var(--primary) !important;
+  border-radius: var(--radius-sm, 4px) !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--in-range {
+  background-color: var(--primary) !important;
+  color: white !important;
+  border-radius: var(--radius-sm, 4px) !important;
+}
+
+.react-datepicker__day--range-start,
+.react-datepicker__day--range-end {
+  background-color: var(--primary) !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: var(--active-bg-color) !important;
+  color: var(--sec-font-color) !important;
+}
+
+.react-datepicker__day--disabled {
+  opacity: 0.3 !important;
+  cursor: not-allowed !important;
+}
+
+.react-datepicker__day--outside-month {
+  color: var(--border) !important;
+}
+
+.react-datepicker__day--today {
+  font-weight: bold !important;
+}
+
+.react-datepicker__navigation {
+  outline: none !important;
+}
+
+.react-datepicker__navigation:hover * {
+  border-color: var(--primary) !important;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: var(--sec-font-color) !important;
+}
+
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: var(--primary) !important;
+}
+
+/* Time picker */
+.react-datepicker__time-container {
+  border-left: 1px solid var(--border) !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time {
+  background: var(--card) !important;
+}
+
+.react-datepicker__time-list-item {
+  color: var(--sec-font-color) !important;
+}
+
+.react-datepicker__time-list-item:hover {
+  background-color: var(--active-bg-color) !important;
+  color: var(--primary) !important;
+}
+
+.react-datepicker__time-list-item--selected {
+  background-color: var(--primary) !important;
+  color: white !important;
+}
+
+/* Year/Month selectors */
+.react-datepicker__year-select,
+.react-datepicker__month-select {
+  background-color: var(--card) !important;
+  color: var(--sec-font-color) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.react-datepicker__year-option,
+.react-datepicker__month-option {
+  color: var(--sec-font-color) !important;
+}
+
+.react-datepicker__year-option:hover,
+.react-datepicker__month-option:hover {
+  background-color: var(--active-bg-color) !important;
+  color: var(--primary) !important;
+}
+
+.react-datepicker__year-option--selected,
+.react-datepicker__month-option--selected {
+  background-color: var(--primary) !important;
+  color: white !important;
+}
+
+/* Clear button */
+.react-datepicker__close-icon {
+  color: var(--sec-font-color) !important;
+}
+
+.react-datepicker__close-icon:hover {
+  color: var(--primary) !important;
+}
+
+/* Multiple calendars (range selection) */
+.react-datepicker__month-container {
+  display: inline-block;
+  background: var(--card) !important;
+  
+}
+
+
+
+/* Ensure proper spacing between two calendars */
+.react-datepicker__month-container:last-child {
+  border-left: 1px solid var(--border) !important;
+  box-sizing: border-box;
+    padding: 6px 12px;
+    width: 248px;
+}

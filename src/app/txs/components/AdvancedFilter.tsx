@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import CrossIcon from "@/assets/images/cross.svg";
 import FilterIcon from "@/assets/images/filter.svg";
 import styles from "./AdvancedFilter.module.css";
 import { usePools } from "@/lib/store";
+import InputFilter from "@/components/InputFilter";
+import SelectFilter from "@/components/SelectFilter";
+import CustomDatePicker from "@/components/DatePicker";
 
 interface AdvancedFilterProps {
   hideAddressFilter?: boolean;
@@ -81,7 +84,7 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
     return filters.toHeight.trim() !== "" || filters.fromHeight.trim() !== "";
   };
 
-  const assets = () => {
+  const assets = useMemo(() => {
     if (pools && pools.length > 0) {
       const poolsMap = pools
         .map((p: any) => p.asset)
@@ -95,7 +98,7 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
       return [...poolsMap, "THOR.RUNE"];
     }
     return [];
-  };
+  }, [pools]);
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -181,12 +184,32 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
   const isFormValid = () => {
     if (
       (filters.toHeight.trim() !== "" || filters.fromHeight.trim() !== "") &&
-      filters.dateValue?.length > 0 &&
-      (filters.dateValue[0] || filters.dateValue[1])
+      filters.dateValue &&
+      filters.dateValue[0] !== null &&
+      filters.dateValue[1] !== null
     ) {
       return false;
     }
-    return true;
+    if (
+      (filters.fromHeight.trim() !== "" &&
+        isNaN(parseInt(filters.fromHeight))) ||
+      (filters.toHeight.trim() !== "" && isNaN(parseInt(filters.toHeight)))
+    ) {
+      return false;
+    }
+    return (
+      filters.addresses.length > 0 ||
+      filters.txId.length > 0 ||
+      filters.affiliate.length > 0 ||
+      filters.asset.length > 0 ||
+      filters.type.length > 0 ||
+      filters.txType.length > 0 ||
+      filters.toHeight.trim() !== "" ||
+      filters.fromHeight.trim() !== "" ||
+      (filters.dateValue &&
+        filters.dateValue[0] !== null &&
+        filters.dateValue[1] !== null)
+    );
   };
 
   const prepareQueryParams = () => {
@@ -291,6 +314,25 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
     setSubmittedCount(filledFilterCount());
   }, [filters]);
 
+  const updateFromHeight = (value: string) => {
+    setFilters((prev) => ({ ...prev, fromHeight: value }));
+  };
+
+  const updateToHeight = (value: string) => {
+    setFilters((prev) => ({ ...prev, toHeight: value }));
+  };
+
+  const updateDateValue = (dates: [Date | null, Date | null]) => {
+    const [startDate, endDate] = dates;
+    setFilters((prev) => ({
+      ...prev,
+      dateValue: [
+        startDate ? startDate.getTime() : null,
+        endDate ? endDate.getTime() : null,
+      ],
+    }));
+  };
+
   return (
     <div>
       <button className={styles["advanced-filter"]} onClick={toggleModal}>
@@ -318,17 +360,103 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
               />
             </div>
             <div className={styles["input-fields"]}>
-              {/* Input filters would go here - simplified version */}
-              <div className={styles["button-group"]}>
-                <button
-                  disabled={!isFormValid()}
-                  className={!isFormValid() ? styles["disabled-btn"] : ""}
-                  onClick={submitForm}
-                >
-                  Submit
-                </button>
-                <button onClick={resetForm}>Clear</button>
+              {!hideAddressFilter && (
+                <div className={styles["input-row"]}>
+                  <InputFilter
+                    tags={filters.addresses}
+                    placeholder="Enter Addresses, press enter"
+                    label={filterLabels.addresses}
+                    showEnterIcon={false}
+                    onTagsUpdate={(tags) => updateTags("addresses", tags)}
+                  />
+                </div>
+              )}
+
+              <div className={styles["input-row"]}>
+                <InputFilter
+                  tags={filters.affiliate}
+                  placeholder="Enter Affiliate, press enter"
+                  label={filterLabels.affiliate}
+                  showEnterIcon={true}
+                  onTagsUpdate={(tags) => updateTags("affiliate", tags)}
+                />
+                <InputFilter
+                  tags={filters.asset}
+                  placeholder="Enter Asset, press enter"
+                  label={filterLabels.asset}
+                  suggestions={assets}
+                  showEnterIcon={false}
+                  onTagsUpdate={(tags) => updateTags("asset", tags)}
+                />
               </div>
+
+              <div className={styles["input-row"]}>
+                <div className={styles["input-group"]}>
+                  <label htmlFor="fromHeight">{filterLabels.fromHeight}</label>
+                  <input
+                    id="fromHeight"
+                    type="text"
+                    value={filters.fromHeight}
+                    onChange={(e) => updateFromHeight(e.target.value)}
+                    placeholder="Enter fromHeight, press enter"
+                  />
+                </div>
+                <div className={styles["input-group"]}>
+                  <label htmlFor="toHeight">{filterLabels.toHeight}</label>
+                  <input
+                    id="toHeight"
+                    type="text"
+                    value={filters.toHeight}
+                    onChange={(e) => updateToHeight(e.target.value)}
+                    placeholder="Enter toHeight, press enter"
+                  />
+                </div>
+              </div>
+
+              <div className={styles["input-row"]}>
+                <SelectFilter
+                  options={getOptions("type")}
+                  default={filters.type}
+                  label={filterLabels.type}
+                  onSelectedOptionsUpdate={(options) =>
+                    selectOption("type", options)
+                  }
+                />
+                <SelectFilter
+                  options={getOptions("txType")}
+                  default={filters.txType}
+                  label={filterLabels.txType}
+                  onSelectedOptionsUpdate={(options) =>
+                    selectOption("txType", options)
+                  }
+                />
+              </div>
+
+              <div className={styles["input-row"]}>
+                <CustomDatePicker
+                  startDate={
+                    filters.dateValue[0] ? new Date(filters.dateValue[0]) : null
+                  }
+                  endDate={
+                    filters.dateValue[1] ? new Date(filters.dateValue[1]) : null
+                  }
+                  onChange={updateDateValue}
+                  label={filterLabels.date}
+                  placeholder="Select date range"
+                  disabled={isHeightFilled()}
+                />
+              </div>
+            </div>
+
+            <div className={styles["button-group"]}>
+              <button
+                disabled={!isFormValid()}
+                className={!isFormValid() ? styles["disabled-btn"] : ""}
+                onClick={submitForm}
+              >
+                Submit
+              </button>
+              <button onClick={resetForm}>Clear</button>
             </div>
           </div>
         </div>
