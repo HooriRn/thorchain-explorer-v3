@@ -1,0 +1,81 @@
+.status-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-container {
+  display: flex;
+  position: relative;
+  margin: 0 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.search-input {
+  flex: 1;
+  color: var(--sec-font-color);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color) !important;
+  border-radius: 0.375rem;
+  outline: none;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: 450;
+}
+
+.search-input:focus {
+  border-color: transparent;
+  box-shadow: 0 0 0 0.15rem rgba(255, 255, 255, 0.1);
+  color: var(--primary-color);
+}
+
+.search-icon {
+  position: absolute;
+  width: 20px;
+  height: 24px;
+  fill: var(--font-color);
+  right: 0.8rem;
+  top: calc(50% - 0.8rem);
+  cursor: pointer;
+  transition: fill 0.3s ease;
+  box-sizing: content-box;
+  background: var(--card-bg-color);
+  padding-left: 5px;
+}
+
+.mini-bubble {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  background-color: var(--bgl-color);
+  border: 1px solid var(--border-color);
+  font-size: 0.875rem;
+}
+
+.mini-bubble.info {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: var(--primary-color);
+}
+
+.table-icon {
+  width: 16px;
+  height: 16px;
+  fill: var(--sec-font-color);
+  cursor: pointer;
+}
+
+.table-icon:hover {
+  fill: var(--primary-color);
+}
+
+.constants-table {
+  margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .search-container {
+    margin: 0;
+    margin-bottom: 1.5rem;
+  }
+}

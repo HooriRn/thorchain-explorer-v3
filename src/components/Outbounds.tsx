@@ -11,15 +11,7 @@ import TransactionAction from "@/components/transactions/TransactionAction";
 import AngleIcon from "@/assets/images/angle-down.svg";
 import { Skeleton } from "@/components/ui/Skeleton";
 import Address from "@/components/transactions/Address";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import NewPagination from "./NewPagination";
 import { getScheduled, getTopSwaps } from "@/lib/api";
 import AssetIcon from "./AssetIcon";
 import styles from "./OutboundSwapsCard.module.css";
@@ -31,7 +23,7 @@ import {
 import { formatNumberToString, formatTotalAmount } from "@/utils/format";
 
 const OutboundSwapsCard = () => {
-  const [isVisible, setIsVisible] = useState<boolean[]>([]);
+  const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [noOutbound, setNoOutbound] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -40,7 +32,7 @@ const OutboundSwapsCard = () => {
   const [schData, setSchData] = useState<any[]>([]);
   const [mode, setMode] = useState("ongoing-outbounds");
   const [topSwaps, setTopSwaps] = useState<any[]>([]);
-  const [angleRotated, setAngleRotated] = useState<boolean[]>([]);
+  const [angleRotated, setAngleRotated] = useState<Record<string, boolean>>({});
 
   const chainsHeight = useChainsHeight();
   const pools = usePools();
@@ -61,6 +53,10 @@ const OutboundSwapsCard = () => {
 
     return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [mode]);
 
   const updateTopSwaps = async () => {
     try {
@@ -266,14 +262,16 @@ const OutboundSwapsCard = () => {
     return "";
   };
 
-  const toggleExtraRight = (index: number) => {
-    const newIsVisible = [...isVisible];
-    newIsVisible[index] = !newIsVisible[index];
-    setIsVisible(newIsVisible);
+  const toggleExtraRight = (asset: string) => {
+    setIsVisible((prev) => ({
+      ...prev,
+      [asset]: !prev[asset],
+    }));
 
-    const newAngleRotated = [...angleRotated];
-    newAngleRotated[index] = !newAngleRotated[index];
-    setAngleRotated(newAngleRotated);
+    setAngleRotated((prev) => ({
+      ...prev,
+      [asset]: !prev[asset],
+    }));
   };
 
   const getAssetAmountUSD = (asset: string, amount: number | string) => {
@@ -342,24 +340,12 @@ const OutboundSwapsCard = () => {
         mode === "ongoing-outbounds" &&
         Object.values(groupedOutbounds).length > 10 ? (
           <div className={styles["center"]}>
-            <Pagination>
-              {Array.from({
-                length: Math.ceil(Object.values(groupedOutbounds).length / 10),
-              }).map((_, i) => (
-                <PaginationItem key={i + 1}>
-                  <PaginationLink
-                    isActive={i + 1 === currentPage}
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setCurrentPage(i + 1);
-                    }}
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-            </Pagination>
+            <NewPagination
+              totalRows={Object.values(groupedOutbounds).length}
+              perPage={10}
+              currentPage={currentPage}
+              onChange={(page) => setCurrentPage(page)}
+            />
           </div>
         ) : null
       }
@@ -464,9 +450,9 @@ const OutboundSwapsCard = () => {
           {!noOutbound && !loading && filteredOutbounds.length > 0
             ? filteredOutbounds.map((group, i) => (
                 <div
-                  key={i}
+                  key={group.asset}
                   className={styles["outbound-item"]}
-                  onClick={() => toggleExtraRight(i)}
+                  onClick={() => toggleExtraRight(group.asset)}
                 >
                   <div className={styles["outbound-collapse"]}>
                     <div className={styles["asset-item"]}>
@@ -504,13 +490,13 @@ const OutboundSwapsCard = () => {
                         )}
                         <AngleIcon
                           className={`${styles["trigger"]} ${
-                            angleRotated[i] ? styles["rotated"] : ""
+                            angleRotated[group.asset] ? styles["rotated"] : ""
                           }`}
                         />
                       </div>
                     </div>
 
-                    {isVisible[i] && (
+                    {isVisible[group.asset] && (
                       <div className={styles["extra-right"]}>
                         {group.items.map((o: any, idx: number) => (
                           <div key={idx} className={styles["asset-info"]}>
