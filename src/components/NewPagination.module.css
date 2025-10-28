@@ -8,25 +8,26 @@
   align-items: center;
   padding: var(--space-8);
   border-radius: var(--radius-lg);
-  gap: 8px;
+  gap: var(--space-8);
 }
 
 .pageItem {
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-s);
   background-color: var(--card);
-  color: var(--font-color);
-  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--border);
+  color: var(--sec-font-color);
+  font-family: "Roboto Mono";
+  padding: var(--space-5) var(--space-8);
   cursor: pointer;
   transition: background-color 0.3s ease, color 0.3s ease;
   font-size: var(--font-size-sm);
-  min-width: 40px;
   text-align: center;
+  border-radius: var(--radius-s);
 }
 
 .pageItem:hover:not(:disabled) {
+  border: 1px solid var(--primary);
   background-color: var(--active-bg-color);
-  color: var(--sec-font-color);
+  color: var(--primary);
 }
 
 .pageItem:disabled {
@@ -35,17 +36,20 @@
 }
 
 .pageItem.active {
-  background-color: var(--primary);
-  color: white;
-  border-color: var(--primary);
+  color: var(--primary);
 }
 
-.pageItem.active:hover {
-  background-color: var(--primary);
-  opacity: 0.9;
+.pageItem:hover {
+  border: 1px solid var(--primary);
+  background-color: var(--active-bg-color);
+  color: var(--primary);
 }
-
 .ellipsis {
-  padding: var(--space-8);
-  color: var(--font-color);
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  color: var(--sec-font-color);
+  font-family: "Roboto Mono";
+  padding: 7px 3px;
+  border-radius: var(--radius-s);
+  font-size: 10px;
 }

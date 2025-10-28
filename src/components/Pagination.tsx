@@ -38,7 +38,15 @@ const Pagination: React.FC<PaginationProps> = ({
 
   return (
     <div className={styles.paginationContainer}>
-      <div className={styles.navIcons} onClick={onPrevPage}>
+      <div
+        className={styles.navIcons}
+        onClick={onPrevPage}
+        style={{
+          opacity: loading ? 0.6 : 1,
+          cursor: loading ? "not-allowed" : "pointer",
+          pointerEvents: loading ? "none" : "auto",
+        }}
+      >
         <AngleLeftIcon />
         Newer
       </div>
@@ -48,10 +56,18 @@ const Pagination: React.FC<PaginationProps> = ({
             {timeFrame.from} - {timeFrame.next}
           </>
         ) : (
-          <span>...</span>
+          <span>Loading...</span>
         )}
       </div>
-      <div className={styles.navIcons} onClick={onNextPage}>
+      <div
+        className={styles.navIcons}
+        onClick={onNextPage}
+        style={{
+          opacity: loading ? 0.6 : 1,
+          cursor: loading ? "not-allowed" : "pointer",
+          pointerEvents: loading ? "none" : "auto",
+        }}
+      >
         Older
         <AngleRightIcon />
       </div>

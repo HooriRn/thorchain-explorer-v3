@@ -296,13 +296,13 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
     if (isFormValid()) {
       const query = prepareQueryParams();
       const params = new URLSearchParams(query);
-      router.push(`/transactions?${params.toString()}`);
+      router.push(`/txs?${params.toString()}`);
       toggleModal();
     }
   };
 
   const resetForm = () => {
-    router.push("/transactions");
+    router.push("/txs");
   };
 
   useEffect(() => {
@@ -366,7 +366,7 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
                     tags={filters.addresses}
                     placeholder="Enter Addresses, press enter"
                     label={filterLabels.addresses}
-                    showEnterIcon={false}
+                    showEnterIcon={true}
                     onTagsUpdate={(tags) => updateTags("addresses", tags)}
                   />
                 </div>
@@ -385,7 +385,7 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
                   placeholder="Enter Asset, press enter"
                   label={filterLabels.asset}
                   suggestions={assets}
-                  showEnterIcon={false}
+                  showEnterIcon={true}
                   onTagsUpdate={(tags) => updateTags("asset", tags)}
                 />
               </div>

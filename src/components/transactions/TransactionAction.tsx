@@ -571,7 +571,16 @@ const TransactionAction: React.FC<TransactionActionProps> = ({
               <div className={styles["asset-cell"]}>
                 <AssetIcon
                   height="1.2rem"
-                  asset={parseCosmosAsset(row.metadata.contract.funds)}
+                  asset={parseCosmosAsset(
+                    typeof row.metadata.contract.funds === "string"
+                      ? row.metadata.contract.funds
+                      : Array.isArray(row.metadata.contract.funds)
+                      ? row.metadata.contract.funds[0]?.denom ||
+                        row.metadata.contract.funds[0] ||
+                        ""
+                      : row.metadata.contract.funds?.denom ||
+                        JSON.stringify(row.metadata.contract.funds || "")
+                  )}
                 />
                 <span className={styles["asset-name"]}>
                   {decimalFormat(
@@ -590,7 +599,11 @@ const TransactionAction: React.FC<TransactionActionProps> = ({
               </div>
             </>
           ) : (
-            <span>{row.metadata.contract.contractType}</span>
+            <span>
+              {typeof row.metadata.contract.msg === "string"
+                ? row.metadata.contract.msg
+                : JSON.stringify(row.metadata.contract.msg)}
+            </span>
           )}
         </div>
       ) : null}

@@ -585,6 +585,9 @@ export const createColor = (hash) => {
 };
 
 export const parseCosmosAsset = (casset) => {
+  if (!casset) {
+    return "";
+  }
   const firstAsset = casset.split(",")[0];
   const match = firstAsset.match(/[a-zA-Z.]+/);
   return match ? match[0].toUpperCase() : casset;
@@ -1032,6 +1035,8 @@ export const getOutAssetFromMemo = (memo, pools) => {
 
   return assetToString(asset);
 };
+
+export { parseMemoToTxType };
 
 export default {
   showLoading,

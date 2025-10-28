@@ -37,6 +37,11 @@
   transition: border-color 0.2s ease;
   box-sizing: border-box;
 }
+@media screen and (max-width: 768px) {
+  .datePickerInput {
+    min-width: 335px;
+  }
+}
 
 .datePickerInput:focus {
   border-color: var(--primary, #4caf50);

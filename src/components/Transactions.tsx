@@ -340,7 +340,7 @@ const Transactions: React.FC<TransactionsProps> = ({
     widths.push("200px");
     widths.push("120px");
     widths.push("124px");
-    widths.push("120px");
+    widths.push("134px");
     if (owner !== undefined) {
       widths.push("80px");
     }
@@ -357,7 +357,7 @@ const Transactions: React.FC<TransactionsProps> = ({
         --data-table-library_grid-template-columns: ${gridTemplateColumns};
       `,
       Cell: `
-        text-align: right;
+        text-align: left;
       `,
     };
   }, [owner, additionalProps.length]);

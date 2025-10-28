@@ -21,7 +21,7 @@
   margin: var(--space-0) var(--space-5);
   padding: var(--space-10) var(--space-8);
   border-radius: var(--radius-sm);
-  background-color: var(--card-bg-color);
+  background-color: var(--card);
   color: var(--font-color);
   font-size: var(--font-size-xs);
   font-weight: 500;

@@ -40,37 +40,43 @@ const NewPagination: React.FC<NewPaginationProps> = ({
 
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
-    const showFirstLast = totalPages > 7;
 
-    if (!showFirstLast) {
+    if (totalPages <= 7) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      pages.push(1);
-
-      if (currentPage > 4) {
+      if (currentPage <= 5) {
+        for (let i = 1; i <= 5; i++) {
+          pages.push(i);
+        }
         pages.push("...");
-      }
-
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (currentPage < totalPages - 3) {
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 4) {
+        pages.push(1);
         pages.push("...");
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push("...");
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push("...");
+        pages.push(totalPages);
       }
-
-      pages.push(totalPages);
     }
 
     return pages;
   };
 
   const pageNumbers = getPageNumbers();
+
+  if (totalPages <= 1) {
+    return null;
+  }
 
   return (
     <div className={styles.overflowAuto}>
