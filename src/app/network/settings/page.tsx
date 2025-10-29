@@ -5,30 +5,23 @@ import Head from "next/head";
 import PageContainer from "@/components/PageContainer";
 import Nav from "@/components/Nav";
 import InfoCard from "@/components/InfoCard";
-import Card from "@/components/ui/Card";
-import Table from "@/components/table/Table";
-import { createCustomColumn, createTextColumn } from "@/components/table/utils";
-import InfoIcon from "@/assets/images/info.svg";
-import SearchIcon from "@/assets/images/search.svg";
+import ConstantsMimirTable, { CombinedSetting } from "./ConstantsMimirTable";
 import { getConstants, getMimir } from "@/lib/api";
 import { useRunePrice } from "@/lib/store";
 import { blockTime } from "@/lib/utils";
 import { parseConstant, normalFormat, formatRune } from "@/utils/global";
-import { number, formatVueNumber, formatPercentToString } from "@/utils/format";
-import GlassmorphismTooltip from "@/components/GlassmorphismTooltip";
-import styles from "./settings.module.css";
+import { camelCase } from "@/utils/global";
+import {
+  number,
+  formatVueNumber,
+  formatPercentToString,
+  formatTrendNumber,
+  formatPercent,
+} from "@/utils/format";
 
 interface NavItem {
   mode: string;
   text: string;
-}
-
-interface CombinedSetting {
-  name: string;
-  value: any;
-  status: string;
-  key: string;
-  extraInfo?: string;
 }
 
 const SettingsPage: React.FC = () => {
@@ -38,7 +31,6 @@ const SettingsPage: React.FC = () => {
   const [combinedSettings, setCombinedSettings] = useState<CombinedSetting[]>(
     []
   );
-  const [searchKey, setSearchKey] = useState("");
   const [activeView, setActiveView] = useState("info");
 
   const navItems: NavItem[] = [
@@ -64,7 +56,7 @@ const SettingsPage: React.FC = () => {
         items: [
           {
             ...parseConstantWithContext("OutboundTransactionFee"),
-            filter: (v: any) => `${normalFormat(v, number)} RUNE`,
+            filter: (v: any) => `${formatTrendNumber(v)} RUNE`,
             usdValue: true,
           },
           {
@@ -118,7 +110,7 @@ const SettingsPage: React.FC = () => {
           },
           {
             ...parseConstantWithContext("MaxSynthPerPoolDepth", {
-              filter: (v: any) => formatPercentToString((v / 1e4) * 100),
+              filter: (v: any) => formatPercent(v / 1e4, 0),
             }),
           },
           {
@@ -166,7 +158,7 @@ const SettingsPage: React.FC = () => {
           },
           {
             ...parseConstantWithContext("NativeTransactionFee"),
-            filter: (v: any) => `${normalFormat(v, number)} RUNE`,
+            filter: (v: any) => `${formatTrendNumber(v)} RUNE`,
             usdValue: true,
           },
           {
@@ -175,7 +167,7 @@ const SettingsPage: React.FC = () => {
           {
             ...parseConstantWithContext("TNSFeeOnSale"),
             name: "Fee On Sale",
-            filter: (v: any) => `${normalFormat(v, number)} RUNE`,
+            filter: (v: any) => `${formatTrendNumber(v)} RUNE`,
           },
           {
             ...parseConstantWithContext("TNSFeePerBlock"),
@@ -245,7 +237,7 @@ const SettingsPage: React.FC = () => {
           },
           {
             ...parseConstantWithContext("MinimumBondInRune"),
-            filter: (v: any) => `${normalFormat(v / 1e8, number)} RUNE`,
+            filter: (v: any) => `${formatTrendNumber(v / 1e8)} RUNE`,
             usdValue: true,
           },
           {
@@ -354,43 +346,6 @@ const SettingsPage: React.FC = () => {
     ];
   }, [networkConst, mimir, runePrice, parseConstantWithContext]);
 
-  const filteredCombinedSettings = React.useMemo(() => {
-    if (!searchKey) return combinedSettings;
-    return combinedSettings.filter((row) =>
-      row.key.toLowerCase().includes(searchKey.toLowerCase())
-    );
-  }, [combinedSettings, searchKey]);
-
-  const combinedSettingsCols = useMemo(
-    () => [
-      createTextColumn<CombinedSetting>("Key", "name", { sortKey: "name" }),
-      createCustomColumn<CombinedSetting>("Value", {
-        sortKey: "value",
-        renderCell: (row) => <span className="mono">{row.value || "0"}</span>,
-      }),
-      createCustomColumn<CombinedSetting>("Status", {
-        sortKey: "status",
-        renderCell: (row) => (
-          <div className={styles["status-container"]}>
-            <span
-              className={`${styles["mini-bubble"]} ${
-                row.status === "Constant" ? styles["info"] : ""
-              }`}
-            >
-              {row.status}
-            </span>
-            {row.extraInfo && (
-              <GlassmorphismTooltip content={row.extraInfo}>
-                <InfoIcon className={styles["table-icon"]} />
-              </GlassmorphismTooltip>
-            )}
-          </div>
-        ),
-      }),
-    ],
-    []
-  );
-
   useEffect(() => {
     getNetworkData().then((data) => {
       setCombinedSettings(data);
@@ -411,18 +366,32 @@ const SettingsPage: React.FC = () => {
 
       if (constRes?.int_64_values) {
         for (const [key, value] of Object.entries(constRes.int_64_values)) {
-          const parsedConstant = parseConstantWithContext(key);
+          const uniKey = key.toUpperCase();
+          const uniName = camelCase(key);
+
+          let constantValue = value;
+          let isMimir = false;
+          if (mimirRes && mimirRes[uniKey] !== undefined) {
+            isMimir = true;
+            constantValue = mimirRes[uniKey];
+          }
+
           combinedSettingsList.push({
-            ...parsedConstant,
-            status: parsedConstant.extraInfo ? "Mimir" : "Constant",
-            key: key.toUpperCase(),
+            name: uniName,
+            value: constantValue || 0,
+            status: isMimir ? "Mimir" : "Constant",
+            key: uniKey,
+            ...(isMimir && { extraInfo: "Overwritten by Mimir" }),
           });
         }
       }
 
       if (mimirRes) {
         for (const [key, value] of Object.entries(mimirRes)) {
-          if (!combinedSettingsList.find((s) => s.key === key)) {
+          const uniKey = key.toUpperCase();
+          if (
+            !combinedSettingsList.find((s) => s.key === uniKey || s.key === key)
+          ) {
             combinedSettingsList.push({
               name: key,
               value,
@@ -455,32 +424,7 @@ const SettingsPage: React.FC = () => {
         {activeView === "info" ? (
           <InfoCard options={networkSettings} runePrice={runePrice} />
         ) : (
-          <div className={styles["constants-table"]}>
-            <div
-              id="vote-search-container"
-              className={styles["search-container"]}
-            >
-              <input
-                value={searchKey}
-                onChange={(e) => setSearchKey(e.target.value)}
-                type="text"
-                placeholder="Search by key..."
-                className={styles["search-input"]}
-              />
-              <SearchIcon className={styles["search-icon"]} />
-            </div>
-            <Card>
-              <Table
-                columns={combinedSettingsCols}
-                data={filteredCombinedSettings.map((row) => ({
-                  ...row,
-                  id: row.key,
-                  value: row.value || "0",
-                }))}
-                enableSort={true}
-              />
-            </Card>
-          </div>
+          <ConstantsMimirTable data={combinedSettings} />
         )}
       </PageContainer>
     </>

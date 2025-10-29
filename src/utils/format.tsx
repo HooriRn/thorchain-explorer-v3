@@ -216,13 +216,42 @@ export const formatTrendCurrency = (
   return formatTrendNumber(value, { ...options, currency: true });
 };
 
-/**
- * Formats large numbers with custom suffixes
- * @param value - The number to format
- * @param suffixes - Array of suffixes (e.g., ['', 'K', 'M', 'B'])
- * @param options - Formatting options
- * @returns Formatted string
- */
+export const formatRoundedCurrency = (
+  value: number | string | null | undefined,
+  currencySymbol: string = "$"
+): string => {
+  if (value === null || value === undefined || value === "") {
+    return `${currencySymbol}0`;
+  }
+
+  const numValue = typeof value === "string" ? parseFloat(value) : value;
+
+  if (isNaN(numValue)) {
+    return `${currencySymbol}0`;
+  }
+
+  const absValue = Math.abs(numValue);
+  const rounded = Math.round(absValue);
+  const sign = numValue < 0 ? "-" : "";
+
+  if (rounded >= 1e9) {
+    const billions = Math.round(rounded / 1e9);
+    return `${sign}${currencySymbol}${billions}B`;
+  }
+
+  if (rounded >= 1e6) {
+    const millions = Math.round(rounded / 1e6);
+    return `${sign}${currencySymbol}${millions}M`;
+  }
+
+  if (rounded >= 1e3) {
+    const thousands = Math.round(rounded / 1e3);
+    return `${sign}${currencySymbol}${thousands}K`;
+  }
+
+  return `${sign}${currencySymbol}${rounded}`;
+};
+
 export const formatTrendWithCustomSuffixes = (
   value: number | string | null | undefined,
   suffixes: string[] = ["", "K", "M", "B", "T"],

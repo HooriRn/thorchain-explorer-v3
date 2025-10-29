@@ -36,8 +36,8 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 0;
-  padding: 12px;}
-
+  padding: 12px;
+}
 
 .section-header.has-icon .header-content h4 {
   margin: var(--space-0) !important;
@@ -217,12 +217,11 @@
 
 .flex-items {
   display: flex;
-      flex-direction: column;
-      gap: .5rem 0;
-      margin: 8px;
-      min-width: 320px;
-  }
-
+  flex-direction: column;
+  gap: 0.5rem 0;
+  margin: 8px;
+  min-width: 320px;
+}
 
 @media (max-width: 1200px) {
   .flex-items {

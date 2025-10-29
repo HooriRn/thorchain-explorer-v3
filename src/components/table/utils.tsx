@@ -39,6 +39,7 @@ export function createNumericColumn<T extends TableData>(
     formatFn?: (value: any) => string;
     className?: string;
     showTooltip?: boolean;
+    loaderType?: "number" | "percentage";
   } = {}
 ): TableColumn<T> {
   return {
@@ -48,6 +49,7 @@ export function createNumericColumn<T extends TableData>(
     maxWidth: options.maxWidth,
     width: options.width,
     sortFn: options.sortFn,
+    loaderType: options.loaderType || "number",
     renderCell: (item: T) => {
       const value = item[dataKey];
       const formattedValue = options.formatFn ? options.formatFn(value) : value;
@@ -66,7 +68,6 @@ export function createNumericColumn<T extends TableData>(
     },
   };
 }
-
 
 export function createStatusColumn<T extends TableData>(
   label: string,
@@ -109,7 +110,6 @@ export function createStatusColumn<T extends TableData>(
     },
   };
 }
-
 
 export function createAddressColumn<T extends TableData>(
   label: string,
@@ -158,7 +158,7 @@ export function createAddressColumn<T extends TableData>(
                     value
                       ?.toString()
                       .split("")
-                      .reduce((a, b) => a + b.charCodeAt(0), 0)
+                      .reduce((a: number, b: string) => a + b.charCodeAt(0), 0)
                   ) % 360
                 }, 70%, 50%)`,
               }}
@@ -182,7 +182,6 @@ export function createAddressColumn<T extends TableData>(
   };
 }
 
-
 export function createDateColumn<T extends TableData>(
   label: string,
   dataKey: keyof T,
@@ -203,6 +202,7 @@ export function createDateColumn<T extends TableData>(
     maxWidth: options.maxWidth,
     width: options.width,
     sortFn: options.sortFn,
+    loaderType: "date",
     renderCell: (item: T) => {
       const value = item[dataKey];
       const formattedValue = options.formatFn ? options.formatFn(value) : value;
@@ -218,7 +218,6 @@ export function createDateColumn<T extends TableData>(
   };
 }
 
-
 export function createCustomColumn<T extends TableData>(
   label: string,
   options: {
@@ -230,6 +229,7 @@ export function createCustomColumn<T extends TableData>(
     renderCell: (item: T) => React.ReactNode;
     headerRender?: () => React.ReactNode;
     className?: string;
+    loaderType?: "text" | "number" | "percentage" | "date";
   }
 ): TableColumn<T> {
   return {
@@ -239,11 +239,11 @@ export function createCustomColumn<T extends TableData>(
     maxWidth: options.maxWidth,
     width: options.width,
     sortFn: options.sortFn,
+    loaderType: options.loaderType,
     renderCell: options.renderCell,
     headerRender: options.headerRender,
   };
 }
-
 
 export function createSortFn<T extends TableData>(
   key: keyof T,
@@ -268,7 +268,6 @@ export function createSortFn<T extends TableData>(
     });
   };
 }
-
 
 export function createCustomSortFn<T extends TableData>(
   sortFunction: (a: T, b: T) => number

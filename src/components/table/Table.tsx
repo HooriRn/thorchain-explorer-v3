@@ -159,44 +159,11 @@ const Table: React.FC<TableProps> = ({
   });
 
   if (loading) {
-    const loaderColumns = columns.map((col) => {
-      let type = "text";
-
-      const label = col.label.toLowerCase();
-      const sortKey = col.sortKey?.toLowerCase() || "";
-
-      if (
-        label.includes("height") ||
-        label.includes("age") ||
-        label.includes("count") ||
-        label.includes("ins") ||
-        label.includes("outs") ||
-        label.includes("since") ||
-        sortKey.includes("height") ||
-        sortKey.includes("age") ||
-        sortKey.includes("count")
-      ) {
-        type = "number";
-      } else if (
-        label.includes("percent") ||
-        label.includes("ratio") ||
-        label.includes("vb")
-      ) {
-        type = "percentage";
-      } else if (
-        label.includes("date") ||
-        label.includes("time") ||
-        label.includes("since")
-      ) {
-        type = "date";
-      }
-
-      return {
-        label: col.label,
-        field: col.sortKey || col.label.toLowerCase(),
-        type: type,
-      };
-    });
+    const loaderColumns = columns.map((col) => ({
+      label: col.label,
+      field: col.sortKey || col.label.toLowerCase(),
+      type: col.loaderType || "text",
+    }));
 
     return (
       <div className={className}>

@@ -13,6 +13,7 @@ export interface TableColumn<T = any> {
   pinLeft?: boolean;
   pinRight?: boolean;
   hidden?: boolean;
+  loaderType?: "text" | "number" | "percentage" | "date";
 }
 
 export interface TableData {

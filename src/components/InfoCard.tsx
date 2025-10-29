@@ -8,7 +8,7 @@ import RightArrow from "../assets/images/arrow-right.svg";
 import Card from "./ui/Card";
 import { Skeleton } from "./ui/Skeleton";
 import GlassmorphismTooltip from "./GlassmorphismTooltip";
-import { formatTrendCurrency } from "../utils/format";
+import { formatTrendCurrency, formatRoundedCurrency } from "../utils/format";
 import { useAppStore } from "@/lib/store";
 import styles from "./InfoCard.module.css";
 
@@ -218,7 +218,7 @@ const InfoCard: React.FC<InfoCardProps> = ({
                             }
                             style={{
                               borderTop: item.header
-                                ? "1px solid var(--border-color)"
+                                ? "1px solid var(--border)"
                                 : undefined,
                               marginTop: item.header ? "8px" : undefined,
                               paddingTop: item.header ? "8px" : undefined,
@@ -290,10 +290,21 @@ const InfoCard: React.FC<InfoCardProps> = ({
                                                       .includes("RUNE");
 
                                                   if (isRuneValue) {
-                                                    return `(${formatTrendCurrency(
-                                                      item.value *
-                                                        (runePrice || 0),
-                                                      { decimals: 2 }
+                                                    const isRawRuneValue =
+                                                      item.filter &&
+                                                      item.filter
+                                                        .toString()
+                                                        .includes("/ 1e8");
+
+                                                    const runeUsdValue =
+                                                      isRawRuneValue
+                                                        ? (item.value / 1e8) *
+                                                          (runePrice || 0)
+                                                        : item.value *
+                                                          (runePrice || 0);
+
+                                                    return `(${formatRoundedCurrency(
+                                                      runeUsdValue
                                                     )})`;
                                                   } else {
                                                     const isRawValue =
@@ -307,9 +318,8 @@ const InfoCard: React.FC<InfoCardProps> = ({
                                                         (tcyPrice || 0)
                                                       : item.value *
                                                         (tcyPrice || 0);
-                                                    return `(${formatTrendCurrency(
-                                                      usdValue,
-                                                      { decimals: 2 }
+                                                    return `(${formatRoundedCurrency(
+                                                      usdValue
                                                     )})`;
                                                   }
                                                 }
