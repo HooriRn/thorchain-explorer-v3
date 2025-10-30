@@ -6,7 +6,7 @@
 .counter-container {
   display: flex;
   flex-direction: column;
-  border-radius: var(--radius-2xl, 1rem);
+  border-radius: var(--radius-2xl);
   flex: 1;
   max-width: 35rem;
 }
@@ -39,12 +39,13 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  align-items: center;
   justify-content: center;
-}
 
-.timers .halted {
-  font-size: var(--font-size-xl, 1.25rem);
-  color: var(--red, #ef4444);
+  .halted {
+    font-size: var(--font-size-xl);
+    color: var(--red);
+  }
 }
 
 .duration-wrapper {
@@ -61,12 +62,12 @@
 }
 
 .duration strong {
-  font-size: var(--font-size-xl, 1.25rem);
-  color: var(--primary, var(--primary));
+  font-size: var(--font-size-xl);
+  color: var(--primary);
 }
 
 .duration small {
-  font-size: var(--font-size-mobile, 0.75rem);
+  font-size: var(--font-size-mobile);
   color: var(--sec-font-color);
 }
 
@@ -87,12 +88,12 @@
   flex-direction: column;
   width: 100%;
   gap: 1rem;
-}
 
-.target-info p {
-  font-size: var(--font-size-md, 1rem);
-  color: var(--sec-font-color);
-  margin: 0;
+  p {
+    font-size: var(--font-size-md);
+    color: var(--sec-font-color);
+    margin: var(--space-0);
+  }
 }
 
 .target-title {

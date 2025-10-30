@@ -69,7 +69,7 @@ export class InfraAPI {
 
   async getChurn(): Promise<Churn> {
     const response = await apiClient.getExternal<Churn>(
-      `${this.config.SERVER_URL}api/churn`
+      `${this.config.SERVER_URL}churns`
     )
     return response.data
   }
