@@ -90,3 +90,7 @@ body {
   z-index: 99999 !important;
   transition: opacity 0.2s ease-in-out !important;
 }
+.cell-content {
+  display: flex;
+  align-items: center;
+}
