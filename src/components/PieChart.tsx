@@ -14,7 +14,9 @@ interface PieData {
 
 interface PieChartProps {
   pieData?: PieData[];
-  formatter?: (value: any, name: string) => string;
+  formatter?:
+    | ((value: any, name: string) => string)
+    | ((params: any) => string);
   name?: string;
   extraSeries?: any;
   extra?: any;
@@ -222,7 +224,11 @@ const PieChart: React.FC<PieChartProps> = ({
             ...chartOptions.tooltip,
             formatter: formatter
               ? function (params: any) {
-                  return formatter(params.value, params.name);
+                  if (formatter.length === 2) {
+                    return formatter(params.value, params.name);
+                  } else {
+                    return formatter(params);
+                  }
                 }
               : undefined,
             className: "echarts-tooltip",

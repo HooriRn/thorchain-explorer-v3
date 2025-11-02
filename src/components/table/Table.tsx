@@ -22,6 +22,7 @@ const Table: React.FC<TableProps> = ({
   enableSelect = false,
   enableFilter = false,
   enablePagination = false,
+  showLineNumbers = false,
   customTheme,
   layout = {
     custom: true,
@@ -41,18 +42,39 @@ const Table: React.FC<TableProps> = ({
       nodes: data.map((item: TableData, index: number) => ({
         ...item,
         id: item.id || index.toString(),
+        _rowIndex: index,
       })),
     }),
     [data]
   );
 
+  const columnsWithLineNumbers = useMemo(() => {
+    if (!showLineNumbers) {
+      return columns;
+    }
+
+    const lineNumberColumn: TableColumn = {
+      label: "",
+      sortKey: "_lineNumber",
+      minWidth: 50,
+      width: 50,
+      className: "line-numbers",
+      renderCell: (item: TableData) => {
+        const rowIndex = (item as any)._rowIndex;
+        return <span>{rowIndex !== undefined ? rowIndex + 1 : ""}</span>;
+      },
+    };
+
+    return [lineNumberColumn, ...columns];
+  }, [columns, showLineNumbers]);
+
   const sortFns = useMemo(() => {
     const fns: { [key: string]: (array: any[]) => any[] } = {};
 
-    columns.forEach((column: TableColumn) => {
+    columnsWithLineNumbers.forEach((column: TableColumn) => {
       if (column.sortKey && column.sortFn) {
         fns[column.sortKey] = column.sortFn;
-      } else if (column.sortKey) {
+      } else if (column.sortKey && column.sortKey !== "_lineNumber") {
         fns[column.sortKey] = (array: any[]) =>
           [...array].sort((a, b) => {
             const aVal = a[column.sortKey!];
@@ -70,7 +92,7 @@ const Table: React.FC<TableProps> = ({
     });
 
     return fns;
-  }, [columns]);
+  }, [columnsWithLineNumbers]);
 
   const gridTemplateColumns = useMemo(() => {
     const customGridMatch = customTheme?.Table?.match(
@@ -79,7 +101,7 @@ const Table: React.FC<TableProps> = ({
     if (customGridMatch) {
       return `--data-table-library_grid-template-columns: ${customGridMatch[1]};`;
     }
-    const gridColumns = columns.map((column) => {
+    const gridColumns = columnsWithLineNumbers.map((column) => {
       if (column.width) {
         return `${column.width}px`;
       }
@@ -92,7 +114,7 @@ const Table: React.FC<TableProps> = ({
     return `--data-table-library_grid-template-columns: ${gridColumns.join(
       " "
     )};`;
-  }, [columns, customTheme]);
+  }, [columnsWithLineNumbers, customTheme]);
 
   const theme = useTheme([
     getTheme(),
@@ -180,7 +202,7 @@ const Table: React.FC<TableProps> = ({
   });
 
   if (loading) {
-    const loaderColumns = columns.map((col) => ({
+    const loaderColumns = columnsWithLineNumbers.map((col) => ({
       label: col.label,
       field: col.sortKey || col.label.toLowerCase(),
       type: col.loaderType || "text",
@@ -204,7 +226,7 @@ const Table: React.FC<TableProps> = ({
   return (
     <div className={`${styles.tableContainer} ${className}`}>
       <CompactTable
-        columns={columns}
+        columns={columnsWithLineNumbers}
         data={tableData}
         theme={theme}
         sort={enableSort ? sort : undefined}

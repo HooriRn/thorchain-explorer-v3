@@ -56,6 +56,7 @@ export interface TableProps {
   enableSelect?: boolean;
   enableFilter?: boolean;
   enablePagination?: boolean;
+  showLineNumbers?: boolean;
   customTheme?: TableTheme;
   layout?: TableLayout;
   options?: TableOptions;

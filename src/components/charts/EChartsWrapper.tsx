@@ -342,6 +342,25 @@ const EChartsWrapper: React.FC<EChartsWrapperProps> = ({
       };
     }
 
+    if (
+      (type === "pie" || type === "doughnut") &&
+      merged.series &&
+      merged.series[0]
+    ) {
+      if (options?.label) {
+        merged.series[0].label = {
+          ...merged.series[0].label,
+          ...options.label,
+        };
+      }
+      if (options?.labelLine) {
+        merged.series[0].labelLine = {
+          ...merged.series[0].labelLine,
+          ...options.labelLine,
+        };
+      }
+    }
+
     return merged;
   }, [type, data, options, theme]);
 
