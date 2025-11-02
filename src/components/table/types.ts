@@ -14,6 +14,7 @@ export interface TableColumn<T = any> {
   pinRight?: boolean;
   hidden?: boolean;
   loaderType?: "text" | "number" | "percentage" | "date";
+  className?: string;
 }
 
 export interface TableData {

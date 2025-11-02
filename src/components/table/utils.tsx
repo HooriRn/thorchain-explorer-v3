@@ -26,7 +26,6 @@ export function createTextColumn<T extends TableData>(
   };
 }
 
-
 export function createNumericColumn<T extends TableData>(
   label: string,
   dataKey: keyof T,
@@ -242,6 +241,7 @@ export function createCustomColumn<T extends TableData>(
     loaderType: options.loaderType,
     renderCell: options.renderCell,
     headerRender: options.headerRender,
+    className: options.className,
   };
 }
 

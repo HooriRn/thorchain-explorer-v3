@@ -7,9 +7,10 @@ import { formatAsset, showAsset, decimalFormat } from "@/utils/global";
 import { number, formatPercent } from "@/utils/format";
 import Card from "@/components/ui/Card";
 import AssetIcon from "@/components/AssetIcon";
-import RuneAsset from "@/components/RuneAsset";
+import Rune from "@/assets/images/rune.svg";
 import { Table, TableColumn, TableData } from "@/components/table";
 import { createCustomColumn } from "@/components/table/utils";
+import styles from "./outbounds.module.css";
 
 interface OutboundFeeData extends TableData {
   asset: string;
@@ -21,34 +22,31 @@ interface OutboundFeeData extends TableData {
 }
 
 const customTheme = {
-  Table: `
-    --data-table-library_grid-template-columns: auto auto auto auto auto auto ;
-    table-layout: fixed;
-  `,
   HeaderCell: `
-    text-align: right ;
-    
-    &:first-child {
-      text-align: left ;
-    }
-  `,
+       &:last-child {
+          text-align: right;
+        }
+      `,
+  Cell: `
+      &:last-child {
+        text-align: right;
+        }
+    `,
 };
 const OutboundsPage: React.FC = () => {
   const runePrice = useAppStore((state) => state.runePrice);
 
-  // data() → useState hooks
   const [loading, setLoading] = useState(true);
   const [outboundFees, setOutboundFees] = useState<OutboundFeeData[]>([]);
 
-  // columns definition
   const columns = useMemo((): TableColumn<OutboundFeeData>[] => {
     return [
       createCustomColumn<OutboundFeeData>("Asset", {
         sortKey: "asset",
         minWidth: 120,
         renderCell: (item: OutboundFeeData) => (
-          <span className="cell-content">
-            <AssetIcon asset={item.asset} className="asset-icon" />
+          <span className={styles.cellContent}>
+            <AssetIcon asset={item.asset} classes={[styles.assetIcon]} />
             <span>{formatAsset(item.asset)}</span>
           </span>
         ),
@@ -56,8 +54,9 @@ const OutboundsPage: React.FC = () => {
       createCustomColumn<OutboundFeeData>("Outbound Fee", {
         sortKey: "outboundFee",
         minWidth: 120,
+        className: "mono",
         renderCell: (item: OutboundFeeData) => (
-          <span>
+          <span className="mono">
             {decimalFormat(item.outboundFee / 1e8)}{" "}
             {showAsset(item.asset, true)}
           </span>
@@ -66,9 +65,10 @@ const OutboundsPage: React.FC = () => {
       createCustomColumn<OutboundFeeData>("Fee Withheld", {
         sortKey: "feeWithheld",
         minWidth: 150,
+        className: "mono",
         renderCell: (item: OutboundFeeData) => (
-          <span>
-            <RuneAsset height="0.7rem" />
+          <span className={`mono ${styles.cellContent}`}>
+            <Rune className={styles.runeCur} />
             {number(item.feeWithheld / 1e8, "0,0.00a")}
             {+item.feeWithheld > 0 && (
               <small>
@@ -81,9 +81,10 @@ const OutboundsPage: React.FC = () => {
       createCustomColumn<OutboundFeeData>("Fee Spent", {
         sortKey: "feeSpent",
         minWidth: 150,
+        className: "mono",
         renderCell: (item: OutboundFeeData) => (
-          <span>
-            <RuneAsset height="0.7rem" />
+          <span className={`mono ${styles.cellContent}`}>
+            <Rune className={styles.runeCur} />
             {number(item.feeSpent / 1e8, "0,0.00a")}
             {+item.feeSpent > 0 && (
               <small>
@@ -96,9 +97,10 @@ const OutboundsPage: React.FC = () => {
       createCustomColumn<OutboundFeeData>("Surplus", {
         sortKey: "surplus",
         minWidth: 150,
+        className: "mono",
         renderCell: (item: OutboundFeeData) => (
-          <span>
-            <RuneAsset height="0.7rem" />
+          <span className={`mono ${styles.cellContent}`}>
+            <Rune className={styles.runeCur} />
             {number(item.surplus / 1e8, "0,0.00a")}
             {+item.surplus > 0 && (
               <small>
@@ -111,8 +113,11 @@ const OutboundsPage: React.FC = () => {
       createCustomColumn<OutboundFeeData>("Dynamic Multiplier", {
         sortKey: "dynamicMultiplier",
         minWidth: 150,
+        className: "mono",
         renderCell: (item: OutboundFeeData) => (
-          <span>{formatPercent(item.dynamicMultiplier / 1e6, 2)}</span>
+          <span className="mono">
+            {formatPercent(item.dynamicMultiplier / 1e6, 2)}
+          </span>
         ),
       }),
     ];
@@ -133,7 +138,12 @@ const OutboundsPage: React.FC = () => {
         surplus: item.surplus_rune || 0,
         dynamicMultiplier: item.dynamic_multiplier_basis_points || 0,
       }));
-      setOutboundFees(formattedData);
+
+      const sortedData = [...formattedData].sort((a, b) =>
+        a.asset.localeCompare(b.asset)
+      );
+
+      setOutboundFees(sortedData);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching outbound fees:", error);

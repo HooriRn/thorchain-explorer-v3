@@ -333,34 +333,7 @@ const Transactions: React.FC<TransactionsProps> = ({
     [owner, hoveredType, hoveredAddress, router, additionalProps]
   );
 
-  const customTheme = useMemo(() => {
-    const additionalColumns = additionalProps.length;
-
-    const widths = [];
-    widths.push("200px");
-    widths.push("120px");
-    widths.push("124px");
-    widths.push("134px");
-    if (owner !== undefined) {
-      widths.push("80px");
-    }
-    widths.push("250px");
-    widths.push("auto");
-    for (let i = 0; i < additionalColumns; i++) {
-      widths.push("auto");
-    }
-
-    const gridTemplateColumns = widths.join(" ");
-
-    return {
-      Table: `
-        --data-table-library_grid-template-columns: ${gridTemplateColumns};
-      `,
-      Cell: `
-        text-align: left;
-      `,
-    };
-  }, [owner, additionalProps.length]);
+ 
 
   const getRowProps = (item: TableData) => {
     return {
@@ -386,7 +359,6 @@ const Transactions: React.FC<TransactionsProps> = ({
           rowProps={getRowProps}
           enableSort={true}
           enableSelect={false}
-          customTheme={customTheme}
           className={styles.tableContainer}
         />
       )}

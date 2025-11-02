@@ -72,6 +72,28 @@ const Table: React.FC<TableProps> = ({
     return fns;
   }, [columns]);
 
+  const gridTemplateColumns = useMemo(() => {
+    const customGridMatch = customTheme?.Table?.match(
+      /--data-table-library_grid-template-columns:\s*([^;]+);?/
+    );
+    if (customGridMatch) {
+      return `--data-table-library_grid-template-columns: ${customGridMatch[1]};`;
+    }
+    const gridColumns = columns.map((column) => {
+      if (column.width) {
+        return `${column.width}px`;
+      }
+      if (column.minWidth) {
+        return `minmax(${column.minWidth}px, 1fr)`;
+      }
+      return "1fr";
+    });
+
+    return `--data-table-library_grid-template-columns: ${gridColumns.join(
+      " "
+    )};`;
+  }, [columns, customTheme]);
+
   const theme = useTheme([
     getTheme(),
     {
@@ -80,15 +102,19 @@ const Table: React.FC<TableProps> = ({
         border: none;
         background: transparent;
         border-collapse: collapse;
-        table-layout: auto;
-        text-align: right;
-        ${customTheme?.Table || ""}
+        table-layout: fixed;
+        ${gridTemplateColumns}
+        ${
+          customTheme?.Table?.replace(
+            /--data-table-library_grid-template-columns:[^;]*;?/g,
+            ""
+          ) || ""
+        }
       `,
       Header: `
         background: transparent;
         border-bottom: 1px solid var(--border) !important;
         position: relative;
-        text-align: right;
         color: var(--font-color);
         ${customTheme?.Header || ""}
       `,
@@ -102,17 +128,11 @@ const Table: React.FC<TableProps> = ({
         color: var(--font-color);
         min-width: auto;
         width: auto;
-        
-
-         &:first-child {
-          text-align: left;
-        }
 
         ${customTheme?.HeaderCell || ""}
       `,
       Body: `
         background: transparent;
-        text-align: right;
         ${customTheme?.Body || ""}
       `,
       Row: `
@@ -138,6 +158,7 @@ const Table: React.FC<TableProps> = ({
         border: none;
         background: transparent;
         vertical-align: middle;
+        padding: .75em;        
         ${customTheme?.Cell || ""}
       `,
     },

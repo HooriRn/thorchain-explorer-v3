@@ -80,7 +80,7 @@ const VaultsPage: React.FC = () => {
 
   const customTheme = {
     Table: `
-      --data-table-library_grid-template-columns: 200px 120px 100px 120px 120px 100px 120px 100px 100px 119px 100px 100px;
+      --data-table-library_grid-template-columns: auto auto auto auto auto auto auto auto auto auto auto auto;
     `,
   };
 
