@@ -82,10 +82,6 @@ export const mainnetNav = {
           name: "TVL by Chain",
           link: "/pools/tvl",
         },
-        {
-          name: "Rune Pool",
-          link: "/pools/runepool",
-        },
       ],
     },
     {

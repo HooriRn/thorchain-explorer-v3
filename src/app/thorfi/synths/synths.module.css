@@ -1,0 +1,39 @@
+th.end .table-asset {
+  justify-content: flex-end;
+}
+
+.table-asset {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-icon {
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.header-icon:hover {
+  opacity: 1;
+}
+
+.cell-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mono {
+  font-family: monospace;
+}
+
+.extra-text {
+  font-size: 0.6rem;
+  font-weight: bold;
+  margin-left: 0.25rem;
+}
+
+.end {
+  justify-content: flex-end;
+}

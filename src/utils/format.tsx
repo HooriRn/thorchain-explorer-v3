@@ -446,7 +446,66 @@ export const formatVueNumber = (
  */
 export const smallBaseAmountFormat = (
   number: number | string | null | undefined,
-  numberFormatter: (value: any, pattern?: any) => string
+  numberFormatter: (value: any, pattern?: any) => string = formatVueNumber
 ) => {
   return number ? numberFormatter(+number / 10 ** 8, "0,0.00a") : "-";
+};
+
+/**
+ * Formats small base amount with currency symbol ($)
+ * @param number - The number to format
+ * @param numberFormatter - The formatter function to use (e.g., formatVueNumber)
+ * @returns Formatted string with $ prefix or "-" if number is falsy
+ */
+export const smallBaseAmountFormatWithCurrency = (
+  number: number | string | null | undefined,
+  numberFormatter: (value: any, pattern?: any) => string = formatVueNumber
+) => {
+  return number ? `$${smallBaseAmountFormat(number, numberFormatter)}` : "-";
+};
+
+/**
+ * Formats base amount values (divided by 10^8) with 4 decimal places
+ * @param number - The number to format
+ * @param numberFormatter - The formatter function to use (e.g., formatVueNumber)
+ * @returns Formatted string or "-" if number is falsy
+ */
+export const formatBaseAmount = (
+  number: number | string | null | undefined,
+  numberFormatter: (value: any, pattern?: any) => string = formatVueNumber
+) => {
+  return number ? numberFormatter(+number / 10 ** 8, "0,0.0000") : "-";
+};
+
+/**
+ * Formats normal numbers with comma separator
+ * @param number - The number to format
+ * @param numberFormatter - The formatter function to use (e.g., formatVueNumber)
+ * @returns Formatted string or "-" if number is falsy
+ */
+export const formatNormalNumber = (
+  number: number | string | null | undefined,
+  numberFormatter: (value: any, pattern?: any) => string = formatVueNumber
+) => {
+  return number ? numberFormatter(+number, "0,0") : "-";
+};
+
+/**
+ * Formats percentage value (ratio 0-1) to percentage string (e.g., 0.05 -> "5.00%")
+ * @param value - The ratio value (0-1)
+ * @param decimals - Number of decimal places (default: 2)
+ * @returns Formatted percentage string
+ */
+export const formatPercentageRatio = (
+  value: number | string | null | undefined,
+  decimals: number = 2
+): string => {
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+  const numValue = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(numValue)) {
+    return "-";
+  }
+  return formatPercent(numValue, decimals);
 };

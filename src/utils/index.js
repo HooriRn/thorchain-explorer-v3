@@ -476,6 +476,9 @@ export function curFormat(number) {
 }
 
 export function formatAsset(asset) {
+  if (!asset) {
+    return asset;
+  }
   return asset.length > 10 ? asset.slice(0, 14) + "..." : asset;
 }
 

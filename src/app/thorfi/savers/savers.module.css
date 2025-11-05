@@ -1,0 +1,43 @@
+.footer-stat {
+  margin: var(--space-24) var(--space-16) var(--space-0) var(--space-16);
+}
+
+.footer-stat small {
+  font-size: small;
+  font-family: "Roboto Mono";
+}
+
+.cell-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 5px 0px;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.mono {
+  font-family: "Roboto Mono", monospace;
+}
+
+.table-asset {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.table-asset.end {
+  justify-content: flex-end;
+}
+
+.header-icon {
+  width: 1rem;
+  height: 1rem;
+  cursor: help;
+}
+
+.extra-text {
+  margin-left: 0.25rem;
+}

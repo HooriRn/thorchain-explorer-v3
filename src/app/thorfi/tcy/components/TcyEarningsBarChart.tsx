@@ -5,7 +5,7 @@ import { getChartColor, getCurrentChartTheme } from "@/utils/global";
 import { useTheme } from "@/lib/store";
 import { formatVueNumber } from "@/utils/format";
 import ChartLoader from "@/components/ChartLoader";
-import EChartsWrapper from "../../../components/charts/EChartsWrapper";
+import EChartsWrapper from "../../../../components/charts/EChartsWrapper";
 
 interface EarningsHistory {
   xAxis: string[];

@@ -49,8 +49,18 @@ const Table: React.FC<TableProps> = ({
   );
 
   const columnsWithLineNumbers = useMemo(() => {
+    let processedColumns = columns.map((column) => {
+      if (column.headerRender) {
+        return {
+          ...column,
+          label: column.headerRender() as any,
+        };
+      }
+      return column;
+    });
+
     if (!showLineNumbers) {
-      return columns;
+      return processedColumns;
     }
 
     const lineNumberColumn: TableColumn = {
@@ -65,7 +75,7 @@ const Table: React.FC<TableProps> = ({
       },
     };
 
-    return [lineNumberColumn, ...columns];
+    return [lineNumberColumn, ...processedColumns];
   }, [columns, showLineNumbers]);
 
   const sortFns = useMemo(() => {
