@@ -5,7 +5,7 @@ import moment from "moment";
 import StatsPanel from "@/components/StatsPanel";
 import Card from "@/components/ui/Card";
 import Address from "@/components/transactions/Address";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "@/components/ui/progressBar";
 import { Badge } from "@/components/ui/badge";
 import SearchIcon from "@/assets/images/search.svg";
 import Page from "@/components/PageContainer";
@@ -273,14 +273,9 @@ const VotesPage: React.FC = () => {
                 extraClass="card-container"
                 header={
                   vote.mimirValue !== undefined ? (
-                    <Badge
-                      variant="green"
-                      className={styles["current-badge"]}
-                    >
+                    <Badge variant="green" className={styles["current-badge"]}>
                       Current:
-                      <strong>
-                        {vote.mimirValue}
-                      </strong>
+                      <strong>{vote.mimirValue}</strong>
                     </Badge>
                   ) : undefined
                 }

@@ -10,7 +10,7 @@ import Card from "@/components/ui/Card";
 import InfoCard from "@/components/InfoCard";
 import ChartLoader from "@/components/ChartLoader";
 import EChartsWrapper from "@/components/charts/EChartsWrapper";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "@/components/ui/progressBar";
 
 import AllocationsCard from "./components/AllocationsChart";
 import ReserveBreakdownCard from "./components/ReserveBreakdownChart";

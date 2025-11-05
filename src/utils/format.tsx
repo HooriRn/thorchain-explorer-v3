@@ -437,3 +437,16 @@ export const formatVueNumber = (
 
   return numValue.toString();
 };
+
+/**
+ * Formats small base amount values (divided by 10^8) with abbreviated format
+ * @param number - The number to format
+ * @param numberFormatter - The formatter function to use (e.g., formatVueNumber)
+ * @returns Formatted string or "-" if number is falsy
+ */
+export const smallBaseAmountFormat = (
+  number: number | string | null | undefined,
+  numberFormatter: (value: any, pattern?: any) => string
+) => {
+  return number ? numberFormatter(+number / 10 ** 8, "0,0.00a") : "-";
+};

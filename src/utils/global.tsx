@@ -22,6 +22,7 @@ import {
   interfaces,
 } from "@/utils/index";
 import API_ENDPOINTS from "@/lib/api/config";
+import { smallBaseAmountFormat as smallBaseAmountFormatFn } from "@/utils/format";
 
 const colorHash = new ColorHash({ lightness: 0.5 });
 
@@ -376,9 +377,7 @@ export const baseAmountFormatOrZero = (number) => {
   return formatBN(bnOrZero(number).div(1e8), 8);
 };
 
-export const smallBaseAmountFormat = (number, numberFormatter) => {
-  return number ? numberFormatter(+number / 10 ** 8, "0,0.00a") : "-";
-};
+export const smallBaseAmountFormat = smallBaseAmountFormatFn;
 
 export const smallBaseAmountFormatWithCur = (number, numberFormatter) => {
   return number ? `$${smallBaseAmountFormat(number, numberFormatter)}` : "-";
