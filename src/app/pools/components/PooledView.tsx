@@ -292,7 +292,7 @@ const PooledView: React.FC = () => {
         />
         <StatItem
           title="30D Earnings:"
-          value={`$${number(totalInfo.month.earnings, "0a")}`}
+          value={`$${number(Math.round(totalInfo.month.earnings), "0a")}`}
           loading={loading}
         />
         <StatItem
