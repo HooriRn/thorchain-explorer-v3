@@ -53,3 +53,10 @@
   border-radius: var(--radius-s);
   font-size: 10px;
 }
+
+.pageInfo {
+  color: var(--sec-font-color);
+  font-family: "Roboto Mono";
+  font-size: var(--font-size-sm);
+  margin-right: auto;
+}

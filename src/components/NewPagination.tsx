@@ -29,6 +29,9 @@ const NewPagination: React.FC<NewPaginationProps> = ({
 
   const totalPages = Math.ceil(limitedTotalRows / perPage);
 
+  const startRow = (currentPage - 1) * perPage + 1;
+  const endRow = Math.min(currentPage * perPage, limitedTotalRows);
+
   const handlePageChange = (newPage: number) => {
     if (controlledCurrentPage === undefined) {
       setInternalPage(newPage);
@@ -81,6 +84,9 @@ const NewPagination: React.FC<NewPaginationProps> = ({
   return (
     <div className={styles.overflowAuto}>
       <div className={styles.customPagination}>
+        <div className={styles.pageInfo}>
+          {startRow} - {endRow} of {limitedTotalRows}
+        </div>
         <button
           className={styles.pageItem}
           disabled={currentPage === 1}
