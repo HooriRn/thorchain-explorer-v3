@@ -50,7 +50,24 @@ interface TableGeneralStat {
   name: string;
   value?: string | number;
 }
+const customTheme = {
+  Table: `
+    --data-table-library_grid-template-columns: auto auto auto auto auto auto ;
+  `,
+  HeaderCell: `
 
+  &:nth-child(6) {
+    text-align: left;
+  }
+`,
+Cell: `  
+
+ 
+  &:nth-child(6) {
+    text-align: right;
+  }
+`,
+};
 const TradesPage: React.FC = () => {
   const runePrice = useAppStore((state) => state.runePrice);
 
@@ -401,6 +418,7 @@ const TradesPage: React.FC = () => {
             enableSelect={false}
             className="vgt-table net-table"
             emptyMessage="No trade assets available"
+            customTheme={customTheme}
           />
         )}
       </Card>

@@ -493,7 +493,7 @@ export class ThornodeAPI {
 
   async getSecuredAssets(): Promise<SecuredAsset[]> {
     const response = await apiClient.getExternal<SecuredAsset[]>(
-      `${this.config.THORNODE_URL}thorchain/secured_assets`
+      `${this.config.THORNODE_URL}thorchain/securedassets`
     );
     return response.data;
   }
