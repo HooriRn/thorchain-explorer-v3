@@ -1,0 +1,134 @@
+.search-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin: var(--space-0) var(--space-10);
+  gap: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .search-container {
+    margin: var(--space-0);
+    gap: var(--space-0);
+  }
+}
+
+.filter-btns {
+  display: flex;
+  margin-left: var(--space-5);
+  gap: var(--space-5);
+  overflow: auto;
+  scrollbar-width: thin;
+  padding-bottom: var(--space-8);
+  scrollbar-color: var(--border-color) var(--bg-color);
+}
+
+.filter-btns .enabled-btn {
+  color: var(--primary-color) !important;
+  border: 1px solid var(--primary-color) !important;
+}
+
+.filter-button {
+  background-color: var(--bg-color);
+  color: var(--sec-font-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-2lg);
+  margin: var(--space-2) var(--space-0);
+  padding: var(--space-8) var(--space-16);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-5);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.filter-button:hover {
+  color: var(--primary-color);
+}
+
+#nodes-search-container {
+  display: flex;
+  position: relative;
+  flex: 1;
+}
+
+.search-input {
+  flex: 1;
+  color: var(--sec-font-color);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-lg);
+  outline: none;
+  margin: var(--space-2);
+  padding: var(--space-12);
+  font-size: var(--font-size-mobile);
+  font-weight: 450;
+}
+
+.search-input:focus {
+  border-color: transparent;
+  box-shadow: 0 0 0 0.15rem rgba(255, 255, 255, 0.1);
+  color: var(--primary-color);
+}
+
+.search-icon {
+  position: absolute;
+  width: 20px;
+  height: 24px;
+  fill: var(--font-color);
+  right: 0.8rem;
+  top: calc(50% - 0.8rem);
+  cursor: pointer;
+  transition: fill 0.3s ease;
+  box-sizing: content-box;
+  background: var(--card-bg-color);
+  padding-left: var(--space-8);
+}
+
+.grid-network {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-gap: 0.5rem;
+  gap: 0.5rem;
+}
+
+.extra {
+  font-size: var(--font-size-xs);
+}
+
+.filter-icon {
+  fill: currentColor;
+  width: 1rem;
+  height: 1rem;
+  transform: rotate(180deg);
+}
+
+.filter-icon.disable {
+  transform: rotate(0);
+}
+
+.skeleton-item {
+  width: 100%;
+}
+
+.skeleton-bar {
+  width: 100%;
+  height: 10px;
+  background: linear-gradient(
+    90deg,
+    var(--border-color) 25%,
+    var(--bg-color) 50%,
+    var(--border-color) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
