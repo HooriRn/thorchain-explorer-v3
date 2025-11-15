@@ -115,6 +115,9 @@ const SecuredPage: React.FC = () => {
 
       if (Array.isArray(poolsToProcess)) {
         poolsToProcess.forEach((pool: any) => {
+          if (!pool?.pool) {
+            return;
+          }
           const securedAsset = assetToSecure(pool.pool);
           if (securedAsset) {
             volume24hMap[securedAsset] = (pool.securedVolume || 0) / 1e2;
@@ -125,9 +128,15 @@ const SecuredPage: React.FC = () => {
       let totalSecuredDepth = 0;
       const ret: SecuredRow[] = [];
       for (const asset of securedAssets) {
+        if (!asset?.asset) {
+          continue;
+        }
         const securedDepth = +asset.depth || 0;
         const securedSupply = +asset.supply || 0;
         const assetName = securedToAsset(asset.asset);
+        if (!assetName) {
+          continue;
+        }
         const pool = pools.find((p: any) => p.asset === assetName);
         const vaultDepth = assetPerVault[assetName] || 0;
 
@@ -321,7 +330,7 @@ const SecuredPage: React.FC = () => {
           if (item.volume24h !== null && item.volume24h !== undefined) {
             return (
               <span className={styles.mono}>
-                {formatCurrencyFn(item.volume24h)}
+                ${formatVueNumber(item.volume24h, "0,0.00")}
               </span>
             );
           }
@@ -348,22 +357,6 @@ const SecuredPage: React.FC = () => {
       },
     ];
   }, [usdDenom, baseAmountFormatFn, formatCurrencyFn, securedToAssetFn]);
-
-  const customTheme = {
-    Table: `
-      --data-table-library_grid-template-columns: auto auto auto auto;
-    `,
-    HeaderCell: `
-      &:nth-child(2) {
-        text-align: right;
-      }
-    `,
-    Cell: `
-      &:nth-child(2) {
-        text-align: right;
-      }
-    `,
-  };
 
   return (
     <Page error={error} fluid={false}>
@@ -392,17 +385,18 @@ const SecuredPage: React.FC = () => {
               }))}
             />
           ) : rows.length > 0 ? (
-            <Table
-              columns={cols}
-              data={rows}
-              loading={false}
-              enableSort={true}
-              enableSelect={false}
-              onSortChange={() => {}}
-              onRowSelectChange={() => {}}
-              customTheme={customTheme}
-              className="vgt-table net-table"
-            />
+            <div className={styles["table-wrapper"]}>
+              <Table
+                columns={cols}
+                data={rows}
+                loading={false}
+                enableSort={true}
+                enableSelect={false}
+                onSortChange={() => {}}
+                onRowSelectChange={() => {}}
+                className="vgt-table net-table"
+              />
+            </div>
           ) : (
             <div style={{ padding: "2rem", textAlign: "center" }}>
               {error

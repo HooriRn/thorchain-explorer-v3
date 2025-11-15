@@ -22,6 +22,7 @@ th.end .table-asset {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  padding: 3px 0;
 }
 
 .mono {
