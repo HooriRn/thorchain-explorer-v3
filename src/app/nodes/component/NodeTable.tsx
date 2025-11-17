@@ -583,7 +583,13 @@ const NodeTable: React.FC<NodeTableProps> = ({
           renderCell: (item: any) => {
             const row = item as any;
             const highlightStyle = getHighlightStyle(row.address);
-
+  
+            const formatAddressLastChars = (address: string, chars: number = 4): string => {
+              if (!address || typeof address !== 'string') return "-";
+              if (address.length <= chars) return address;
+              return address.slice(-chars);
+            };
+            
             if (col.field === "address") {
               return (
                 <div className={styles["table-wrapper-row"]}>
@@ -593,7 +599,7 @@ const NodeTable: React.FC<NodeTableProps> = ({
                       style={highlightStyle}
                       href={`/address/${row.address}`}
                     >
-                      {addressFormatV2(row.address, 4, true)}
+                      {formatAddressLastChars(row.address, 4)}
                     </Link>
                   </Tooltip>
                   <Copy strCopy={row.address} />

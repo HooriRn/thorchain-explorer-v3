@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { rcompare } from "semver";
 import { orderBy, countBy } from "lodash";
 import moment from "moment";
@@ -8,10 +8,10 @@ import PageContainer from "@/components/PageContainer";
 import Card from "@/components/ui/Card";
 import InfoCard from "@/components/InfoCard";
 import TableLoader from "@/components/TableLoader";
-import NodeTable from "./component/NodeTable";
+import Table from "@/components/table/Table";
 import { fillNodeData, availableChains, blockTime } from "@/lib/utils";
-import { addressFormatV2, normalFormat } from "@/utils/global";
-import { number, formatPercent } from "@/utils/format";
+import { addressFormatV2 } from "@/utils/global";
+import { number, formatPercent, formatNormalNumber } from "@/utils/format";
 import { useRunePrice, useChainsHeight } from "@/lib/store";
 import { getNodeOverview, getNodesInfo, getAsgard, getMimir } from "@/lib/api";
 import styles from "./page.module.css";
@@ -31,6 +31,7 @@ import HandcuffsIcon from "@/assets/images/handcuffs.svg";
 import CircleUpIcon from "@/assets/images/circle-up.svg";
 import WalkerIcon from "@/assets/images/walker.svg";
 import HammerIcon from "@/assets/images/hammer.svg";
+import { TableColumn, TableData } from "@/components/table/types";
 
 const SkeletonItem: React.FC<{
   loading: boolean;
@@ -46,32 +47,44 @@ const SkeletonItem: React.FC<{
   return <>{children}</>;
 };
 
+interface NodeRow extends TableData {
+  address: string;
+  churn: any[];
+  isp: string;
+  location: any;
+  status: string;
+  version: string;
+  fee: number;
+  operator: string;
+  award: number;
+  total_bond: number;
+  slash: number;
+  score: number;
+  apy: number;
+  vault: string;
+  missing_blocks: number;
+  rpcHealth: string;
+  bifrostHealth: string;
+  age: any;
+  behind?: any;
+  highlight?: any;
+}
+
 const NodesPage: React.FC = () => {
   const runePrice = useRunePrice();
   const chainsHeight = useChainsHeight();
 
   const [network, setNetwork] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [mode, setMode] = useState<string>("active");
-  const [statusMode, setStatusMode] = useState<string>("node-stat");
   const [nodesQuery, setNodesQuery] = useState<any[] | undefined>(undefined);
-  const [nodesExtra, setNodesExtra] = useState<any | undefined>(undefined);
   const [minBond, setMinBond] = useState<number>(30000000000000);
   const [extraNodeChurn, setExtraNodeChurn] = useState<number>(0);
   const [newNodesChurn, setNewNodesChurn] = useState<number>(2);
-  const [lastBlockHeight, setLastBlockHeight] = useState<number | undefined>(
-    undefined
-  );
-  const [churnInterval, setChurnInterval] = useState<number | undefined>(
-    undefined
-  );
+  const [churnInterval, setChurnInterval] = useState<number | undefined>(undefined);
   const [churnOption, setChurnOption] = useState<any | undefined>(undefined);
   const [bondMetrics, setBondMetrics] = useState<any | undefined>(undefined);
   const [mimirs, setMimirs] = useState<any | undefined>(undefined);
-  const [provDist, setProvDist] = useState<any | undefined>(undefined);
-  const [churnHalted, setChurnHalted] = useState<boolean | undefined>(
-    undefined
-  );
+  const [churnHalted, setChurnHalted] = useState<boolean | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [churnProgressValue, setChurnProgressValue] = useState<number>(0);
   const [churnProgressTime, setChurnProgressTime] = useState<number>(0);
@@ -90,382 +103,426 @@ const NodesPage: React.FC = () => {
     RPC: true,
     BFR: true,
   });
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<string | null>(null);
 
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
   const secondIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // توابع setter باید قبل از useMemo ها تعریف شوند
+  const setTheLeastBondChurn = useCallback((bond: number) => {
+    setLeastBondChurn(bond);
+  }, []);
+
+  const setEntering = useCallback((bond: number, count: number) => {
+    setEnteringBond(bond);
+    setEnteringCount(count);
+  }, []);
+
+  const setLeaving = useCallback((bond: number, count: number) => {
+    setLeavingBond(bond);
+    setLeavingCount(count);
+  }, []);
 
   const error = useMemo(() => {
     return !nodesQuery;
   }, [nodesQuery]);
 
-  const activeCols = useMemo(() => {
-    const activeNodesList =
-      nodesQuery?.filter((n) => n.status === "Active") || [];
+  // Sorting functions
+  const cSort = useCallback((x: any, y: any) => {
+    return x?.code < y?.code ? -1 : x?.code > y?.code ? 1 : 0;
+  }, []);
+
+  const aSort = useCallback((x: any, y: any) => {
+    return x?.number < y?.number ? -1 : x?.number > y?.number ? 1 : 0;
+  }, []);
+
+  const versionSort = useCallback((x: string, y: string) => {
+    return rcompare(x, y);
+  }, []);
+
+  const highlightSort = useCallback((
+    rowX: any,
+    rowY: any,
+    name: string
+  ) => {
+    const favs = JSON.parse(localStorage.getItem(name) || "[]")?.map((f: any) => f.address) || [];
+    if (!favs || favs.length === 0) {
+      return 0;
+    }
+    if (favs.includes(rowX.address)) {
+      return 1;
+    }
+    if (favs.includes(rowY.address)) {
+      return -1;
+    }
+    return 0;
+  }, []);
+
+  const activeCols = useMemo<TableColumn[]>(() => {
+    const activeNodesList = nodesQuery?.filter((n) => n.status === "Active") || [];
     const availableChainsList = availableChains(activeNodesList);
-    const chains = Array.isArray(availableChainsList)
+    
+    const chainColumns: TableColumn[] = Array.isArray(availableChainsList)
       ? availableChainsList.sort().map((c: string) => ({
           label: c,
-          field: `behind.${c}`,
-          type: "number",
-          tdClass: "mono center",
+          sortKey: `behind.${c}`,
+          renderCell: (item: NodeRow) => (
+            <span className="mono center">{item.behind?.[c] || 0}</span>
+          ),
           thClass: "center no-padding",
         }))
       : [];
 
-    return [
+    const baseColumns: TableColumn[] = [
       {
         label: "Highlight",
-        field: "highlight",
-        tdClass: "center",
+        sortKey: "highlight",
+        renderCell: (item: NodeRow) => (
+          <div className="center">
+            {item.churn && item.churn.length > 0 && (
+              <div className={styles.churnIndicator}>
+                {item.churn.map((h: any, idx: number) => (
+                  <img key={idx} src={h.icon} alt={h.name} title={h.name} className={styles.churnIcon} />
+                ))}
+              </div>
+            )}
+          </div>
+        ),
         thClass: "center no-padding",
-        sortFn: (x: any, y: any, col: any, rowX: any, rowY: any) =>
-          highlightSort(x, y, col, rowX, rowY, "active-nodes"),
       },
       {
         label: "Address",
-        field: "address",
-        formatFn: addressFormatV2,
-        tdClass: "mono",
+        sortKey: "address",
+        renderCell: (item: NodeRow) => (
+          <span className="mono">{addressFormatV2(item.address)}</span>
+        ),
       },
       {
         label: "Churn",
-        field: "churn",
+        sortKey: "churn",
+        renderCell: (item: NodeRow) => (
+          <div className={styles.churnContainer}>
+            {item.churn?.map((churn, idx) => (
+              <div key={idx} className={`${styles.churnItem} ${styles[churn.type] || ''}`}>
+                <img src={churn.icon} alt={churn.name} className={styles.churnIcon} />
+                <span>{churn.name}</span>
+              </div>
+            ))}
+          </div>
+        ),
         thClass: "center min-padding",
       },
       {
         label: "ISP",
-        field: "isp",
-        width: "50px",
-        type: "text",
-        tdClass: "center",
+        sortKey: "isp",
+        renderCell: (item: NodeRow) => <span className="center">{item.isp}</span>,
         thClass: "center",
         hidden: hides?.isp ?? false,
       },
       {
         label: "Location",
-        field: "location",
-        width: "50px",
-        tdClass: "center",
+        sortKey: "location",
+        renderCell: (item: NodeRow) => <span className="center">{item.location?.name || '-'}</span>,
         thClass: "center",
-        sortFn: cSort,
       },
       {
         label: "Status",
-        field: "status",
-        width: "70px",
-        tdClass: "center",
+        sortKey: "status",
+        renderCell: (item: NodeRow) => <span className="center">{item.status}</span>,
         thClass: "center",
       },
       {
         label: "Version",
-        field: "version",
-        type: "text",
-        width: "80px",
-        tdClass: "center",
-        sortFn: versionSort,
+        sortKey: "version",
+        renderCell: (item: NodeRow) => <span className="center">{item.version}</span>,
+        thClass: "center",
       },
       {
         label: "Fee",
-        field: "fee",
-        width: "80px",
-        type: "percentage",
-        tdClass: "mono",
+        sortKey: "fee",
+        renderCell: (item: NodeRow) => <span className="mono">{formatPercent(item.fee, 2)}</span>,
         hidden: hides?.fee ?? false,
       },
       {
         label: "Operator",
-        field: "operator",
-        type: "text",
-        width: "90px",
-        tdClass: "mono center",
+        sortKey: "operator",
+        renderCell: (item: NodeRow) => <span className="mono center">{item.operator}</span>,
         thClass: "center",
       },
       {
         label: "Award",
-        field: "award",
-        type: "number",
-        formatFn: normalFormat,
-        tdClass: "mono",
+        sortKey: "award",
+        renderCell: (item: NodeRow) => <span className="mono">{formatNormalNumber(item.award)}</span>,
       },
       {
         label: "Bond",
-        field: "total_bond",
-        type: "number",
-        formatFn: normalFormat,
-        tdClass: "mono",
+        sortKey: "total_bond",
+        renderCell: (item: NodeRow) => <span className="mono">{formatNormalNumber(item.total_bond)}</span>,
       },
       {
         label: "Slash",
-        field: "slash",
-        type: "number",
-        formatFn: normalFormat,
-        tdClass: "mono",
+        sortKey: "slash",
+        renderCell: (item: NodeRow) => <span className="mono">{formatNormalNumber(item.slash)}</span>,
       },
       {
         label: "Score",
-        field: "score",
-        type: "number",
-        tdClass: "mono center",
+        sortKey: "score",
+        renderCell: (item: NodeRow) => <span className="mono center">{item.score}</span>,
         thClass: "center",
         hidden: hides?.score ?? false,
       },
       {
         label: "APY",
-        field: "apy",
-        type: "percentage",
-        tdClass: "mono center",
+        sortKey: "apy",
+        renderCell: (item: NodeRow) => <span className="mono center">{formatPercent(item.apy, 2)}</span>,
         thClass: "center",
       },
       {
         label: "Vault",
-        field: "vault",
-        type: "text",
-        tdClass: "center",
+        sortKey: "vault",
+        renderCell: (item: NodeRow) => <span className="center">{item.vault}</span>,
         thClass: "center min-padding",
       },
-      ...chains,
+      ...chainColumns,
       {
         label: "",
-        field: "missing_blocks",
-        type: "number",
-        tdClass: "mono center",
+        sortKey: "missing_blocks",
+        renderCell: (item: NodeRow) => <span className="mono center">{item.missing_blocks}</span>,
         thClass: "center no-padding",
       },
       {
         label: "RPC",
-        field: "rpcHealth",
-        type: "text",
-        tdClass: "mono center",
+        sortKey: "rpcHealth",
+        renderCell: (item: NodeRow) => <span className="mono center">{item.rpcHealth}</span>,
         thClass: "center no-padding",
         hidden: hides?.RPC ?? false,
       },
       {
         label: "BFR",
-        field: "bifrostHealth",
-        type: "text",
-        tdClass: "mono center",
+        sortKey: "bifrostHealth",
+        renderCell: (item: NodeRow) => <span className="mono center">{item.bifrostHealth}</span>,
         thClass: "center no-padding",
         hidden: hides?.BFR ?? false,
       },
       {
         label: "Age",
-        field: "age",
-        type: "number",
-        tdClass: "center",
+        sortKey: "age",
+        renderCell: (item: NodeRow) => <span className="center">{item.age?.number || 0}</span>,
         thClass: "center",
-        sortFn: aSort,
         hidden: hides?.age ?? false,
       },
     ];
+
+    return baseColumns.filter(col => !col.hidden);
   }, [nodesQuery, hides]);
 
-  const stbCols = useMemo(() => {
-    const activeNodesList =
-      nodesQuery?.filter((n) => n.status === "Active") || [];
+  const stbCols = useMemo<TableColumn[]>(() => {
+    const activeNodesList = nodesQuery?.filter((n) => n.status === "Active") || [];
     const availableChainsList = availableChains(activeNodesList);
-    const chains = Array.isArray(availableChainsList)
+    
+    const chainColumns: TableColumn[] = Array.isArray(availableChainsList)
       ? availableChainsList.sort().map((c: string) => ({
           label: c,
-          field: `behind.${c}`,
-          type: "number",
-          tdClass: "mono center",
+          sortKey: `behind.${c}`,
+          renderCell: (item: NodeRow) => (
+            <span className="mono center">{item.behind?.[c] || 0}</span>
+          ),
           thClass: "center no-padding",
         }))
       : [];
 
-    return [
+    const baseColumns: TableColumn[] = [
       {
         label: "Highlight",
-        field: "highlight",
-        tdClass: "center",
+        sortKey: "highlight",
+        renderCell: (item: NodeRow) => (
+          <div className="center">
+            {item.churn && item.churn.length > 0 && (
+              <div className={styles.churnIndicator}>
+                {item.churn.map((h: any, idx: number) => (
+                  <img key={idx} src={h.icon} alt={h.name} title={h.name} className={styles.churnIcon} />
+                ))}
+              </div>
+            )}
+          </div>
+        ),
         thClass: "center no-padding",
-        sortFn: (x: any, y: any, col: any, rowX: any, rowY: any) =>
-          highlightSort(x, y, col, rowX, rowY, "rdy-nodes"),
       },
       {
         label: "Address",
-        field: "address",
-        formatFn: addressFormatV2,
-        tdClass: "mono",
+        sortKey: "address",
+        renderCell: (item: NodeRow) => (
+          <span className="mono">{addressFormatV2(item.address)}</span>
+        ),
       },
       {
         label: "Churn",
-        field: "churn",
+        sortKey: "churn",
+        renderCell: (item: NodeRow) => (
+          <div className={styles.churnContainer}>
+            {item.churn?.map((churn, idx) => (
+              <div key={idx} className={`${styles.churnItem} ${styles[churn.type] || ''}`}>
+                <img src={churn.icon} alt={churn.name} className={styles.churnIcon} />
+                <span>{churn.name}</span>
+              </div>
+            ))}
+          </div>
+        ),
         thClass: "center min-padding",
       },
       {
         label: "ISP",
-        field: "isp",
-        width: "50px",
-        type: "text",
-        tdClass: "center",
+        sortKey: "isp",
+        renderCell: (item: NodeRow) => <span className="center">{item.isp}</span>,
         thClass: "center",
         hidden: hides?.isp ?? false,
       },
       {
         label: "Location",
-        field: "location",
-        width: "50px",
-        tdClass: "center",
+        sortKey: "location",
+        renderCell: (item: NodeRow) => <span className="center">{item.location?.name || '-'}</span>,
         thClass: "center",
-        sortFn: cSort,
       },
       {
         label: "Status",
-        field: "status",
-        width: "70px",
-        tdClass: "center",
+        sortKey: "status",
+        renderCell: (item: NodeRow) => <span className="center">{item.status}</span>,
         thClass: "center",
       },
       {
         label: "Version",
-        field: "version",
-        width: "80px",
-        type: "text",
-        tdClass: "center",
-        sortFn: versionSort,
+        sortKey: "version",
+        renderCell: (item: NodeRow) => <span className="center">{item.version}</span>,
+        thClass: "center",
       },
       {
         label: "Fee",
-        field: "fee",
-        width: "80px",
-        type: "percentage",
-        tdClass: "mono",
+        sortKey: "fee",
+        renderCell: (item: NodeRow) => <span className="mono">{formatPercent(item.fee, 2)}</span>,
         hidden: hides?.fee ?? false,
       },
       {
         label: "Operator",
-        field: "operator",
-        type: "text",
-        width: "90px",
-        tdClass: "mono center",
+        sortKey: "operator",
+        renderCell: (item: NodeRow) => <span className="mono center">{item.operator}</span>,
         thClass: "center",
       },
       {
         label: "Bond",
-        field: "total_bond",
-        type: "number",
-        formatFn: normalFormat,
-        tdClass: "mono",
+        sortKey: "total_bond",
+        renderCell: (item: NodeRow) => <span className="mono">{formatNormalNumber(item.total_bond)}</span>,
       },
       {
         label: "Slash",
-        field: "slash",
-        type: "number",
-        formatFn: normalFormat,
-        tdClass: "mono",
+        sortKey: "slash",
+        renderCell: (item: NodeRow) => <span className="mono">{formatNormalNumber(item.slash)}</span>,
       },
-      ...chains,
+      ...chainColumns,
       {
         label: "",
-        field: "missing_blocks",
-        type: "number",
-        tdClass: "mono center",
+        sortKey: "missing_blocks",
+        renderCell: (item: NodeRow) => <span className="mono center">{item.missing_blocks}</span>,
         thClass: "center no-padding",
       },
       {
         label: "RPC",
-        field: "rpcHealth",
-        type: "text",
-        width: "40px",
-        tdClass: "mono center",
+        sortKey: "rpcHealth",
+        renderCell: (item: NodeRow) => <span className="mono center">{item.rpcHealth}</span>,
         thClass: "center no-padding",
         hidden: hides?.RPC ?? false,
       },
       {
         label: "BFR",
-        field: "bifrostHealth",
-        type: "text",
-        width: "40px",
-        tdClass: "mono center",
+        sortKey: "bifrostHealth",
+        renderCell: (item: NodeRow) => <span className="mono center">{item.bifrostHealth}</span>,
         thClass: "center no-padding",
         hidden: hides?.BFR ?? false,
       },
       {
         label: "Age",
-        field: "age",
-        type: "number",
-        tdClass: "center",
+        sortKey: "age",
+        renderCell: (item: NodeRow) => <span className="center">{item.age?.number || 0}</span>,
         thClass: "center",
-        sortFn: aSort,
         hidden: hides?.age ?? false,
       },
     ];
+
+    return baseColumns.filter(col => !col.hidden);
   }, [nodesQuery, hides]);
 
-  const otherNodes = useMemo(() => {
-    return [
-      {
-        label: "Address",
-        field: "address",
-        formatFn: addressFormatV2,
-        tdClass: "mono",
-      },
-      {
-        label: "ISP",
-        field: "isp",
-        width: "50px",
-        type: "text",
-        tdClass: "center",
-      },
-      {
-        label: "Location",
-        field: "location",
-        width: "50px",
-        tdClass: "center",
-        sortFn: cSort,
-      },
-      {
-        label: "Status",
-        field: "status",
-        width: "70px",
-        tdClass: "center",
-        thClass: "center",
-      },
-      {
-        label: "Version",
-        field: "version",
-        width: "80px",
-        type: "text",
-        tdClass: "center",
-        sortFn: versionSort,
-      },
-      {
-        label: "Fee",
-        field: "fee",
-        width: "80px",
-        type: "percentage",
-        tdClass: "mono",
-      },
-      {
-        label: "Operator",
-        field: "operator",
-        type: "text",
-        width: "100px",
-        tdClass: "mono center",
-        thClass: "center",
-      },
-      {
-        label: "Bond",
-        field: "total_bond",
-        type: "number",
-        formatFn: normalFormat,
-        tdClass: "mono",
-      },
-      {
-        label: "Age",
-        field: "age",
-        type: "number",
-        tdClass: "center",
-        thClass: "center",
-        sortFn: aSort,
-      },
-    ];
-  }, []);
+  const otherCols = useMemo<TableColumn[]>(() => [
+    {
+      label: "Address",
+      sortKey: "address",
+      renderCell: (item: NodeRow) => (
+        <span className="mono">{addressFormatV2(item.address)}</span>
+      ),
+    },
+    {
+      label: "ISP",
+      sortKey: "isp",
+      renderCell: (item: NodeRow) => <span className="center">{item.isp}</span>,
+    },
+    {
+      label: "Location",
+      sortKey: "location",
+      renderCell: (item: NodeRow) => <span className="center">{item.location?.name || '-'}</span>,
+    },
+    {
+      label: "Status",
+      sortKey: "status",
+      renderCell: (item: NodeRow) => <span className="center">{item.status}</span>,
+      thClass: "center",
+    },
+    {
+      label: "Version",
+      sortKey: "version",
+      renderCell: (item: NodeRow) => <span className="center">{item.version}</span>,
+    },
+    {
+      label: "Fee",
+      sortKey: "fee",
+      renderCell: (item: NodeRow) => <span className="mono">{formatPercent(item.fee, 2)}</span>,
+    },
+    {
+      label: "Operator",
+      sortKey: "operator",
+      renderCell: (item: NodeRow) => <span className="mono center">{item.operator}</span>,
+      thClass: "center",
+    },
+    {
+      label: "Bond",
+      sortKey: "total_bond",
+      renderCell: (item: NodeRow) => <span className="mono">{formatNormalNumber(item.total_bond)}</span>,
+    },
+    {
+      label: "Age",
+      sortKey: "age",
+      renderCell: (item: NodeRow) => <span className="center">{item.age?.number || 0}</span>,
+      thClass: "center",
+    },
+  ], []);
 
   const activeInfo = useMemo(() => {
+    const formatRune = (value: number, format: string): string => {
+      return number(value, format) + " RUNE";
+    };
+
+    const calculateHardCap = (): number => {
+      if (!nodesQuery) {
+        return 0;
+      }
+      const actNodes = nodesQuery?.filter((n) => n.status === "Active");
+      if (actNodes?.length === 0) {
+        return 0;
+      }
+      if (actNodes?.length < 2) {
+        return actNodes[0].total_bond;
+      }
+      actNodes?.sort((a, b) => +a.total_bond - +b.total_bond);
+      const lowerNodes = actNodes?.slice(0, Math.floor((actNodes.length * 2) / 3));
+      return Math.floor((Number.parseInt(lowerNodes?.slice(-1)[0]?.total_bond) ?? 0) / 10 ** 8);
+    };
+
     return [
       {
         title: "Active",
@@ -505,9 +562,13 @@ const NodesPage: React.FC = () => {
         ],
       },
     ];
-  }, [network, bondMetrics]);
+  }, [network, bondMetrics, nodesQuery]);
 
   const standbyInfo = useMemo(() => {
+    const formatRune = (value: number, format: string): string => {
+      return number(value, format) + " RUNE";
+    };
+
     return [
       {
         title: "Standby",
@@ -556,6 +617,50 @@ const NodesPage: React.FC = () => {
   }, [network, bondMetrics, leastBondChurn]);
 
   const churnInfo = useMemo(() => {
+    const formatRune = (value: number, format: string): string => {
+      return number(value, format) + " RUNE";
+    };
+
+    const averageApysCalc = (): number => {
+      if (!nodesQuery || nodesQuery.length === 0) {
+        return 0;
+      }
+      let totalApy = 0;
+      for (const node of nodesQuery) {
+        totalApy += +node.apy;
+      }
+      const totalActiveNodes = nodesQuery.filter((node) => node.status === "Active").length;
+      return totalApy / totalActiveNodes;
+    };
+
+    const monthlyNodeReturn = (): number => {
+      if (!totalAwards || !churnProgressValue || !network) {
+        return 0;
+      }
+      const churnProgress = churnProgressValue;
+      let churnPeriodInDays = (((churnInterval || 0) * 6) / 86400) * churnProgress;
+      const thisChurnBlock = (chainsHeight?.THOR ?? 0) - +(churnOption?.height || 0);
+      if (thisChurnBlock > (churnInterval || 0)) {
+        churnPeriodInDays = (thisChurnBlock * 6) / 86400;
+      }
+      const calculatedValue = (totalAwards / network?.activeNodeCount) * (30 / churnPeriodInDays);
+      return calculatedValue;
+    };
+
+    const annualNodeReturn = (): number => {
+      if (!totalAwards || !nodesQuery || !churnProgressValue) {
+        return 0;
+      }
+      const churnProgress = churnProgressValue;
+      let churnPeriodInDays = (((churnInterval || 0) * 6) / 86400) * churnProgress;
+      const thisChurnBlock = (chainsHeight?.THOR ?? 0) - +(churnOption?.height || 0);
+      if (thisChurnBlock > (churnInterval || 0)) {
+        churnPeriodInDays = (thisChurnBlock * 6) / 86400;
+      }
+      const annualNodes = (totalAwards / network?.activeNodeCount) * (365 / churnPeriodInDays);
+      return annualNodes;
+    };
+
     let churnValue: string | undefined;
 
     if (churnProgressTime > 600) {
@@ -588,8 +693,7 @@ const NodesPage: React.FC = () => {
           {
             name: "Churn Interval",
             value: churnInterval,
-            filter: (v: number) =>
-              `${churnInterval ? blockTime(v, true) : "N/A"}`,
+            filter: (v: number) => `${churnInterval ? blockTime(v, true) : "N/A"}`,
           },
           {
             name: "Total Rewards",
@@ -633,9 +737,16 @@ const NodesPage: React.FC = () => {
     churnInterval,
     totalAwards,
     churnOption,
+    nodesQuery,
+    network,
+    chainsHeight,
   ]);
 
   const blockRewardInfo = useMemo(() => {
+    const formatRune = (value: number, format: string): string => {
+      return number(value, format) + " RUNE";
+    };
+
     return [
       {
         title: "Next Churn",
@@ -683,9 +794,8 @@ const NodesPage: React.FC = () => {
     }
 
     let actNodes = nodesQuery.filter((e) => e.status === "Active");
-
     actNodes = orderBy(actNodes, [(o) => +o.slash_points]);
-    const filteredNodes: any[] = [];
+    const filteredNodes: NodeRow[] = [];
 
     let lowestBond: number | null = null;
     let highestSlash = 0;
@@ -707,18 +817,14 @@ const NodesPage: React.FC = () => {
         oldestIndex = i;
       }
 
-      if (
-        (!lowestBond || lowestBond > +el.total_bond) &&
-        el.requested_to_leave === false
-      ) {
+      if ((!lowestBond || lowestBond > +el.total_bond) && el.requested_to_leave === false) {
         lowestBond = +el.total_bond;
       }
 
       if (
         Object.keys(versions).length > 1 &&
         el.version !== Object.keys(versions)[0] &&
-        versions[Object.keys(versions)[0]] >
-          Math.floor((actNodes.length * 2) / 3)
+        versions[Object.keys(versions)[0]] > Math.floor((actNodes.length * 2) / 3)
       ) {
         lowVersions.push(el.node_address);
       }
@@ -775,15 +881,11 @@ const NodesPage: React.FC = () => {
       if (el.requested_to_leave) {
         filteredNodes[index].churn.push({
           name: "Requested to leave",
-          icon:
-            ArrowDownSquareIcon.src || "/assets/images/arrow-down-square.svg",
+          icon: ArrowDownSquareIcon.src || "/assets/images/arrow-down-square.svg",
           type: "leave",
         });
 
-        if (
-          mimirs &&
-          +mimirs?.DESIREDVALIDATORSET >= actNodes.length + extraChurn
-        ) {
+        if (mimirs && +mimirs?.DESIREDVALIDATORSET >= actNodes.length + extraChurn) {
           extraChurn += 1;
         }
         leavingBondCalc += +el.total_bond;
@@ -795,7 +897,7 @@ const NodesPage: React.FC = () => {
     setLeaving(leavingBondCalc, leavingCountCalc);
 
     return filteredNodes;
-  }, [nodesQuery, chainsHeight, churnProgressValue, mimirs]);
+  }, [nodesQuery, chainsHeight, churnProgressValue, mimirs, setLeaving]);
 
   const stbNodes = useMemo(() => {
     if (!nodesQuery) {
@@ -825,10 +927,9 @@ const NodesPage: React.FC = () => {
 
     stbNodesList = orderBy(stbNodesList, [(o) => +o.total_bond], ["desc"]);
 
-    const filteredNodes: any[] = [];
+    const filteredNodes: NodeRow[] = [];
     const churnInNumbers = 3 + newNodesChurn + extraNodeChurn;
-    const remainingCount =
-      +mimirs?.DESIREDVALIDATORSET - (activeNodes?.length ?? 0) + leavingCount;
+    const remainingCount = +mimirs?.DESIREDVALIDATORSET - (activeNodes?.length ?? 0) + leavingCount;
     let lastChurnIndex = 0;
     let churnNodes = 0;
     let enteringBondCalc = 0;
@@ -846,9 +947,7 @@ const NodesPage: React.FC = () => {
         filteredNodes[i].churn.push({
           name: {
             ...el.jail,
-            releaseTime: moment
-              .duration((el.jail?.release_height - chainHeight) * 6, "seconds")
-              .humanize(),
+            releaseTime: moment.duration((el.jail?.release_height - chainHeight) * 6, "seconds").humanize(),
           },
           icon: HandcuffsIcon.src || "/assets/images/handcuffs.svg",
           type: "jail",
@@ -902,7 +1001,6 @@ const NodesPage: React.FC = () => {
     }
 
     setEntering(enteringBondCalc, enteringCountCalc);
-
     setTheLeastBondChurn(filteredNodes[lastChurnIndex]?.total_bond);
 
     return filteredNodes;
@@ -917,6 +1015,8 @@ const NodesPage: React.FC = () => {
     chainsHeight,
     churnProgressValue,
     retiringVaults,
+    setEntering,
+    setTheLeastBondChurn
   ]);
 
   const whiteListedNodes = useMemo(() => {
@@ -937,7 +1037,7 @@ const NodesPage: React.FC = () => {
 
     whtNodes = orderBy(whtNodes, [(o) => +o.total_bond], ["desc"]);
 
-    const filteredNodes: any[] = [];
+    const filteredNodes: NodeRow[] = [];
 
     whtNodes.forEach((el, index) => {
       fillNodeData(filteredNodes, el, index);
@@ -983,20 +1083,6 @@ const NodesPage: React.FC = () => {
     localStorage.setItem("filterSettings", JSON.stringify(hides));
   };
 
-  const setTheLeastBondChurn = (bond: number) => {
-    setLeastBondChurn(bond);
-  };
-
-  const setEntering = (bond: number, count: number) => {
-    setEnteringBond(bond);
-    setEnteringCount(count);
-  };
-
-  const setLeaving = (bond: number, count: number) => {
-    setLeavingBond(bond);
-    setLeavingCount(count);
-  };
-
   const totalAwardsCalc = () => {
     if (!nodesQuery) return;
     let total = 0;
@@ -1006,153 +1092,44 @@ const NodesPage: React.FC = () => {
     setTotalAwards(total);
   };
 
-  const monthlyNodeReturn = (): number => {
-    if (!totalAwards || !churnProgressValue || !network) {
-      return 0;
-    }
-
-    const churnProgress = churnProgressValue;
-    let churnPeriodInDays =
-      (((churnInterval || 0) * 6) / 86400) * churnProgress;
-    const thisChurnBlock =
-      (chainsHeight?.THOR ?? 0) - +(churnOption?.height || 0);
-    if (thisChurnBlock > (churnInterval || 0)) {
-      churnPeriodInDays = (thisChurnBlock * 6) / 86400;
-    }
-
-    const calculatedValue =
-      (totalAwards / network?.activeNodeCount) * (30 / churnPeriodInDays);
-
-    return calculatedValue;
-  };
-
-  const annualNodeReturn = (): number => {
-    if (!totalAwards || !nodesQuery || !churnProgressValue) {
-      return 0;
-    }
-
-    const churnProgress = churnProgressValue;
-    let churnPeriodInDays =
-      (((churnInterval || 0) * 6) / 86400) * churnProgress;
-    const thisChurnBlock =
-      (chainsHeight?.THOR ?? 0) - +(churnOption?.height || 0);
-    if (thisChurnBlock > (churnInterval || 0)) {
-      churnPeriodInDays = (thisChurnBlock * 6) / 86400;
-    }
-
-    const annualNodes =
-      (totalAwards / network?.activeNodeCount) * (365 / churnPeriodInDays);
-
-    return annualNodes;
-  };
-
-  const averageApysCalc = (): number => {
-    if (!nodesQuery || nodesQuery.length === 0) {
-      return 0;
-    }
-
-    let totalApy = 0;
-    for (const node of nodesQuery) {
-      totalApy += +node.apy;
-    }
-    const totalActiveNodes = nodesQuery.filter(
-      (node) => node.status === "Active"
-    ).length;
-
-    return totalApy / totalActiveNodes;
-  };
-
   const churnProgress = () => {
     if (!network || !churnInterval) {
       return;
     }
 
-    const churnValue =
-      1 -
-      (network?.nextChurnHeight - (chainsHeight?.THOR ?? 0)) / churnInterval;
-
+    const churnValue = 1 - (network?.nextChurnHeight - (chainsHeight?.THOR ?? 0)) / churnInterval;
     setChurnProgressValue(churnValue);
 
     const churnTime = network?.nextChurnHeight - (chainsHeight?.THOR ?? 0);
-
     setChurnProgressTime(churnTime);
   };
 
-  const calculateHardCap = (): number => {
-    if (!nodesQuery) {
-      return 0;
-    }
-
-    const actNodes = nodesQuery?.filter((n) => n.status === "Active");
-    if (actNodes?.length === 0) {
-      return 0;
-    }
-    if (actNodes?.length < 2) {
-      return actNodes[0].total_bond;
-    }
-
-    actNodes?.sort((a, b) => +a.total_bond - +b.total_bond);
-    const lowerNodes = actNodes?.slice(
-      0,
-      Math.floor((actNodes.length * 2) / 3)
+  const filteredActiveNodes = useMemo(() => {
+    if (!activeNodes) return [];
+    return activeNodes.filter(node => 
+      node.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      node.operator.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      node.location?.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+  }, [activeNodes, searchTerm]);
 
-    return Math.floor(
-      (Number.parseInt(lowerNodes?.slice(-1)[0]?.total_bond) ?? 0) / 10 ** 8
+  const filteredStbNodes = useMemo(() => {
+    if (!stbNodes) return [];
+    return stbNodes.filter(node => 
+      node.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      node.operator.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      node.location?.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  };
+  }, [stbNodes, searchTerm]);
 
-  const cSort = (x: any, y: any, col: any, rowX: any, rowY: any) => {
-    return x?.code < y?.code ? -1 : x?.code > y?.code ? 1 : 0;
-  };
-
-  const aSort = (x: any, y: any, col: any, rowX: any, rowY: any) => {
-    return x?.number < y?.number ? -1 : x?.number > y?.number ? 1 : 0;
-  };
-
-  const versionSort = (x: string, y: string) => {
-    return rcompare(x, y);
-  };
-
-  const highlightSort = (
-    x: any,
-    y: any,
-    col: any,
-    rowX: any,
-    rowY: any,
-    name: string
-  ) => {
-    const favs =
-      JSON.parse(localStorage.getItem(name) || "[]")?.map(
-        (f: any) => f.address
-      ) || [];
-    if (!favs || favs.length === 0) {
-      return 0;
-    }
-    if (favs.includes(rowX.address)) {
-      return 1;
-    }
-    if (favs.includes(rowY.address)) {
-      return -1;
-    }
-    return 0;
-  };
-
-  const onSortChange = ({
-    column,
-    order,
-  }: {
-    column: string;
-    order: string;
-  }) => {
-    setSortColumn(column);
-    setSortOrder(order);
-    localStorage.setItem("tableSorting", JSON.stringify({ column, order }));
-  };
-
-  const formatRune = (value: number, format: string): string => {
-    return number(value, format) + " RUNE";
-  };
+  const filteredWhiteListedNodes = useMemo(() => {
+    if (!whiteListedNodes) return [];
+    return whiteListedNodes.filter(node => 
+      node.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      node.operator.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      node.location?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [whiteListedNodes, searchTerm]);
 
   useEffect(() => {
     churnProgress();
@@ -1193,14 +1170,6 @@ const NodesPage: React.FC = () => {
       setHides(JSON.parse(savedFilters));
     }
 
-    const savedSorting = JSON.parse(
-      localStorage.getItem("tableSorting") || "{}"
-    );
-    if (savedSorting) {
-      setSortColumn(savedSorting.column);
-      setSortOrder(savedSorting.order);
-    }
-
     return () => {
       if (intervalIdRef.current) {
         clearInterval(intervalIdRef.current);
@@ -1214,15 +1183,10 @@ const NodesPage: React.FC = () => {
   return (
     <PageContainer error={error && !loading} fluid={true}>
       <div className={styles["grid-network"]}>
-        <Card>
           <InfoCard options={activeInfo} inner={true} />
-        </Card>
-        <Card>
           <InfoCard options={standbyInfo} inner={true} />
-        </Card>
       </div>
       <div className={styles["grid-network"]}>
-        <Card>
           <InfoCard options={churnInfo} inner={true}>
             {churnInfo[0]?.items?.find(
               (item: any) => item.valueSlot === "churn"
@@ -1244,10 +1208,7 @@ const NodesPage: React.FC = () => {
               </SkeletonItem>
             )}
           </InfoCard>
-        </Card>
-        <Card>
           <InfoCard options={blockRewardInfo} inner={true} />
-        </Card>
       </div>
       <div className={styles["search-container"]}>
         <div id={styles["nodes-search-container"]}>
@@ -1350,40 +1311,54 @@ const NodesPage: React.FC = () => {
 
       <Card imgSrc={ActiveImage.src} title="Active Nodes">
         {loading ? (
-          <TableLoader cols={activeCols} />
-        ) : activeNodes ? (
-          <NodeTable
-            rows={activeNodes}
-            cols={activeCols}
-            name="active-nodes"
-            searchTerm={searchTerm}
-            sortColumn={sortColumn}
-            sortOrder={sortOrder}
-            onSortChange={onSortChange}
+          <TableLoader cols={activeCols.map(col => ({ label: col.label, field: col.sortKey || "id" }))} />
+        ) : filteredActiveNodes ? (
+          <Table
+            columns={activeCols}
+            data={filteredActiveNodes}
+            loading={loading}
+            onSortChange={() => {}}
+            onRowSelectChange={() => {}}
+            enableSort={true}
+            enableSelect={false}
+            className="vgt-table net-table"
+            emptyMessage="No active nodes available"
           />
         ) : null}
       </Card>
+
       <Card imgSrc={ChurnImage.src} title="Eligible Nodes">
         {loading ? (
-          <TableLoader cols={stbCols} />
-        ) : stbNodes ? (
-          <NodeTable
-            rows={stbNodes}
-            cols={stbCols}
-            name="rdy-nodes"
-            searchTerm={searchTerm}
+          <TableLoader cols={stbCols.map(col => ({ label: col.label, field: col.sortKey || "id" }))} />
+        ) : filteredStbNodes ? (
+          <Table
+            columns={stbCols}
+            data={filteredStbNodes}
+            loading={loading}
+            onSortChange={() => {}}
+            onRowSelectChange={() => {}}
+            enableSort={true}
+            enableSelect={false}
+            className="vgt-table net-table"
+            emptyMessage="No eligible nodes available"
           />
         ) : null}
       </Card>
+
       <Card imgSrc={WhitelistImage.src} title="Whitelisted Nodes">
         {loading ? (
-          <TableLoader cols={otherNodes} />
-        ) : whiteListedNodes ? (
-          <NodeTable
-            rows={whiteListedNodes}
-            cols={otherNodes}
-            name="other-nodes"
-            searchTerm={searchTerm}
+          <TableLoader cols={otherCols.map(col => ({ label: col.label, field: col.sortKey || "id" }))} />
+        ) : filteredWhiteListedNodes ? (
+          <Table
+            columns={otherCols}
+            data={filteredWhiteListedNodes}
+            loading={loading}
+            onSortChange={() => {}}
+            onRowSelectChange={() => {}}
+            enableSort={true}
+            enableSelect={false}
+            className="vgt-table net-table"
+            emptyMessage="No whitelisted nodes available"
           />
         ) : null}
       </Card>

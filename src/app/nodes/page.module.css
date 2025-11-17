@@ -19,7 +19,7 @@
   overflow: auto;
   scrollbar-width: thin;
   padding-bottom: var(--space-8);
-  scrollbar-color: var(--border-color) var(--bg-color);
+  scrollbar-color: var(--border) var(--card);
 }
 
 .filter-btns .enabled-btn {
@@ -28,9 +28,9 @@
 }
 
 .filter-button {
-  background-color: var(--bg-color);
+  background-color: var(--card);
   color: var(--sec-font-color);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: var(--radius-2lg);
   margin: var(--space-2) var(--space-0);
   padding: var(--space-8) var(--space-16);
@@ -42,7 +42,7 @@
 }
 
 .filter-button:hover {
-  color: var(--primary-color);
+  color: var(--primary);
 }
 
 #nodes-search-container {
@@ -54,8 +54,8 @@
 .search-input {
   flex: 1;
   color: var(--sec-font-color);
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color) !important;
+  background-color: var(--card);
+  border: 1px solid var(--border) !important;
   border-radius: var(--radius-lg);
   outline: none;
   margin: var(--space-2);
@@ -67,7 +67,7 @@
 .search-input:focus {
   border-color: transparent;
   box-shadow: 0 0 0 0.15rem rgba(255, 255, 255, 0.1);
-  color: var(--primary-color);
+  color: var(--primary);
 }
 
 .search-icon {
@@ -80,7 +80,7 @@
   cursor: pointer;
   transition: fill 0.3s ease;
   box-sizing: content-box;
-  background: var(--card-bg-color);
+  background: var(--card);
   padding-left: var(--space-8);
 }
 
@@ -116,9 +116,9 @@
   height: 10px;
   background: linear-gradient(
     90deg,
-    var(--border-color) 25%,
-    var(--bg-color) 50%,
-    var(--border-color) 75%
+    var(--border) 25%,
+    var(--card) 50%,
+    var(--border) 75%
   );
   background-size: 200% 100%;
   animation: loading 1.5s ease-in-out infinite;

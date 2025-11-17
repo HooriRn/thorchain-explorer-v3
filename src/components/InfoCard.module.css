@@ -190,9 +190,6 @@
 .grid-item {
   font-size: var(--font-size-s);
   padding: var(--space-8);
-  background-color: var(--muted);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
 }
 
 .grid-item .item-name {
