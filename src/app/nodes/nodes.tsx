@@ -107,7 +107,6 @@ const NodesPage: React.FC = () => {
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
   const secondIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // توابع setter باید قبل از useMemo ها تعریف شوند
   const setTheLeastBondChurn = useCallback((bond: number) => {
     setLeastBondChurn(bond);
   }, []);
@@ -126,7 +125,6 @@ const NodesPage: React.FC = () => {
     return !nodesQuery;
   }, [nodesQuery]);
 
-  // Sorting functions
   const cSort = useCallback((x: any, y: any) => {
     return x?.code < y?.code ? -1 : x?.code > y?.code ? 1 : 0;
   }, []);
@@ -193,7 +191,7 @@ const NodesPage: React.FC = () => {
         label: "Address",
         sortKey: "address",
         renderCell: (item: NodeRow) => (
-          <span className="mono">{addressFormatV2(item.address)}</span>
+          <span className="mono">{item.address.slice(-4)}</span>
         ),
       },
       {
@@ -245,7 +243,7 @@ const NodesPage: React.FC = () => {
       {
         label: "Operator",
         sortKey: "operator",
-        renderCell: (item: NodeRow) => <span className="mono center">{item.operator}</span>,
+        renderCell: (item: NodeRow) => <span className="mono">{item.operator.slice(-4)}</span>,
         thClass: "center",
       },
       {
@@ -351,7 +349,7 @@ const NodesPage: React.FC = () => {
         label: "Address",
         sortKey: "address",
         renderCell: (item: NodeRow) => (
-          <span className="mono">{addressFormatV2(item.address)}</span>
+          <span className="mono">{item.address.slice(-4)}</span>
         ),
       },
       {
@@ -403,7 +401,7 @@ const NodesPage: React.FC = () => {
       {
         label: "Operator",
         sortKey: "operator",
-        renderCell: (item: NodeRow) => <span className="mono center">{item.operator}</span>,
+        renderCell: (item: NodeRow) => <span className="mono">{item.operator.slice(-4)}</span>,
         thClass: "center",
       },
       {
@@ -454,7 +452,7 @@ const NodesPage: React.FC = () => {
       label: "Address",
       sortKey: "address",
       renderCell: (item: NodeRow) => (
-        <span className="mono">{addressFormatV2(item.address)}</span>
+        <span className="mono">{item.address.slice(-4)}</span>
       ),
     },
     {
@@ -486,7 +484,7 @@ const NodesPage: React.FC = () => {
     {
       label: "Operator",
       sortKey: "operator",
-      renderCell: (item: NodeRow) => <span className="mono center">{item.operator}</span>,
+      renderCell: (item: NodeRow) => <span className="mono">{item.operator.slice(-4)}</span>,
       thClass: "center",
     },
     {
