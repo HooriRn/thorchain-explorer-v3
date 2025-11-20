@@ -1,77 +1,83 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { orderBy, remove } from "lodash";
-import { Table, TableColumn, TableData } from "@/components/table";
-import { useRunePrice } from "@/lib/store";
-import { addressFormatV2, formatCurrency, normalFormat } from "@/utils/global";
-import { number as formatNumber } from "@/utils/format";
-import Copy from "@/components/Copy";
-import Ip from "@/components/Ip";
-import CloudImage from "@/components/CloudImage";
-import ColorHash from "@/components/ColorHash";
-import VFlag from "@/components/VFlag";
-import RuneAsset from "@/components/RuneAsset";
-import { ProgressIcon } from "@/components/ui/ProgressIcon";
-import Avatar from "@/components/Avatar";
-import Tooltip from "@/components/Tooltip";
-import JsonIcon from "@/assets/images/json.svg";
-import InfoIcon from "@/assets/images/info.svg";
-import StarIcon from "@/assets/images/bookmark.svg";
-import StaredIcon from "@/assets/images/bookmarked.svg";
-import ExitIcon from "@/assets/images/arrow-down-square.svg";
-import RecycleIcon from "@/assets/images/recycle.svg";
-import MarkerIcon from "@/assets/images/marker.svg";
-import DangerIcon from "@/assets/images/danger.svg";
-import ExternalIcon from "@/assets/images/external.svg";
-import VaultIcon from "@/assets/images/safe.svg";
-import HighlightList from "@/assets/images/highlight-list.svg";
-import CrossIcon from "@/assets/images/cross.svg";
-import NodeIcon from "@/assets/images/node.svg";
-import MissingBlock from "@/assets/images/missingblock.svg";
-import CheckIcon from "@/assets/images/check.svg";
-import WarningIcon from "@/assets/images/warning.svg";
-import UserIcon from "@/assets/images/user.svg";
-import StatusIcon from "@/assets/images/status.svg";
-import styles from "./NodeTable.module.css";
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import Link from 'next/link';
+import { remove, orderBy } from 'lodash';
+import { rcompare } from 'semver';
+import { useRunePrice } from '@/lib/store';
+import { assetImage, addressFormatV2, normalFormat, formatCurrency, vaultColor } from '@/utils/global';
+import { number } from '@/utils/format';
+import { Table, TableColumn } from '@/components/table';
+import Copy from '@/components/Copy';
+import Ip from '@/components/Ip';
+import CloudImage from '@/components/CloudImage';
+import VFlag from '@/components/VFlag';
+import RuneAsset from '@/components/RuneAsset';
+import ColorHash from '@/components/ColorHash';
+import { ProgressIcon } from '@/components/ui/ProgressIcon';
 
-interface NodeData extends TableData {
+import JsonIcon from '@/assets/images/json.svg';
+import InfoIcon from '@/assets/images/info.svg';
+import StarIcon from '@/assets/images/bookmark.svg';
+import StaredIcon from '@/assets/images/bookmarked.svg';
+import ExitIcon from '@/assets/images/arrow-down-square.svg';
+import DangerIcon from '@/assets/images/danger.svg';
+import MarkerIcon from '@/assets/images/marker.svg';
+import RecycleIcon from '@/assets/images/recycle.svg';
+import ExternalIcon from '@/assets/images/external.svg';
+import VaultIcon from '@/assets/images/safe.svg';
+import HighlightList from '@/assets/images/highlight-list.svg';
+import CrossIcon from '@/assets/images/cross.svg';
+import NodeIcon from '@/assets/images/node.svg';
+import MissingBlock from '@/assets/images/missingblock.svg';
+
+import styles from './NodeTable.module.css';
+
+interface NodeData {
   address: string;
+  rank: number;
   ip: string;
+  version: string;
   status: string;
-  operator: string;
+  age?: { number?: number; info?: string };
+  isp?: string;
+  org?: string;
+  location?: { code: string; city: string };
   total_bond: number;
   award: number;
-  vault: string;
-  age: { number: number; info: string };
-  isp: string;
-  location: { code: string; city: string };
-  version: string;
-  missing_blocks: number;
-  preflight?: { reason: string };
-  providers?: any[];
-  churn: any[];
-  rank: number;
+  vault?: string;
+  preflight?: { reason?: string };
   leave?: boolean;
-  fee?: string;
+  fee?: number;
   score?: number;
-  rpcHealth?: any;
-  bifrostHealth?: any;
+  operator?: string;
+  providers?: Array<{ bond_address: string; bond: number }>;
+  churn?: Array<{ type: string; icon: string; name: string }>;
+  missing_blocks?: number;
+  rpcHealth?: boolean | string;
+  bifrostHealth?: boolean | string;
+  originalIndex?: number;
   [key: string]: any;
+}
+
+interface ColumnConfig {
+  label: string;
+  field: string;
+  hidden?: boolean;
+  tdClass?: string;
 }
 
 interface NodeTableProps {
   rows: NodeData[];
-  cols: any[];
+  cols: ColumnConfig[];
   name: string;
   searchTerm?: string;
-  sortColumn?: string;
-  sortOrder?: "asc" | "desc";
+  sortColumn?: string | null;
+  sortOrder?: string | null;
+  onSortChanged?: (params: { column: string; order: string }) => void;
 }
 
-interface FavoriteNode {
+interface Favorite {
   address: string;
   rank: number;
   lastRank?: number;
@@ -87,755 +93,642 @@ const NodeTable: React.FC<NodeTableProps> = ({
   rows,
   cols,
   name,
-  searchTerm = "",
-  sortColumn,
-  sortOrder = "asc"
+  searchTerm = '',
+  onSortChanged,
 }) => {
-  const router = useRouter();
-  const runePrice = useRunePrice();
-  
-  const [favs, setFavs] = useState<FavoriteNode[]>([]);
+  const [favs, setFavs] = useState<Favorite[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedRow, setSelectedRow] = useState<NodeData | null>(null);
+  const [filteredRows, setFilteredRows] = useState<NodeData[]>([]);
+
+  const runePrice = useRunePrice();
 
   useEffect(() => {
-    const storedFavs = localStorage.getItem(name);
-    if (storedFavs) {
-      setFavs(JSON.parse(storedFavs));
+    const savedFavs = localStorage.getItem(name);
+    if (savedFavs) {
+      setFavs(JSON.parse(savedFavs));
     }
   }, [name]);
 
   useEffect(() => {
-    localStorage.setItem(name, JSON.stringify(favs));
+    if (favs.length > 0) {
+      localStorage.setItem(name, JSON.stringify(favs));
+    }
   }, [favs, name]);
 
-  const getHighlightStyle = (address: string) => {
-    const isFavorite = isFav(address);
-    return {
-      color: isFavorite ? vaultColor(address, true) : "",
-      fill: isFavorite ? vaultColor(address, true) : "",
-      fontWeight: isFavorite ? "bold" : "normal",
+  const loadRank = useCallback(() => {
+    if (name === 'active-nodes' && favs.length > 0 && rows) {
+      const updatedFavs = [...favs];
+      rows.forEach((node, index) => {
+        const favIndex = updatedFavs.findIndex((f) => f.address === node.address);
+        if (favIndex !== -1) {
+          if (!updatedFavs[favIndex].lastRank) {
+            updatedFavs[favIndex].lastRank = updatedFavs[favIndex].rank;
+          }
+          updatedFavs[favIndex].rank = updatedFavs[favIndex].lastRank || index + 1;
+        }
+      });
+      setFavs(updatedFavs);
+    }
+  }, [name, favs, rows]);
+
+  const unloadRank = useCallback(() => {
+    if (name === 'active-nodes' && favs.length > 0 && rows) {
+      let changed = false;
+      const updatedFavs = [...favs];
+      rows.forEach((node, index) => {
+        const favIndex = updatedFavs.findIndex((f) => f.address === node.address);
+        if (favIndex !== -1 && updatedFavs[favIndex].lastRank !== index + 1) {
+          updatedFavs[favIndex].lastRank = index + 1;
+          changed = true;
+        }
+      });
+      if (changed) {
+        setFavs(updatedFavs);
+      }
+    }
+  }, [name, favs, rows]);
+
+  useEffect(() => {
+    loadRank();
+    const handleVisibilityChange = () => unloadRank();
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  };
+  }, [rows, loadRank, unloadRank]);
 
-  const vaultColor = (address: string, asColor: boolean = false): string => {
-    return "#000";
-  };
-
-  const assetImage = (asset: string): string => {
-    return `/assets/${asset}.png`;
-  };
-
-  const getHealthStatus = (value: any, row: NodeData, column: any): HealthStatus => {
-    if (value === null || value === undefined) {
-      return { text: "-", url: "", title: "" };
+  useEffect(() => {
+    if (!rows) {
+      setFilteredRows([]);
+      return;
     }
 
-    const field = column.label;
+    let filtered = [...rows];
+
+    if (searchTerm && searchTerm.trim() !== '') {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter((row) => {
+        return Object.values(row).some((value) => {
+          if (value === null || value === undefined) return false;
+          return String(value).toLowerCase().includes(searchLower);
+        });
+      });
+    }
+
+    setFilteredRows(filtered.map((row, index) => ({ ...row, originalIndex: index })));
+  }, [rows, searchTerm]);
+
+  const isFav = useCallback(
+    (address: string) => {
+      return favs && favs.map((f) => f.address).includes(address);
+    },
+    [favs]
+  );
+
+  const getHighlightStyle = useCallback(
+    (address: string) => {
+      return {
+        color: isFav(address) ? vaultColor(address, true) : '',
+        fill: isFav(address) ? vaultColor(address, true) : '',
+        fontWeight: isFav(address) ? 'bold' : 'normal',
+      };
+    },
+    [isFav]
+  );
+
+  const getHealthStatus = useCallback((value: boolean | string | null | undefined, row: NodeData, columnField: string): HealthStatus => {
+    if (value === null || value === undefined) {
+      return { text: '-', url: '', title: '' };
+    }
+
     const ip = row.ip;
-    let url = "";
-    
-    if (field === "BFR") {
+    let url = '';
+    if (columnField === 'bifrostHealth') {
       url = `http://${ip}:6040/p2pid`;
-    } else if (field === "RPC") {
+    } else if (columnField === 'rpcHealth') {
       url = `http://${ip}:27147/health?`;
     }
 
-    const errorMessages: { [key: string]: string } = {
-      ERR_BAD_RESPONSE: "Unexpected response from the server",
-      ECONNREFUSED: "Connection Refused By Server",
-      ECONNABORTED: "Connection was interrupted",
+    const errorMessages: Record<string, string> = {
+      ERR_BAD_RESPONSE: 'Unexpected response from the server',
+      ECONNREFUSED: 'Connection Refused By Server',
+      ECONNABORTED: 'Connection was interrupted',
     };
 
     if (value === true) {
-      return { text: "OK", url, title: "" };
+      return { text: 'OK', url, title: '' };
     }
 
     if (value === false) {
-      return { text: "BAD", url, title: "" };
+      return { text: 'BAD', url, title: '' };
     }
 
-    if (typeof value === "string") {
-      return { text: "BAD", url, title: errorMessages[value] || value };
+    if (typeof value === 'string') {
+      return { text: 'BAD', url, title: errorMessages[value] || value };
     }
 
-    return { text: "-", url: "", title: "" };
-  };
+    return { text: '-', url: '', title: '' };
+  }, []);
 
-  const getHealth = (row: NodeData, column: any): HealthStatus => {
-    return getHealthStatus(row[column.field], row, column);
-  };
+  const rankChange = useCallback(
+    (address: string, rank: number) => {
+      const na = favs.find((f) => f.address === address);
+      return na ? na.rank - rank : 0;
+    },
+    [favs]
+  );
 
-  const rankChange = (address: string, rank: number): number => {
-    const favNode = favs.find((f) => f.address === address);
-    return favNode ? favNode.rank - rank : 0;
-  };
-
-  const openModal = (row: NodeData) => {
+  const openModal = useCallback((row: NodeData) => {
     setSelectedRow(row);
     setShowModal(true);
-  };
+  }, []);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setShowModal(false);
     setSelectedRow(null);
-  };
+  }, []);
 
-  const isUpgrading = (version: string): boolean => {
-    if (name !== "active-nodes" || !rows) {
+  const isUpgrading = useCallback(
+    (ver: string) => {
+      if (name !== 'active-nodes' || !rows) {
+        return false;
+      }
+
+      const nodesVersion = rows.map((r) => r.version).sort(rcompare);
+      const versions = [...new Set(nodesVersion)];
+      if (versions.length > 1 && ver === versions[0]) {
+        return true;
+      }
       return false;
-    }
+    },
+    [name, rows]
+  );
 
-    const nodesVersion = rows.map((r) => r.version).sort();
-    const versions = [...new Set(nodesVersion)];
-    
-    return versions.length > 1 && version === versions[0];
-  };
-
-  const filterProviders = (arr: any[] | undefined) => {
+  const filterProviders = useCallback((arr: Array<{ bond_address: string; bond: number }> | undefined) => {
     if (!arr) {
       return [];
     }
     return orderBy(
       arr.map((a) => ({ ...a, bond: +a.bond })),
-      ["bond"],
-      ["desc"]
+      ['bond'],
+      ['desc']
     );
-  };
+  }, []);
 
-  const rowClassCallback = (row: NodeData): string => {
-    const classes = [styles["table-row"]];
-    
-    if (row.churn?.length > 0) {
-      if (row.churn.some((e) => e.type === "churn-out" || e.type === "leave")) {
-        classes.push(styles["churning-out"]);
+  const rowStyleClass = useCallback((row: NodeData) => {
+    const classes: string[] = [];
+    if (row.churn && row.churn.length > 0) {
+      if (row.churn.some((e) => e.type === 'churn-out' || e.type === 'leave')) {
+        classes.push(styles['churning-out']);
       }
 
-      if (row.churn.some((e) => e.type === "churn-in")) {
-        classes.push(styles["churning-in"]);
+      if (row.churn.some((e) => e.type === 'churn-in')) {
+        classes.push(styles['churning-in']);
       }
     }
 
-    return classes.join(" ");
-  };
+    return classes.join(' ');
+  }, []);
 
-  const addFav = (address: string, rank: number) => {
-    if (address) {
-      setFavs([...favs, { address, rank, lastRank: rank }]);
-    }
-  };
+  const addFav = useCallback(
+    (address: string, rank: number) => {
+      if (address) {
+        setFavs([...favs, { address, rank, lastRank: rank }]);
+      }
+    },
+    [favs]
+  );
 
-  const delFav = (address: string) => {
-    const updatedFavs = favs.filter((fav) => fav.address !== address);
-    setFavs(updatedFavs);
-  };
+  const delFav = useCallback(
+    (address: string) => {
+      const newFavs = [...favs];
+      remove(newFavs, (n) => n.address === address);
+      setFavs(newFavs);
+    },
+    [favs]
+  );
 
-  const isFav = (address: string): boolean => {
-    return favs.some((fav) => fav.address === address);
-  };
-
-  const handleSortChange = (params: { column: string; order: "asc" | "desc" }) => {
-    console.log("Sort changed:", params);
-  };
+  const handleSortChange = useCallback(
+    (params: Array<{ field: string; type: string }>) => {
+      if (onSortChanged && params && params[0]) {
+        onSortChanged({
+          column: params[0].field,
+          order: params[0].type,
+        });
+      }
+    },
+    [onSortChanged]
+  );
 
   const tableColumns = useMemo((): TableColumn<NodeData>[] => {
     return cols.map((col) => {
-      const column: TableColumn<NodeData> = {
+      const column: Partial<TableColumn<NodeData>> = {
         label: col.label,
-        field: col.field,
         sortKey: col.field,
-        headerRender: () => {
-          console.log('Rendering header for field:', col.field);
-          
-          if (col.field.includes("behind")) {
-            return (
-              <div className={styles["table-asset"]}>
-                <img 
-                  className={styles["asset-chain"]} 
-                  src={assetImage(`${col.label}.${col.label}`)} 
-                  alt={col.label}
-                />
-              </div>
-            );
-          } else if (col.field === "highlight") {
-            return (
-              <div className={styles["table-header-icon"]}>
-                <HighlightList className={styles["table-icon"]} />
-              </div>
-            );
-          } else if (col.field === "location") {
-            return (
-              <Tooltip content="Node Location">
-                <div className={styles["table-header-icon"]}>
-                  <MarkerIcon className={styles["table-icon"]} />
-                </div>
-              </Tooltip>
-            );
-          } else if (col.field === "churn") {
-            return (
-              <div className={styles["table-header-icon"]}>
-                <RecycleIcon className={styles["table-icon"]} />
-              </div>
-            );
-          } else if (col.field === "vault") {
-            return (
-              <div className={styles["table-asset"]}>
-                <VaultIcon className={styles["table-icon"]} />
-              </div>
-            );
-          } else if (col.field === "missing_blocks") {
-            return (
-              <div className={styles["table-asset"]}>
-                <MissingBlock className={styles["table-icon"]} />
-              </div>
-            );
-          } else if (col.field === "address") {
-            return (
-              <div className={styles["header-with-icon"]}>
-                <UserIcon className={styles["header-icon"]} />
-                <span>Address</span>
-              </div>
-            );
-          } else if (col.field === "status") {
-            return (
-              <div className={styles["header-with-icon"]}>
-                <StatusIcon className={styles["header-icon"]} />
-                <span>Status</span>
-              </div>
-            );
-          } else {
-            return <span>{col.label}</span>;
-          }
-        },
-        renderCell: (item: NodeData) => {
-          switch (col.field) {
-            case "address":
-              return (
-                <div className={styles["table-wrapper-row"]}>
-                  <Tooltip content={item.address}>
-                    <Link 
-                      className={styles.clickable} 
-                      style={getHighlightStyle(item.address)}
-                      href={`/address/${item.address}`}
-                    >
-          {item.address.slice(-4)}
-          </Link>
-                  </Tooltip>
-                  <Copy strCopy={item.address} />
-                  <Link 
-                    style={getHighlightStyle(item.address)} 
-                    href={`/node/${item.address}`}
-                    target="_blank"
-                  >
-                    <InfoIcon className={`${styles["table-icon"]} ${styles["item-link"]}`} />
-                  </Link>
-                  <a 
-                    style={getHighlightStyle(item.address)} 
-                    className={styles["height-1rem"]}
-                    href={`http://${item.ip}:6040/status/scanner`} 
-                    target="_blank"
-                  >
-                    <JsonIcon className={`${styles["table-icon"]} ${styles["item-link"]}`} />
-                  </a>
-                  <Ip strCopy={item.ip} />
-                  <a 
-                    style={getHighlightStyle(item.address)} 
-                    className={styles["height-1rem"]}
-                    href={`https://thornode.ninerealms.com/thorchain/node/${item.address}`} 
-                    target="_blank"
-                  >
-                    <NodeIcon className={`${styles["table-icon"]} ${styles["item-link"]}`} />
-                  </a>
-                </div>
-              );
-
-            case "highlight":
-              return isFav(item.address) ? (
-                <div className={styles["fav-cell"]}>
-                  <StaredIcon 
-                    className={styles["table-icon"]} 
-                    style={getHighlightStyle(item.address)}
-                    onClick={() => delFav(item.address)}
-                  />
-                  <span className={styles["fav-text"]}>Favorite</span>
-                </div>
-              ) : (
-                <div className={styles["fav-cell"]}>
-                  <StarIcon 
-                    className={styles["table-icon"]} 
-                    onClick={() => addFav(item.address, item.rank)}
-                  />
-                  <span className={styles["fav-text"]}>Add to Fav</span>
-                </div>
-              );
-
-            case "age":
-              return item.age ? (
-                <Tooltip content={item.age.info}>
-                  <span style={{ cursor: "pointer" }}>
-                    {formatNumber(item.age.number, "0,0.00")}
-                  </span>
-                </Tooltip>
-              ) : (
-                <span>-</span>
-              );
-
-            case "isp":
-              return item.isp ? (
-                <CloudImage name={[item.isp, item.org]} />
-              ) : (
-                <span>-</span>
-              );
-
-            case "location":
-              return item.location ? (
-                <div className={styles["location-cell"]}>
-                  <Tooltip content={`${item.location.code}, ${item.location.city}`}>
-                    <div className={styles.countries}>
-                      <VFlag flag={item.location.code} />
-                    </div>
-                  </Tooltip>
-                  <span className={styles["location-text"]}>
-                    {item.location.city}
-                  </span>
-                </div>
-              ) : null;
-
-            case "total_bond":
-              return (
-                <Tooltip content={formatCurrency(runePrice * item.total_bond)}>
-                  <span className={styles.hoverable}>
-                    <RuneAsset 
-                      height="0.7rem" 
-                      style={getHighlightStyle(item.address)} 
-                    />
-                    {normalFormat(item.total_bond)}
-                  </span>
-                </Tooltip>
-              );
-
-            case "award":
-              return (
-                <Tooltip content={formatCurrency(runePrice * item.award)}>
-                  <span className={styles.hoverable}>
-                    <RuneAsset 
-                      height="0.7rem" 
-                      style={getHighlightStyle(item.address)} 
-                    />
-                    {item.award}
-                  </span>
-                </Tooltip>
-              );
-
-            case "vault":
-              return (
-                <div className={styles["vault-wrapper"]}>
-                  <Tooltip content={item.vault}>
-                    <ColorHash name={item.vault} />
-                  </Tooltip>
-                </div>
-              );
-
-            case "status":
-              return (
-                <Tooltip content={item.preflight?.reason || ""}>
-                  <div
-                    className={[
-                      styles["mini-bubble"],
-                      styles.hoverable,
-                      item.status === "Standby" ? styles.yellow : "",
-                      item.status === "Disabled" ? styles.danger : "",
-                      item.status === "Whitelisted" ? styles.white : "",
-                    ].join(" ")}
-                    style={getHighlightStyle(item.address)}
-                  >
-                    <span>{item.status}</span>
-                  </div>
-                </Tooltip>
-              );
-
-            case "ip":
-              return item.ip ? (
-                <div className={styles["table-wrapper-row"]}>
-                  <span>{item.ip}</span>
-                  <Copy strCopy={item.ip} />
-                </div>
-              ) : (
-                <span>-</span>
-              );
-
-            case "leave":
-              return item.leave ? (
-                <div className={styles["table-wrapper-row"]} style={{ justifyContent: "center" }}>
-                  <ExitIcon 
-                    className={styles["table-icon"]} 
-                    style={{ fill: "var(--red)" }} 
-                  />
-                </div>
-              ) : null;
-
-            case "fee":
-            case "score":
-              return <span>{item[col.field]}</span>;
-
-            case "operator":
-              if (item.providers && item.providers.length > 10) {
-                return (
-                  <div style={{ cursor: "pointer" }}>
-                    <Tooltip content="Click to see more">
-                      <div className={styles.hoverable}>
-                        <Link 
-                          className={`${styles.clickable} ${styles.mono}`} 
-                          target="_blank" 
-                          href={`/address/${item.operator}`}
-                          style={getHighlightStyle(item.address)}
-                        >
-                          {item.operator.slice(-4)}
-                        </Link>
-                        <div 
-                          className={`${styles["bubble-container"]} ${styles.grey}`} 
-                          onClick={() => openModal(item)}
-                        >
-                          {item.providers.length}
-                        </div>
-                      </div>
-                    </Tooltip>
-                  </div>
-                );
-              } else if (item.providers && item.providers.length > 1) {
-                return (
-                  <Tooltip
-                    content={
-                      <div>
-                        <table className={styles["provider-table"]}>
-                          <thead>
-                            <tr>
-                              <th style={{ textAlign: "left" }}>Address</th>
-                              <th>Bond</th>
-                              <th style={{ textAlign: "right" }}>Share</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filterProviders(item.providers).map((p, i) => (
-                              <tr key={i}>
-                                <td style={{ display: "flex" }}>
-                                  <Link 
-                                    className={`${styles.hoverable} ${styles.mono} ${styles["external-link"]}`} 
-                                    target="_blank"
-                                    href={`/address/${p.bond_address}`}
-                                  >
-                                    {addressFormatV2(p.bond_address, 4, true)}
-                                    <ExternalIcon className={styles["asset-icon"]} />
-                                  </Link>
-                                  <Copy strCopy={p.bond_address} size="small" hideToast={true} />
-                                </td>
-                                <td className={styles.mono}>
-                                  <RuneAsset 
-                                    height="0.7rem" 
-                                    style={getHighlightStyle(item.address)} 
-                                  />
-                                  {formatNumber(p.bond / 10 ** 8, "0,0")}
-                                </td>
-                                <td style={{ textAlign: "right" }}>
-                                  <span className={styles.mono}>
-                                    {formatNumber((p.bond / 10 ** 8 / item.total_bond) * 100, "0.00")}%
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        <hr />
-                        <div style={{ marginTop: "5px" }}>
-                          <strong>Operator: </strong>
-                          <span className={styles.mono}>
-                            {item.operator.slice(-4)} - {item.fee}
-                          </span>
-                        </div>
-                      </div>
-                    }
-                  >
-                    <div className={styles.hoverable}>
-                      <Link 
-                        className={`${styles.clickable} ${styles.mono}`} 
-                        target="_blank" 
-                        href={`/address/${item.operator}`}
-                        style={getHighlightStyle(item.address)}
-                      >
-                        {item.operator.slice(-4)}
-                      </Link>
-                      <div className={`${styles["bubble-container"]} ${styles.grey}`}>
-                        {item.providers ? item.providers.length : 0}
-                      </div>
-                    </div>
-                  </Tooltip>
-                );
-              } else {
-                return (
-                  <div className={styles.hoverable}>
-                    <Link 
-                      className={`${styles.clickable} ${styles.mono}`} 
-                      target="_blank" 
-                      href={`/address/${item.operator}`}
-                      style={getHighlightStyle(item.address)}
-                    >
-                      {item.operator.slice(-4)}
-                    </Link>
-                  </div>
-                );
-              }
-
-            case "churn":
-              return (
-                <div className={styles["churn-wrapper"]}>
-                  {item.churn?.map((churnItem, index) => (
-                    <div key={index} className={styles["churn-item"]}>
-                      <Tooltip
-                        content={
-                          churnItem.type !== "jail" ? (
-                            churnItem.name
-                          ) : (
-                            <div>
-                              <strong>{churnItem.name.reason}</strong>
-                              <div style={{ marginTop: "0.5rem", padding: "4px" }}>
-                                <div>
-                                  <span>Released Height:</span>
-                                  <span>{formatNumber(churnItem.name.release_height, "0,0")}</span>
-                                </div>
-                                {churnItem.name.releaseTime && (
-                                  <div>
-                                    <span>Release Time:</span>
-                                    <span>{churnItem.name.releaseTime}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )
-                        }
-                      >
-                        {React.createElement(churnItem.icon, {
-                          className: styles["table-icon"],
-                        })}
-                      </Tooltip>
-                    </div>
-                  ))}
-                  {(!item.churn || item.churn.length === 0) && !isFav(item.address) && <span>-</span>}
-                  {isFav(item.address) && name === "active-nodes" && (
-                    <div className={styles["rank-wrap"]}>
-                      <span>{item.rank}</span>
-                      <ProgressIcon 
-                        dataNumber={rankChange(item.address, item.rank)}
-                        isDown={rankChange(item.address, item.rank) < 0}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-
-            case "version":
-              return (
-                <span className={isUpgrading(item.version) ? styles.upgraded : ""}>
-                  {item.version}
-                </span>
-              );
-
-            default:
-              if (col.field.includes("behind.")) {
-                const value = parseInt(item[col.field]);
-                if (value === 0) {
-                  return (
-                    <div className={styles["status-cell"]}>
-                      <CheckIcon className={styles["status-icon"]} />
-                      <span style={getHighlightStyle(item.address)} className={styles.version}>
-                        OK
-                      </span>
-                    </div>
-                  );
-                } else if (isNaN(value) || item[col.field] === "") {
-                  return (
-                    <div className={styles["status-cell"]}>
-                      <span>-</span>
-                    </div>
-                  );
-                } else if (value > 0 && value < 10000) {
-                  return (
-                    <div className={styles["behind-cell"]}>
-                      <WarningIcon className={styles["warning-icon"]} />
-                      <span style={getHighlightStyle(item.address)} className={styles.number}>
-                        -{formatNumber(value, "0a")}
-                      </span>
-                    </div>
-                  );
-                } else if (value < 0 && value > -10000) {
-                  return (
-                    <Tooltip content="Disabled">
-                      <DangerIcon 
-                        className={styles["table-icon"]} 
-                        style={{ color: "#ef5350" }} 
-                      />
-                    </Tooltip>
-                  );
-                } else if (value > 10000) {
-                  return (
-                    <Tooltip content={item[col.field]}>
-                      <DangerIcon 
-                        className={styles["table-icon"]} 
-                        style={{ fill: "#ffc107" }} 
-                      />
-                    </Tooltip>
-                  );
-                } else {
-                  return (
-                    <Tooltip content={item[col.field]}>
-                      <DangerIcon 
-                        className={styles["table-icon"]} 
-                        style={{ fill: "#ef5350" }} 
-                      />
-                    </Tooltip>
-                  );
-                }
-              } else if (col.field === "missing_blocks") {
-                if (item.missing_blocks === 0) {
-                  return (
-                    <div className={styles["status-cell"]}>
-                      <CheckIcon className={styles["status-icon"]} />
-                      <span style={getHighlightStyle(item.address)} className={styles.version}>
-                        OK
-                      </span>
-                    </div>
-                  );
-                } else if (item.missing_blocks !== null && item.missing_blocks !== undefined) {
-                  return (
-                    <div className={styles["behind-cell"]}>
-                      <WarningIcon className={styles["warning-icon"]} />
-                      <span style={getHighlightStyle(item.address)} className={styles.number}>
-                        {formatNumber(-item.missing_blocks, "0,0")}
-                      </span>
-                    </div>
-                  );
-                } else {
-                  return <span>-</span>;
-                }
-              } else if (col.field === "rpcHealth" || col.field === "bifrostHealth") {
-                const health = getHealth(item, col);
-                if (health.text !== "-") {
-                  return (
-                    <Tooltip content={health.title}>
-                      <a
-                        className={[
-                          styles.clickable,
-                          styles.hoverable,
-                          health.text === "BAD" ? styles["bad-link"] : "",
-                        ].join(" ")}
-                        href={health.url}
-                        target="_blank"
-                        style={{ 
-                          textDecoration: "none",
-                          ...getHighlightStyle(item.address)
-                        }}
-                      >
-                        {health.text}
-                      </a>
-                    </Tooltip>
-                  );
-                } else {
-                  return <span>-</span>;
-                }
-              } else {
-                return <span>{item[col.field]}</span>;
-              }
-          }
-        },
+        field: col.field,
+        hidden: col.hidden,
+        className: col.tdClass,
       };
 
-      return column;
-    });
-  }, [cols, favs, runePrice, name, rows]);
+      if (col.field.includes('behind')) {
+        column.headerRender = () => (
+          <div className={styles['table-asset']}>
+            <img
+              className={styles['asset-chain']}
+              src={assetImage(`${col.label}.${col.label}`)}
+              alt={col.label}
+            />
+          </div>
+        );
+      } else if (col.field === 'highlight') {
+        column.headerRender = () => <HighlightList className={styles['table-icon']} />;
+      } else if (col.field === 'location') {
+        column.headerRender = () => (
+          <div title="Node Location">
+            <MarkerIcon className={styles['table-icon']} />
+          </div>
+        );
+      } else if (col.field === 'churn') {
+        column.headerRender = () => <RecycleIcon className={styles['table-icon']} />;
+      } else if (col.field === 'vault') {
+        column.headerRender = () => (
+          <div className={styles['table-asset']}>
+            <VaultIcon className={styles['table-icon']} />
+          </div>
+        );
+      } else if (col.field === 'missing_blocks') {
+        column.headerRender = () => (
+          <div className={styles['table-asset']}>
+            <MissingBlock className={styles['table-icon']} />
+          </div>
+        );
+      }
 
-  if (!rows) {
-    return <div>Loading...</div>;
-  }
+      column.renderCell = (row: NodeData) => {
+        const fieldValue = row[col.field];
+        const highlightStyle = getHighlightStyle(row.address);
+
+        if (col.field === 'address') {
+          return (
+            <div className={styles['table-wrapper-row']} style={highlightStyle}>
+              <Link
+                href={`/address/${row.address}`}
+                className={styles['clickable']}
+                style={highlightStyle}
+                title={row.address}
+              >
+                {addressFormatV2(row.address, 4, true)}
+              </Link>
+              <Copy strCopy={row.address} />
+              <Link
+                href={`/node/${row.address}`}
+                target="_blank"
+                style={highlightStyle}
+              >
+                <InfoIcon className={`${styles['table-icon']} ${styles['item-link']}`} />
+              </Link>
+              <a
+                style={highlightStyle}
+                href={`http://${row.ip}:6040/status/scanner`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <JsonIcon className={`${styles['table-icon']} ${styles['item-link']}`} />
+              </a>
+              <Ip strCopy={row.ip} />
+              <a
+                style={highlightStyle}
+                href={`https://thornode.ninerealms.com/thorchain/node/${row.address}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <NodeIcon className={`${styles['table-icon']} ${styles['item-link']}`} />
+              </a>
+            </div>
+          );
+        }
+
+        if (col.field === 'highlight') {
+          return isFav(row.address) ? (
+            <StaredIcon
+              className={styles['table-icon']}
+              style={highlightStyle}
+              onClick={() => delFav(row.address)}
+            />
+          ) : (
+            <StarIcon
+              className={styles['table-icon']}
+              onClick={() => addFav(row.address, row.rank)}
+            />
+          );
+        }
+
+        if (col.field === 'age') {
+          return row.age ? (
+            <span title={row.age.info} style={{ cursor: 'pointer' }}>
+              {number(row.age.number || 0, '0,0.00')}
+            </span>
+          ) : (
+            <span>-</span>
+          );
+        }
+
+        if (col.field === 'isp') {
+          return row.isp ? <CloudImage name={[row.isp, row.org || '']} /> : <span>-</span>;
+        }
+
+        if (col.field === 'location') {
+          return row.location ? (
+            <div
+              className={styles['countries']}
+              title={`${row.location.code}, ${row.location.city}`}
+            >
+              <VFlag flag={row.location.code} />
+            </div>
+          ) : null;
+        }
+
+        if (col.field === 'total_bond') {
+          return (
+            <span 
+              className={styles['hoverable']} 
+              title={formatCurrency(runePrice * row.total_bond, (v: number) => number(v, "0,0.00a"))}
+            >
+              <RuneAsset height="0.7rem" />
+              {normalFormat(row.total_bond, number)}
+            </span>
+          );
+        }
+
+        if (col.field === 'award') {
+          return (
+            <span 
+              className={styles['hoverable']} 
+              title={formatCurrency(runePrice * row.award, (v: number) => number(v, "0,0.00a"))}
+            >
+              <RuneAsset height="0.7rem" />
+              {normalFormat(row.award, number)}
+            </span>
+          );
+        }
+
+        if (col.field === 'vault') {
+          return (
+            <div className={styles['vault-wrapper']} title={row.vault}>
+              <ColorHash name={row.vault || ''} />
+            </div>
+          );
+        }
+
+        if (col.field === 'status') {
+          return (
+            <div
+              className={`${styles['mini-bubble']} ${styles['hoverable']} ${
+                row.status === 'Standby' ? styles['yellow'] : ''
+              } ${row.status === 'Disabled' ? styles['danger'] : ''} ${
+                row.status === 'Whitelisted' ? styles['white'] : ''
+              }`}
+              style={highlightStyle}
+              title={row.preflight?.reason}
+            >
+              <span>{row.status}</span>
+            </div>
+          );
+        }
+
+        if (col.field === 'ip') {
+          return row.ip ? (
+            <div className={styles['table-wrapper-row']}>
+              <span>{row.ip}</span>
+              <Copy strCopy={row.ip} />
+            </div>
+          ) : (
+            <span>-</span>
+          );
+        }
+
+        if (col.field === 'leave') {
+          return (
+            <div className={styles['table-wrapper-row']} style={{ justifyContent: 'center' }}>
+              {row.leave === true && <ExitIcon className={styles['table-icon']} style={{ fill: 'var(--red)' }} />}
+            </div>
+          );
+        }
+
+        if (col.field === 'fee') {
+          return <span>{number((fieldValue || 0) * 100, '0,0.00')}%</span>;
+        }
+
+        if (col.field === 'score') {
+          return <span>{number(fieldValue || 0, '0,0.00')}</span>;
+        }
+
+        if (col.field === 'operator') {
+          if (row.providers && row.providers.length > 10) {
+            return (
+              <div style={{ cursor: 'pointer' }}>
+                <div className={styles['hoverable']}>
+                  <Link
+                    className={`${styles['clickable']} mono`}
+                    href={`/address/${row.operator}`}
+                    target="_blank"
+                    style={highlightStyle}
+                  >
+                    {row.operator?.slice(-4)}
+                  </Link>
+                  <div className={`${styles['bubble-container']} ${styles['grey']}`} onClick={() => openModal(row)}>
+                    {row.providers.length}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className={styles['hoverable']}>
+              <Link
+                className={`${styles['clickable']} mono`}
+                href={`/address/${row.operator}`}
+                target="_blank"
+                style={highlightStyle}
+              >
+                {row.operator?.slice(-4)}
+              </Link>
+              {row.providers && row.providers.length !== 1 && (
+                <div className={`${styles['bubble-container']} ${styles['grey']}`}>
+                  {row.providers ? row.providers.length : 0}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        if (col.field === 'churn') {
+          const churnData = rows[row.originalIndex || 0]?.churn || [];
+          return (
+            <div className={styles['churn-wrapper']}>
+              {churnData.map((churnItem, index: number) => {
+                const IconComponent = churnItem.icon;
+                return (
+                  <div key={index} className={styles['churn-item']} title={churnItem.name}>
+                    {typeof IconComponent === 'string' ? (
+                      <img src={IconComponent} className={styles['table-icon']} alt={churnItem.name} />
+                    ) : IconComponent ? (
+                      React.createElement(IconComponent, { className: styles['table-icon'] })
+                    ) : null}
+                  </div>
+                );
+              })}
+              {churnData.length === 0 && !isFav(row.address) && <span>-</span>}
+              {isFav(row.address) && name === 'active-nodes' && (
+                <div className={styles['rank-wrap']}>
+                  <span>{row.rank}</span>
+                  <ProgressIcon
+                    dataNumber={rankChange(row.address, row.rank)}
+                    isDown={rankChange(row.address, row.rank) < 0}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        if (col.field === 'version') {
+          return (
+            <span className={isUpgrading(fieldValue) ? styles['upgraded'] : ''}>
+              {fieldValue}
+            </span>
+          );
+        }
+
+        if (col.field.includes('behind.')) {
+          const behindValue = parseInt(fieldValue);
+          if (behindValue === 0) {
+            return <span style={highlightStyle} className={styles['version']}>OK</span>;
+          } else if (fieldValue === '' || fieldValue === null || fieldValue === undefined) {
+            return <span>-</span>;
+          } else if (behindValue > 0 && behindValue < 10000) {
+            return (
+              <span style={highlightStyle} className={styles['number']}>
+                -{behindValue.toLocaleString()}
+              </span>
+            );
+          } else if (behindValue < 0 && behindValue > -10000) {
+            return <DangerIcon title="Disabled" className={styles['table-icon']} style={{ color: '#ef5350' }} />;
+          } else if (behindValue > 10000) {
+            return <DangerIcon title={`${behindValue}`} className={styles['table-icon']} style={{ fill: '#ffc107' }} />;
+          } else {
+            return <DangerIcon title={`${behindValue}`} className={styles['table-icon']} style={{ fill: '#ef5350' }} />;
+          }
+        }
+
+        if (col.field === 'missing_blocks') {
+          if (row.missing_blocks === 0) {
+            return <span style={highlightStyle} className={styles['version']}>OK</span>;
+          } else if (row.missing_blocks !== null && row.missing_blocks !== undefined) {
+            return (
+              <span style={highlightStyle} className={styles['number']}>
+                {(-row.missing_blocks).toLocaleString()}
+              </span>
+            );
+          } else {
+            return <span>-</span>;
+          }
+        }
+
+        if (col.field === 'rpcHealth' || col.field === 'bifrostHealth') {
+          const health = getHealthStatus(fieldValue as boolean | string, row, col.field);
+          if (health.text !== '-') {
+            return (
+              <a
+                className={`${styles['clickable']} ${styles['hoverable']} ${
+                  health.text === 'BAD' ? styles['bad-link'] : ''
+                }`}
+                href={health.url}
+                target="_blank"
+                rel="noreferrer"
+                title={health.title}
+                style={highlightStyle}
+              >
+                {health.text}
+              </a>
+            );
+          }
+          return <span>-</span>;
+        }
+
+        return <span>{fieldValue}</span>;
+      };
+
+      return column as TableColumn<NodeData>;
+    });
+  }, [cols, rows, runePrice, getHighlightStyle, isFav, addFav, delFav, openModal, rankChange, name, isUpgrading, getHealthStatus]);
 
   return (
     <div>
-      <Table<NodeData>
+      <Table
         columns={tableColumns}
-        data={rows}
+        data={filteredRows}
         loading={false}
         enableSort={true}
         enableSelect={false}
         showLineNumbers={true}
-        className={`vgt-table net-table bordered condensed node-table ${styles["node-table"]}`}
-        searchOptions={{
-          enabled: true,
-          externalQuery: searchTerm,
-        }}
-        sortOptions={{
-          enabled: true,
-          initialSortBy: sortColumn
-            ? [{ field: sortColumn, type: sortOrder }]
-            : [],
-        }}
+        className={`vgt-table net-table bordered condensed ${styles['node-table']}`}
+        rowStyleClass={rowStyleClass}
         onSortChange={handleSortChange}
-        rowStyleClass={rowClassCallback}
+        onRowSelectChange={() => {}}
       />
 
       {showModal && selectedRow && (
-        <div className={styles["modal-overlay"]}>
-          <div className={styles["modal-content"]}>
-            <div className={styles["modal-header"]}>
+        <div className={styles['modal-overlay']}>
+          <div className={styles['modal-content']}>
+            <div className={styles['modal-header']}>
               <h3>Operator Details</h3>
-              <CrossIcon className={styles["close-btn"]} onClick={closeModal} />
+              <CrossIcon className={styles['close-btn']} onClick={closeModal} />
             </div>
-            <table className={styles["modal-table"]}>
+            <table className={styles['modal-table']}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: "left" }}>Address</th>
+                  <th style={{ textAlign: 'left' }}>Address</th>
                   <th>Bond</th>
-                  <th style={{ textAlign: "right" }}>Share</th>
+                  <th style={{ textAlign: 'right' }}>Share</th>
                 </tr>
               </thead>
               <tbody>
-                {filterProviders(selectedRow.providers).map((p, i) => (
+                {filterProviders(selectedRow.providers).map((p, i: number) => (
                   <tr key={i}>
-                    <td style={{ display: "flex" }}>
-                      <Link 
-                        className={`${styles.hoverable} ${styles.mono} ${styles["external-link"]}`} 
-                        target="_blank"
+                    <td style={{ display: 'flex' }}>
+                      <Link
+                        className={`${styles['hoverable']} mono ${styles['external-link']}`}
                         href={`/address/${p.bond_address}`}
+                        target="_blank"
                       >
                         {addressFormatV2(p.bond_address, 4, true)}
-                        <ExternalIcon className={styles["asset-icon"]} />
+                        <ExternalIcon className={styles['asset-icon']} />
                       </Link>
                       <Copy strCopy={p.bond_address} size="small" hideToast={true} />
                     </td>
-                    <td className={styles.mono}>
-                      <RuneAsset 
-                        height="0.7rem" 
-                        style={getHighlightStyle(selectedRow.address)} 
-                      />
-                      {formatNumber(p.bond / 10 ** 8, "0,0")}
+                    <td className="mono">
+                      <RuneAsset height="0.7rem" />
+                      {number(p.bond / 10 ** 8, '0,0')}
                     </td>
-                    <td style={{ textAlign: "right" }}>
-                      <span className={styles.mono}>
-                        {formatNumber((p.bond / 10 ** 8 / selectedRow.total_bond) * 100, "0.00")}%
+                    <td style={{ textAlign: 'right' }}>
+                      <span className="mono">
+                        {number((p.bond / 10 ** 8 / selectedRow.total_bond) * 100, '0,0.00')}%
                       </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <div className={styles["footer-table"]}>
-              <strong>Operator:</strong>
-              <span className={styles.mono} style={{ marginLeft: "5px" }}>
-                <Link 
-                  className={styles.clickable} 
-                  href={`/address/${selectedRow.operator}`} 
-                  target="_blank"
-                >
-                  {selectedRow.operator.slice(-4)}
+            <div className={styles['footer-table']}>
+              <strong>Operator: </strong>
+              <span className="mono" style={{ marginLeft: '5px' }}>
+                <Link className={styles['clickable']} href={`/address/${selectedRow.operator}`} target="_blank">
+                  {selectedRow.operator?.slice(-4)}
                 </Link>
-                - {selectedRow.fee}
+                - {number((selectedRow.fee || 0) * 100, '0,0.00')}%
               </span>
             </div>
           </div>

@@ -1,37 +1,51 @@
-import React from 'react';
-import styles from './VFlag.module.scss';
+"use client";
+
+import React, { useState, useEffect } from 'react';
 
 interface VFlagProps {
   flag: string;
 }
 
 const VFlag: React.FC<VFlagProps> = ({ flag }) => {
-  const getImgPath = (): string | undefined => {
+  const [FlagComponent, setFlagComponent] = useState<React.ComponentType<any> | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
     if (!flag) {
-      return undefined;
+      return;
     }
 
-    try {
-      return require(`country-flag-icons/flags/3x2/${flag}.svg`);
-    } catch (error) {
-      console.warn(`Flag not found for country code: ${flag}`);
-      return undefined;
-    }
-  };
+    const loadFlag = async () => {
+      try {
+        const flagModule = await import(`country-flag-icons/react/3x2/${flag}`);
+        setFlagComponent(() => flagModule.default);
+      } catch {
+        console.warn(`Flag not found for country code: ${flag}`);
+        setError(true);
+      }
+    };
 
-  const imgPath = getImgPath();
+    loadFlag();
+  }, [flag]);
+
+  if (!flag) {
+    return <span>-</span>;
+  }
+
+  if (error) {
+    return <span>{flag}</span>;
+  }
+
+  if (!FlagComponent) {
+    return <span>...</span>;
+  }
 
   return (
-    <div>
-      {imgPath ? (
-        <img
-          src={imgPath}
-          alt={`flag-${flag}`}
-          className={`asset-icon ${styles.countryIcon}`}
-        />
-      ) : (
-        <span>-</span>
-      )}
+    <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+      <FlagComponent 
+        className="asset-icon country-icon" 
+        style={{ width: '20px', height: '15px' }}
+      />
     </div>
   );
 };

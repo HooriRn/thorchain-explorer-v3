@@ -1,5 +1,5 @@
 import React from 'react';
-import { capitalize } from '@/utils/filters';
+import { capitalize } from 'lodash';
 import Tooltip from '@/components/Tooltip';
 
 import AmazonIcon from '@/assets/images/clouds/amazon.svg';
@@ -16,104 +16,46 @@ import ComcastIcon from '@/assets/images/clouds/comcast.svg';
 import IonosIcon from '@/assets/images/clouds/ionos.svg';
 import CloudIcon from '@/assets/images/clouds/cloud.svg';
 
-import CloudzyImage from '@/assets/images/clouds/cloudzy.png';
-import LeasewebImage from '@/assets/images/clouds/leaseweb.png';
-
-interface CloudContainerProps {
+interface CloudImageProps {
   name: string[];
 }
 
-const CloudContainer: React.FC<CloudContainerProps> = ({ name }) => {
-  const findOrg = (orgName: string): React.ComponentType<any> | false | undefined => {
-    const lowerName = orgName.toLowerCase();
+const CloudImage: React.FC<CloudImageProps> = ({ name }) => {
+  if (!name || !Array.isArray(name) || name.length === 0) {
+    return <span>-</span>;
+  }
+
+  const getCloudIcon = () => {
+    const providers = name.map(n => n?.toLowerCase() || '');
     
-    if (lowerName.includes('amazon')) {
-      return AmazonIcon;
-    } else if (lowerName.includes('google')) {
-      return GoogleIcon;
-    } else if (lowerName.includes('microsoft')) {
-      return AzureIcon;
-    } else if (lowerName.includes('hetzner')) {
-      return HetznerIcon;
-    } else if (lowerName.includes('digitalocean')) {
-      return DigitalOceanIcon;
-    } else if (
-      lowerName.includes('the constant company') ||
-      lowerName.includes('vultr') ||
-      lowerName.includes('choopa')
-    ) {
-      return VultrIcon;
-    } else if (lowerName.includes('hostinger')) {
-      return HostingerIcon;
-    } else if (lowerName.includes('cogent')) {
-      return CogentIcon;
-    } else if (lowerName.includes('datacamp')) {
-      return DatacampIcon;
-    } else if (lowerName.includes('ovh')) {
-      return OvhIcon;
-    } else if (lowerName.includes('comcast')) {
-      return ComcastIcon;
-    } else if (lowerName.includes('ionos')) {
-      return IonosIcon;
-    } else if (lowerName.includes('routerhosting') || lowerName.includes('leaseweb')) {
-      return false;
+    for (const provider of providers) {
+      if (provider.includes('amazon')) return AmazonIcon;
+      if (provider.includes('google')) return GoogleIcon;
+      if (provider.includes('microsoft') || provider.includes('azure')) return AzureIcon;
+      if (provider.includes('hetzner')) return HetznerIcon;
+      if (provider.includes('digitalocean')) return DigitalOceanIcon;
+      if (provider.includes('vultr') || provider.includes('choopa') || provider.includes('the constant company')) return VultrIcon;
+      if (provider.includes('hostinger')) return HostingerIcon;
+      if (provider.includes('cogent')) return CogentIcon;
+      if (provider.includes('datacamp')) return DatacampIcon;
+      if (provider.includes('ovh')) return OvhIcon;
+      if (provider.includes('comcast')) return ComcastIcon;
+      if (provider.includes('ionos')) return IonosIcon;
     }
-
-    return undefined;
-  };
-
-  const getType = (): React.ComponentType<any> | false | undefined => {
-    const lowerName = name.map(e => e.toLowerCase());
-    let host = findOrg(lowerName[0]);
     
-    if (host === undefined) {
-      host = findOrg(lowerName[1]);
-    }
-
-    if (host === undefined) {
-      return CloudIcon;
-    }
-
-    return host;
+    return CloudIcon;
   };
 
-  const getImagePath = (): string => {
-    const lowerName = name[0].toLowerCase();
-    if (lowerName.includes('routerhosting')) {
-      return CloudzyImage;
-    } else if (lowerName.includes('leaseweb')) {
-      return LeasewebImage;
-    }
-    return '';
-  };
-
-  const type = getType();
-  const imagePath = getImagePath();
-  const tooltipContent = capitalize(name[0]);
+  const Icon = getCloudIcon();
+  const tooltipText = capitalize(name[0] || '');
 
   return (
-    <div className="cloud-container">
-      {type ? (
-        <Tooltip content={tooltipContent}>
-          {React.createElement(type, {
-            className: "asset-icon"
-          })}
-        </Tooltip>
-      ) : imagePath ? (
-        <Tooltip content={tooltipContent}>
-          <img 
-            src={imagePath} 
-            alt={name[0]}
-            className="asset-image" 
-          />
-        </Tooltip>
-      ) : (
-        <Tooltip content={tooltipContent}>
-          <CloudIcon className="asset-icon" />
-        </Tooltip>
-      )}
-    </div>
+    <Tooltip content={tooltipText}>
+      <div className="cloud-container">
+        <Icon className="asset-icon" />
+      </div>
+    </Tooltip>
   );
 };
 
-export default CloudContainer;
+export default CloudImage;
