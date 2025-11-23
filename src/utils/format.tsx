@@ -32,6 +32,11 @@ export const number = (value: number, pattern: string = "0,0") => {
     return new Intl.NumberFormat("en-US").format(value);
   }
 
+  if (pattern.includes(".")) {
+    const decimalPlaces = pattern.split(".")[1]?.length || 0;
+    return value.toFixed(decimalPlaces);
+  }
+
   return value.toString();
 };
 
@@ -53,6 +58,36 @@ export const formatTCYToString = (value: number) => {
 
 export const formatUSDValue = (value: number) => {
   return `$${formatNumber(value, { decimalScale: 2 })}`;
+};
+
+/**
+ * Formats USD values with proper zero handling
+ * Always shows $0.00 instead of $<0.01
+ * @param value - The USD value to format
+ * @returns Formatted USD string
+ */
+export const formatUSDValueFixed = (
+  value: number | string | null | undefined
+): string => {
+  if (value === null || value === undefined || value === "") {
+    return "$0.00";
+  }
+
+  const numValue = typeof value === "string" ? parseFloat(value) : value;
+
+  if (isNaN(numValue)) {
+    return "$0.00";
+  }
+
+  if (numValue === 0) {
+    return "$0.00";
+  }
+
+  if (numValue < 0.01) {
+    return "$0.00";
+  }
+
+  return `$${numValue.toFixed(2)}`;
 };
 
 export interface TrendFilterOptions {
@@ -138,10 +173,10 @@ export const formatTrendNumber = (
   }
 
   if (numValue > 0) {
-    return currency ? `${currencySymbol}<0.01` : "<0.01";
+    return currency ? `${currencySymbol}0.00` : "0.00";
   }
 
-  return currency ? `${currencySymbol}0` : "0";
+  return currency ? `${currencySymbol}0.00` : "0.00";
 };
 
 /**
@@ -181,13 +216,42 @@ export const formatTrendCurrency = (
   return formatTrendNumber(value, { ...options, currency: true });
 };
 
-/**
- * Formats large numbers with custom suffixes
- * @param value - The number to format
- * @param suffixes - Array of suffixes (e.g., ['', 'K', 'M', 'B'])
- * @param options - Formatting options
- * @returns Formatted string
- */
+export const formatRoundedCurrency = (
+  value: number | string | null | undefined,
+  currencySymbol: string = "$"
+): string => {
+  if (value === null || value === undefined || value === "") {
+    return `${currencySymbol}0`;
+  }
+
+  const numValue = typeof value === "string" ? parseFloat(value) : value;
+
+  if (isNaN(numValue)) {
+    return `${currencySymbol}0`;
+  }
+
+  const absValue = Math.abs(numValue);
+  const rounded = Math.round(absValue);
+  const sign = numValue < 0 ? "-" : "";
+
+  if (rounded >= 1e9) {
+    const billions = Math.round(rounded / 1e9);
+    return `${sign}${currencySymbol}${billions}B`;
+  }
+
+  if (rounded >= 1e6) {
+    const millions = Math.round(rounded / 1e6);
+    return `${sign}${currencySymbol}${millions}M`;
+  }
+
+  if (rounded >= 1e3) {
+    const thousands = Math.round(rounded / 1e3);
+    return `${sign}${currencySymbol}${thousands}K`;
+  }
+
+  return `${sign}${currencySymbol}${rounded}`;
+};
+
 export const formatTrendWithCustomSuffixes = (
   value: number | string | null | undefined,
   suffixes: string[] = ["", "K", "M", "B", "T"],
@@ -320,4 +384,128 @@ export const formatTotalAmount = (
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   }).format(convertedValue);
+};
+
+/**
+ * Vue.js $options.filters.number equivalent
+ * Formats numbers with patterns like '0,0.00a' (comma separator, decimals, abbreviated)
+ * @param value - The number to format
+ * @param pattern - Format pattern (e.g., '0,0.00a', '0,0', '0.00')
+ * @returns Formatted string
+ */
+export const formatVueNumber = (
+  value: number | string | null | undefined,
+  pattern: string = "0,0.00a"
+): string => {
+  if (value === null || value === undefined || value === "") {
+    return "0";
+  }
+
+  const numValue = typeof value === "string" ? parseFloat(value) : value;
+
+  if (isNaN(numValue)) {
+    return "0";
+  }
+
+  if (pattern.includes("a")) {
+    if (numValue >= 1e9) {
+      return (numValue / 1e9).toFixed(1) + "B";
+    } else if (numValue >= 1e6) {
+      return (numValue / 1e6).toFixed(1) + "M";
+    } else if (numValue >= 1e3) {
+      return (numValue / 1e3).toFixed(1) + "K";
+    }
+  }
+
+  if (pattern.includes(",")) {
+    const parts = pattern.split(".");
+    if (parts.length > 1) {
+      const decimalCount = parts[1].replace("a", "").length;
+      return new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: decimalCount,
+        maximumFractionDigits: decimalCount,
+      }).format(numValue);
+    } else {
+      return new Intl.NumberFormat("en-US").format(numValue);
+    }
+  }
+
+  if (pattern.includes(".")) {
+    const decimalCount = pattern.split(".")[1]?.replace("a", "").length || 0;
+    return numValue.toFixed(decimalCount);
+  }
+
+  return numValue.toString();
+};
+
+/**
+ * Formats small base amount values (divided by 10^8) with abbreviated format
+ * @param number - The number to format
+ * @param numberFormatter - The formatter function to use (e.g., formatVueNumber)
+ * @returns Formatted string or "-" if number is falsy
+ */
+export const smallBaseAmountFormat = (
+  number: number | string | null | undefined,
+  numberFormatter: (value: any, pattern?: any) => string = formatVueNumber
+) => {
+  return number ? numberFormatter(+number / 10 ** 8, "0,0.00a") : "-";
+};
+
+/**
+ * Formats small base amount with currency symbol ($)
+ * @param number - The number to format
+ * @param numberFormatter - The formatter function to use (e.g., formatVueNumber)
+ * @returns Formatted string with $ prefix or "-" if number is falsy
+ */
+export const smallBaseAmountFormatWithCurrency = (
+  number: number | string | null | undefined,
+  numberFormatter: (value: any, pattern?: any) => string = formatVueNumber
+) => {
+  return number ? `$${smallBaseAmountFormat(number, numberFormatter)}` : "-";
+};
+
+/**
+ * Formats base amount values (divided by 10^8) with 4 decimal places
+ * @param number - The number to format
+ * @param numberFormatter - The formatter function to use (e.g., formatVueNumber)
+ * @returns Formatted string or "-" if number is falsy
+ */
+export const formatBaseAmount = (
+  number: number | string | null | undefined,
+  numberFormatter: (value: any, pattern?: any) => string = formatVueNumber
+) => {
+  return number ? numberFormatter(+number / 10 ** 8, "0,0.0000") : "-";
+};
+
+/**
+ * Formats normal numbers with comma separator
+ * @param number - The number to format
+ * @param numberFormatter - The formatter function to use (e.g., formatVueNumber)
+ * @returns Formatted string or "-" if number is falsy
+ */
+export const formatNormalNumber = (
+  number: number | string | null | undefined,
+  numberFormatter: (value: any, pattern?: any) => string = formatVueNumber
+) => {
+  return number ? numberFormatter(+number, "0,0") : "-";
+};
+
+/**
+ * Formats percentage value (ratio 0-1) to percentage string (e.g., 0.05 -> "5.00%")
+ * @param value - The ratio value (0-1)
+ * @param decimals - Number of decimal places (default: 2)
+ * @returns Formatted percentage string
+ */
+export const formatPercentageRatio = (
+  value: number | string | null | undefined,
+  decimals: number = 2
+): string => {
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+  const numValue = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(numValue)) {
+    return "-";
+  }
+  return formatPercent(numValue, decimals);
 };

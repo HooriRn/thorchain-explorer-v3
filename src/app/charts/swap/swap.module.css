@@ -1,0 +1,125 @@
+.header-swap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.button-swap {
+  background-color: var(--card);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  padding: 12px 16px;
+  color: var(--font-color);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-items: center;
+}
+
+.button-swap:hover {
+  background-color: var(--active-bg-color);
+  color: var(--primary);
+}
+
+.dropdown-icon {
+  width: 1rem;
+  height: 1rem;
+  fill: var(--sec-font-color);
+}
+
+.selected-all {
+  padding: 12.5px 16px;
+}
+
+.selected-asset {
+  padding: 9px 16px;
+}
+
+.dropdown-menu {
+  margin-top: 0.3rem;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease-in-out;
+  pointer-events: none;
+  cursor: pointer;
+  max-height: 300px;
+  width: 178px;
+  overflow: auto;
+}
+
+.all-section {
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem;
+}
+
+.all-section:hover {
+  background-color: var(--active-bg-color);
+  color: var(--primary);
+}
+
+.selected-options {
+  display: flex;
+  padding: 0.5rem;
+  align-items: center;
+}
+
+.selected-options:hover {
+  background-color: var(--active-bg-color);
+  color: var(--primary);
+}
+
+.open .dropdown-menu {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.csv-download {
+  margin-left: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-right: 0.5rem;
+}
+
+.csv-download:hover svg {
+  fill: var(--primary);
+}
+
+.csv-download svg {
+  fill: var(--sec-font-color);
+  height: 1.2rem;
+  width: 1.2rem;
+}
+
+
+.csv-download svg:hover {
+  fill: var(--primary);
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.asset-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+}

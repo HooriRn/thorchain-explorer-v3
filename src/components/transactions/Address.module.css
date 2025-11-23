@@ -11,9 +11,9 @@
 }
 
 .address-container .address.hovered {
+  border: 1px dashed var(--highlight);
   color: var(--active-primary-color) !important;
   border-radius: var(--radius-xs);
-  box-shadow: 0 0 0 1px var(--highlight);
 }
 
 .address-container .no-hover {

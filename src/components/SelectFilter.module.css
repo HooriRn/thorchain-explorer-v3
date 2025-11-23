@@ -1,0 +1,128 @@
+.formGroup {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: var(--space-8, 8px);
+  font-size: var(--font-size-desktop, 1rem);
+  font-weight: bold;
+  color: var(--sec-font-color);
+}
+
+.selectedOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tagBadge {
+  align-items: center;
+  display: flex;
+  font-size: 12px;
+  height: 17px;
+  justify-content: center;
+  margin-left: 5px;
+  margin-top: 2px;
+}
+
+.multipleSelected {
+  font-weight: bold;
+}
+
+.tagBadge > span {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--sec-font-color);
+  margin-left: var(--space-8, 8px);
+  transition: color 0.2s ease;
+}
+
+.tagBadge > span:hover {
+  color: var(--primary);
+}
+
+.customDropdown {
+  position: relative;
+}
+
+.dropdownButton {
+  width: 100%;
+  padding: var(--space-12, 12px) var(--space-10, 10px);
+  font-size: var(--font-size-desktop, 1rem);
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  background-color: var(--card);
+  color: var(--sec-font-color);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dropdownIcon {
+  width: 1rem;
+  height: 1rem;
+  fill: var(--sec-font-color);
+}
+
+.dropdownOptions {
+  background-color: var(--card);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  border-radius: var(--radius-md, 8px);
+  margin-top: var(--space-8, 8px);
+  padding: var(--space-8, 8px) 0;
+  box-sizing: border-box;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.dropdownOption {
+  position: relative;
+  padding: var(--space-12, 12px) 34px;
+  font-size: var(--font-size-desktop, 1rem);
+  color: var(--sec-font-color);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.dropdownOption:hover {
+  background-color: var(--active-bg-color);
+  border-radius: var(--radius-s, 6px);
+  color: var(--primary);
+}
+
+.dropdownOption.selected {
+  border-radius: var(--radius-s, 6px);
+  color: var(--primary);
+}
+
+.checkmark {
+  width: 0.8rem;
+  height: 0.8rem;
+  position: absolute;
+  left: 12px;
+  top: calc(50% - 0.4rem);
+  fill: var(--primary);
+  border: none;
+}
+
+.dropdownOptions::-webkit-scrollbar {
+  width: 5px;
+}
+
+.dropdownOptions::-webkit-scrollbar-track {
+  background-color: var(--border);
+}
+
+.dropdownOptions::-webkit-scrollbar-thumb {
+  background-color: var(--font-color);
+  border-radius: var(--radius-sm, 4px);
+}

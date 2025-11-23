@@ -1,6 +1,6 @@
 .rune-asset {
   display: inline-flex;
   align-items: center;
-  fill: var(--sec-font-color);
+  fill: currentColor;
   font-size: 11px;
 }

@@ -7,6 +7,8 @@
 @import "./charts.css";
 @import "./navigation.css";
 @import "./responsive.css";
+@import "./normalize.css";
+@import "./datepicker.css";
 
 .clickable {
   text-decoration: none;
@@ -29,6 +31,26 @@
 
 * {
   box-sizing: border-box;
+}
+h3 {
+  display: block;
+  font-size: 1.17em;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+  font-weight: bold;
+  unicode-bidi: isolate;
+}
+h1 {
+  display: block;
+  font-size: 2em;
+  margin-block-start: 0.67em;
+  margin-block-end: 0.67em;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+  font-weight: bold;
+  unicode-bidi: isolate;
 }
 
 html,
@@ -61,4 +83,24 @@ body {
   font-style: normal;
   font-optical-sizing: auto;
   color: var(--foreground);
+}
+
+.glassmorphism-tooltip {
+  background-color: var(--bgt-color) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  font-size: 14px !important;
+  font-family: "Montserrat", sans-serif !important;
+  color: var(--sec-font-color) !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+  z-index: 99999 !important;
+  transition: opacity 0.2s ease-in-out !important;
+}
+.cell-content {
+  display: flex;
+  align-items: center;
 }

@@ -42,6 +42,18 @@ const AssetIcon: React.FC<AssetIconProps> = ({
     return assetObj && typeof assetObj === "object" && assetObj.id;
   }, [asset]);
 
+  const findAssetInPools = (assetSymbol: string) => {
+    const pool = pools?.find((p: any) => {
+      const poolAsset = assetFromString(p.asset);
+      if (poolAsset?.symbol === assetSymbol) {
+        return true;
+      }
+      return false;
+    });
+
+    return pool ? pool.asset : assetSymbol;
+  };
+
   const tokens = useMemo(() => {
     let assetObj = asset;
     if (typeof asset === "string") {
@@ -56,18 +68,6 @@ const AssetIcon: React.FC<AssetIconProps> = ({
     return [assetObj];
   }, [asset, pools]);
 
-  const findAssetInPools = (assetSymbol: string) => {
-    const pool = pools?.find((p: any) => {
-      const poolAsset = assetFromString(p.asset);
-      if (poolAsset?.symbol === assetSymbol) {
-        return true;
-      }
-      return false;
-    });
-
-    return pool ? pool.asset : assetSymbol;
-  };
-
   const showChainImage = () => {
     if (chain === false) {
       return false;
@@ -81,7 +81,7 @@ const AssetIcon: React.FC<AssetIconProps> = ({
     if (chain) {
       return true;
     } else if (assetToChain(asset) !== assetStr) {
-      return false;
+      return true;
     }
     return false;
   };

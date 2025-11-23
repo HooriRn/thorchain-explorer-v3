@@ -82,10 +82,6 @@ export const mainnetNav = {
           name: "TVL by Chain",
           link: "/pools/tvl",
         },
-        {
-          name: "Rune Pool",
-          link: "/pools/runepool",
-        },
       ],
     },
     {
@@ -124,6 +120,10 @@ export const mainnetNav = {
       icon: "chartSelected",
       link: "/rujira",
       submenu: [
+        {
+          name: "Ruji",
+          link: "/rujira",
+        },
         {
           name: "Secured Assets",
           link: "/rujira/secured",

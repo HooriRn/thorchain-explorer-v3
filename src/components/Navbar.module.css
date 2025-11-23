@@ -202,13 +202,12 @@
   flex-direction: column;
   transition: height 0.3s ease;
   overflow: hidden;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   max-height: 0;
   opacity: 0;
   transition: max-height 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
   transform: translateY(-20px);
+
 }
 
 .submenu.open {
@@ -238,6 +237,7 @@
   border-top: 2px solid var(--primary);
   opacity: 0;
   transition: opacity 0.3s ease;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
 .desktopSubmenu::before {
@@ -282,7 +282,6 @@
   display: flex !important;
   max-height: 500px !important;
   opacity: 1 !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   animation: slideDownSubmenu 0.3s ease forwards;
 }
 
@@ -380,7 +379,6 @@
     display: flex !important;
     max-height: 500px !important;
     opacity: 1 !important;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 }
 

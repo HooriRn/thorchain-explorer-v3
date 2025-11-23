@@ -1,0 +1,23 @@
+.buttonMore {
+  display: flex;
+  gap: 8px;
+}
+.buttonContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0.5rem;
+  background: transparent;
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+  transition: opacity 0.2s;
+}
+.buttonContainer:hover {
+    background-color: var(--active-bg-color);
+    color: var(primary);
+}

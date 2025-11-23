@@ -1,0 +1,12 @@
+.runeCur {
+  height: 0.7rem;
+  fill: currentColor;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+.cellContent {
+  gap: 0.5rem;
+  display: flex;
+  align-items: center;
+  padding: 0.30em 0em;
+}

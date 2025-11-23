@@ -1,0 +1,32 @@
+.leaderboardContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+  .leaderboardContainer {
+    flex-direction: column;
+  }
+}
+
+.dataSection {
+  flex: 1;
+  margin: var(--space-0) var(--space-10);
+}
+
+@media (min-width: 1024px) {
+  .dataSection {
+    margin: var(--space-0);
+  }
+}
+
+.sectionTitle {
+  text-align: center;
+  color: var(--sec-font-color);
+  padding: var(--space-18) var(--space-0);
+  border-bottom: 1px solid var(--border);
+  margin-top: var(--space-0);
+}

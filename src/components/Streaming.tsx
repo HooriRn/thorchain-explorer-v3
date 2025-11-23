@@ -15,7 +15,7 @@ import { formatNumberToString, formatPercent } from "@/utils/format";
 import Card from "@/components/ui/Card";
 import AssetIcon from "@/components/AssetIcon";
 import DotLive from "@/components/DotLive";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "@/components/ui/progressBar";
 import { Skeleton } from "@/components/ui/Skeleton";
 import styles from "./Streaming.module.css";
 import StreamingIcon from "@/assets/images/streaming.svg";

@@ -93,18 +93,11 @@
 }
 
 .ratio {
-  font-weight: 600;
-  padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.875rem;
 }
 
-.membershipCell {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  position: relative;
-}
+
 
 .ageCell {
   display: flex;
@@ -124,7 +117,6 @@
 }
 
 .currency {
-  color: var(--primary);
   font-weight: 600;
   margin-right: 0.25rem;
 }
@@ -258,8 +250,9 @@
   min-width: 260px;
 }
 
-.hashCell > .mono {
+.hashCell .mono {
   white-space: nowrap;
+  font-family: "Roboto Mono", monospace;
 }
 
 .tableContainer tbody tr:last-child td {
@@ -277,7 +270,6 @@
   }
 
   .hashCell {
-    flex-direction: column;
     align-items: flex-start;
     gap: 0.25rem;
   }

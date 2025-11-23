@@ -1,3 +1,5 @@
-import TcyPage from "./index";
+import TcyPage from "./tcy";
 
-export default TcyPage;
+export default function Tcy() {
+  return <TcyPage />;
+}

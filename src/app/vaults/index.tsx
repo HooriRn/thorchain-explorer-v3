@@ -80,7 +80,7 @@ const VaultsPage: React.FC = () => {
 
   const customTheme = {
     Table: `
-      --data-table-library_grid-template-columns: 200px 120px 100px 120px 120px 100px 120px 100px 100px 100px 100px 100px;
+      --data-table-library_grid-template-columns: auto auto auto auto auto auto auto auto auto auto auto auto;
     `,
   };
 
@@ -343,7 +343,7 @@ const VaultsPage: React.FC = () => {
         renderCell: (item: VaultData) => (
           <div className={styles.hashCell}>
             <span
-              className={`${styles.mono} ${styles.clickable}`}
+              className={`mono ${styles.clickable}`}
               title={`Full Hash: ${item.pubKey}`}
               onClick={() => handleAddressClick(item.hash)}
             >
@@ -395,7 +395,7 @@ const VaultsPage: React.FC = () => {
           item.bond ? (
             <div className={styles.numericCell}>
               <span
-                className={`${styles.mono} ${styles.right}`}
+                className={`mono ${styles.right}`}
                 title={`Bond Value: ${curFormat(runePrice * item.bond)}`}
               >
                 <span className={styles.currency}>{runeCur()}</span>
@@ -413,7 +413,7 @@ const VaultsPage: React.FC = () => {
           item.total_value ? (
             <div className={styles.numericCell}>
               <span
-                className={`${styles.mono} ${styles.right}`}
+                className={`mono ${styles.right}`}
                 title={`Balance Value: ${curFormat(
                   runePrice * item.total_value
                 )}`}
@@ -453,7 +453,8 @@ const VaultsPage: React.FC = () => {
           item.membership_count ? (
             <div className={styles.membershipCell}>
               <span
-                className={styles.mono}
+                className="mono"
+                style={{ color: "var(--primary)" }}
                 title={`Node Members: ${item.membership
                   ?.map((node: any) => `.${node.node_address?.slice(-4)}`)
                   .join(", ")}`}
@@ -495,7 +496,7 @@ const VaultsPage: React.FC = () => {
         renderCell: (item: VaultData) => (
           <div className={styles.tssCell}>
             <span
-              className={styles.mono}
+              className="mono"
               title={`Average TSS Time: ${
                 item.avgTSS ? (item.avgTSS / 1e3).toFixed(2) : "N/A"
               } seconds`}

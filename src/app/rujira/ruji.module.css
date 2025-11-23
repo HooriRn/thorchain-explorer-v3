@@ -1,0 +1,46 @@
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.assetCell {
+  display: flex;
+  align-items: center;
+  padding: 3px 0;
+}
+
+.assetName {
+  color: var(--sec-font-color);
+}
+
+.assetChain {
+  display: flex;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  align-items: center;
+}
+
+.numericCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.right {
+  text-align: right;
+  font-family: "Courier New", monospace;
+}
+
+@media (max-width: 768px) {
+  .tableContainer {
+    font-size: 0.875rem;
+  }
+
+  .assetCell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}

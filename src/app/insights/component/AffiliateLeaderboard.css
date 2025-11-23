@@ -1,23 +1,23 @@
 .sub-title {
-    color: var(--sec-font-color);
-  }
-  
+  color: var(--sec-font-color);
+}
+
+.leaderboard-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
   .leaderboard-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 20px;
-    flex-wrap: wrap;
+    flex-direction: row;
   }
-  
-  @media (min-width: 768px) {
-    .leaderboard-container {
-      flex-direction: row;
-    }
-  }
-  
-  .card-header-title {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 600;
-  }
+}
+
+.card-header-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}

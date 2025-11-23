@@ -27,12 +27,12 @@
 }
 
 .card-header {
-  padding: var(--space-16);
-  margin-bottom: 0;
-  border-bottom: 1px solid var(--border);
-  justify-content: space-between;
-  display: flex;
   align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0;
+  padding: 16px;
 }
 
 .nav-header {
@@ -55,7 +55,7 @@
 }
 
 .card-header-title {
-  color: var(--muted-foreground);
+  color: var(--sec-font-color);
   font-size: var(--font-size-desktop);
   font-weight: 700;
   margin-bottom: 0;
@@ -87,15 +87,17 @@
 
 .nav-section {
   cursor: pointer;
-  color: var(--foreground);
+  color: var(--font-color);
   border-bottom: 1px solid transparent;
   margin-right: var(--space-16);
   padding: var(--space-16) 0.1rem;
+  font-weight: 700;
 }
 
 .nav-section.active {
-  color: var(--muted-foreground);
-  border-bottom: 2px solid var(--muted-foreground);
+  color: var(--sec-font-color);
+  border-bottom: 2px solid var(--sec-font-color);
+  font-weight: 700;
 }
 
 .stat-image {
@@ -341,12 +343,16 @@
 
 @media (max-width: 768px) {
   .card-container {
-    margin: 0;
-    width: 100%;
-    height: auto;
-    min-height: auto;
     display: flex;
+    flex: 1;
     flex-direction: column;
+    position: relative;
+    word-wrap: break-word;
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin: 0 var(--space-10);
+    max-width: 100%;
   }
 
   .card-header {

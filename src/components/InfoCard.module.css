@@ -11,6 +11,7 @@
   max-width: 100%;
   height: 100%;
   min-height: 0;
+  padding: 12px;
 }
 
 .info-card.nested {
@@ -30,11 +31,12 @@
 }
 
 .section-header.has-icon {
+  align-items: center;
   border-bottom: 1px solid var(--border);
-}
-
-.section-header.has-icon .header-content {
-  margin-bottom: var(--space-12);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0;
+  padding: 12px;
 }
 
 .section-header.has-icon .header-content h4 {
@@ -188,9 +190,6 @@
 .grid-item {
   font-size: var(--font-size-s);
   padding: var(--space-8);
-  background-color: var(--muted);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
 }
 
 .grid-item .item-name {
@@ -214,18 +213,17 @@
 }
 
 .flex-items {
-  gap: var(--space-8) var(--space-0);
-  min-width: 320px;
   display: flex;
   flex-direction: column;
-  padding: var(--space-8) var(--space-8);
-  flex: 1 1 0%;
+  gap: 0.5rem 0;
+  margin: 8px;
+  min-width: 320px;
 }
 
 @media (max-width: 1200px) {
   .flex-items {
     min-width: 280px;
-    padding: var(--space-6) var(--space-6);
+    padding: 0px var(--space-0);
     gap: var(--space-6) var(--space-0);
   }
 }
@@ -233,14 +231,14 @@
 @media (max-width: 768px) {
   .flex-items {
     min-width: 100%;
-    padding: var(--space-4) var(--space-4);
+    padding: 0px var(--space-0);
     gap: var(--space-4) var(--space-0);
   }
 }
 
 @media (max-width: 480px) {
   .flex-items {
-    padding: var(--space-3) var(--space-3);
+    padding: 0px var(--space-0);
     gap: var(--space-3) var(--space-0);
   }
 }
@@ -263,7 +261,7 @@
   font-size: var(--font-size-sm);
   justify-content: space-between;
   gap: var(--space-3) var(--space-0);
-  padding: var(--space-8) var(--space-0);
+  padding: 0px var(--space-0);
 }
 
 .flex-item:last-child {
@@ -361,7 +359,7 @@
     flex-direction: row;
     font-size: var(--font-size-desktop);
     align-items: center;
-    padding: var(--space-4) var(--space-0);
+    padding: 0px var(--space-0);
   }
 
   .flex-item .item-name .header-icon {
@@ -376,7 +374,7 @@
   }
 
   .flex-items {
-    gap: var(--space-0);
+    gap: var(--space-4);
   }
 }
 

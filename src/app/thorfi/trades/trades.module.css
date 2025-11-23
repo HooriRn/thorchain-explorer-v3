@@ -1,0 +1,48 @@
+.button-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.button-container:hover {
+  opacity: 0.7;
+}
+
+.full-screen-btn {
+  margin-left: auto;
+}
+
+.btn-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: currentColor;
+}
+
+.cell-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mono {
+  font-family: monospace;
+}
+
+.end {
+  text-align: right;
+  justify-content: flex-end;
+}
+
+.table-asset {
+  display: flex;
+  align-items: center;
+}
+
+th.end .table-asset {
+  justify-content: flex-end;
+}

@@ -7,7 +7,9 @@ import UnknownIcon from "../assets/images/unknown.svg";
 import RightArrow from "../assets/images/arrow-right.svg";
 import Card from "./ui/Card";
 import { Skeleton } from "./ui/Skeleton";
-import { formatTrendCurrency } from "../utils/format";
+import GlassmorphismTooltip from "./GlassmorphismTooltip";
+import { formatTrendCurrency, formatRoundedCurrency } from "../utils/format";
+import { useAppStore } from "@/lib/store";
 import styles from "./InfoCard.module.css";
 
 interface ProgressData {
@@ -22,7 +24,7 @@ interface InfoItem {
   link?: string;
   filter?: (value: any) => React.ReactNode | string;
   progress?: ProgressData;
-  usdValue?: boolean;
+  usdValue?: boolean | ((value: any) => string);
   extraText?: string;
   extraInfo?: string;
   header?: boolean;
@@ -84,11 +86,24 @@ const InfoCard: React.FC<InfoCardProps> = ({
   inner = false,
   isLoading = false,
   link,
-  runePrice = 0,
-  tcyPrice = 0,
+  runePrice: propRunePrice = 0,
+  tcyPrice: propTcyPrice = 0,
   children,
   nested = false,
 }) => {
+  const storeRunePrice = useAppStore((state) => state.runePrice);
+  const storePools = useAppStore((state) => state.pools);
+
+  const runePrice = propRunePrice || storeRunePrice || 0;
+
+  const tcyPrice = React.useMemo(() => {
+    if (propTcyPrice) return propTcyPrice;
+    if (storePools && storePools.length > 0) {
+      const tcyPool = storePools.find((pool: any) => pool.asset === "THOR.TCY");
+      return tcyPool ? tcyPool.assetPriceUSD : 0;
+    }
+    return 0;
+  }, [propTcyPrice, storePools]);
   const flexContainers: { [key: number]: InfoSection[] } = {};
   options.forEach((option) => {
     const index = option.rowStart || 0;
@@ -203,7 +218,7 @@ const InfoCard: React.FC<InfoCardProps> = ({
                             }
                             style={{
                               borderTop: item.header
-                                ? "1px solid var(--border-color)"
+                                ? "1px solid var(--border)"
                                 : undefined,
                               marginTop: item.header ? "8px" : undefined,
                               paddingTop: item.header ? "8px" : undefined,
@@ -220,12 +235,16 @@ const InfoCard: React.FC<InfoCardProps> = ({
                                     <>
                                       {item.name}
                                       {item.extraInfo && (
-                                        <UnknownIcon
-                                          className={styles["header-icon"]}
-                                          title={item.extraInfo}
-                                          width={12}
-                                          height={12}
-                                        />
+                                        <GlassmorphismTooltip
+                                          content={item.extraInfo}
+                                          placement="top"
+                                        >
+                                          <UnknownIcon
+                                            className={styles["header-icon"]}
+                                            width={12}
+                                            height={12}
+                                          />
+                                        </GlassmorphismTooltip>
                                       )}
                                     </>
                                   )}
@@ -256,34 +275,53 @@ const InfoCard: React.FC<InfoCardProps> = ({
                                           {item.value &&
                                           typeof item.value === "number"
                                             ? (() => {
-                                                const isRuneValue =
-                                                  item.filter &&
-                                                  item.filter
-                                                    .toString()
-                                                    .includes("RUNE");
-
-                                                if (isRuneValue) {
-                                                  return `(${formatTrendCurrency(
-                                                    item.value *
-                                                      (runePrice || 0),
-                                                    { decimals: 2 }
+                                                if (
+                                                  typeof item.usdValue ===
+                                                  "function"
+                                                ) {
+                                                  return `(${item.usdValue(
+                                                    item.value
                                                   )})`;
                                                 } else {
-                                                  const isRawValue =
+                                                  const isRuneValue =
                                                     item.filter &&
                                                     item.filter
                                                       .toString()
-                                                      .includes("/ 1e8");
+                                                      .includes("RUNE");
 
-                                                  const usdValue = isRawValue
-                                                    ? (item.value / 1e8) *
-                                                      (tcyPrice || 0)
-                                                    : item.value *
-                                                      (tcyPrice || 0);
-                                                  return `(${formatTrendCurrency(
-                                                    usdValue,
-                                                    { decimals: 2 }
-                                                  )})`;
+                                                  if (isRuneValue) {
+                                                    const isRawRuneValue =
+                                                      item.filter &&
+                                                      item.filter
+                                                        .toString()
+                                                        .includes("/ 1e8");
+
+                                                    const runeUsdValue =
+                                                      isRawRuneValue
+                                                        ? (item.value / 1e8) *
+                                                          (runePrice || 0)
+                                                        : item.value *
+                                                          (runePrice || 0);
+
+                                                    return `(${formatRoundedCurrency(
+                                                      runeUsdValue
+                                                    )})`;
+                                                  } else {
+                                                    const isRawValue =
+                                                      item.filter &&
+                                                      item.filter
+                                                        .toString()
+                                                        .includes("/ 1e8");
+
+                                                    const usdValue = isRawValue
+                                                      ? (item.value / 1e8) *
+                                                        (tcyPrice || 0)
+                                                      : item.value *
+                                                        (tcyPrice || 0);
+                                                    return `(${formatRoundedCurrency(
+                                                      usdValue
+                                                    )})`;
+                                                  }
                                                 }
                                               })()
                                             : null}

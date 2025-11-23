@@ -63,13 +63,12 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
         setTooltipData(data);
         setTooltipPosition(position);
         setIsTooltipVisible(true);
-      }, 16); 
+      }, 16);
     },
     []
   );
 
   const CustomTooltip = useMemo(() => {
-    console.log("CustomTooltip render:", customTooltip);
     if (!customTooltip) return null;
 
     return (
@@ -249,6 +248,17 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
 
     const affiliateTotals: { [key: string]: number } = {};
 
+    const getAffiliateUsdForInterval = (affiliate: any, interval: any) => {
+      const usdCents =
+        affiliate.feeUSD ?? affiliate.volumeUSD ?? affiliate.earningsUSD;
+      if (usdCents !== undefined && usdCents !== null) {
+        return Number(usdCents) / 1e2;
+      }
+      const raw = affiliate.earnings || affiliate.fee || affiliate.volume || 0;
+      const runePrice = interval?.runePriceUSD || 1;
+      return (+raw / 10 ** 8) * Number.parseFloat(runePrice);
+    };
+
     affiliateData.intervals.forEach((interval: any) => {
       const affiliateArray = interval.affiliates || interval.thornames;
       if (affiliateArray && Array.isArray(affiliateArray)) {
@@ -260,11 +270,7 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
             affiliate;
 
           if (affiliateName) {
-            const earningsValue =
-              affiliate.earnings || affiliate.fee || affiliate.volume || 0;
-            const runePrice = interval.runePriceUSD || 1;
-            const earnings =
-              (+earningsValue / 10 ** 8) * Number.parseFloat(runePrice);
+            const earnings = getAffiliateUsdForInterval(affiliate, interval);
 
             if (!affiliateTotals[affiliateName]) {
               affiliateTotals[affiliateName] = 0;
@@ -312,10 +318,7 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
 
         let earnings = 0;
         if (affiliate) {
-          const earningsValue =
-            affiliate.earnings || affiliate.fee || affiliate.volume || 0;
-          const runePrice = interval.runePriceUSD || 1;
-          earnings = (+earningsValue / 10 ** 8) * Number.parseFloat(runePrice);
+          earnings = getAffiliateUsdForInterval(affiliate, interval);
         }
 
         dataPoint[name] = earnings;
@@ -332,11 +335,7 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
             affiliate;
 
           if (affiliateName && !sortedAffiliates.includes(affiliateName)) {
-            const earningsValue =
-              affiliate.earnings || affiliate.fee || affiliate.volume || 0;
-            const runePrice = interval.runePriceUSD || 1;
-            const earnings =
-              (+earningsValue / 10 ** 8) * Number.parseFloat(runePrice);
+            const earnings = getAffiliateUsdForInterval(affiliate, interval);
             othersEarnings += earnings;
           }
         });
@@ -358,18 +357,27 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
       return { labels: [], series: [] };
     }
 
+    const n = chartData.length;
+    const lastIdx = Math.max(0, n - 1);
+    const lastAllZero = seriesNames.every(
+      (name) => ((chartData[lastIdx]?.[name] as number) || 0) === 0
+    );
+    const effectiveLength = lastAllZero && n > 0 ? n - 1 : n;
+
     const series = seriesNames.map((name, index) => ({
       name,
       type: "bar",
       stack: "Total",
-      data: chartData.map((item) => (item[name] as number) || 0),
+      data: chartData
+        .slice(0, effectiveLength)
+        .map((item) => (item[name] as number) || 0),
       itemStyle: {
         color: getSeriesColor(index),
       },
     }));
 
     const result = {
-      labels: chartData.map((item) => item.date),
+      labels: chartData.slice(0, effectiveLength).map((item) => item.date),
       series,
     };
 
@@ -393,20 +401,12 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
           color: "transparent",
         },
         formatter: function (params: any, ticket: string, callback: any) {
-          console.log("Tooltip triggered:", params);
-
           if (!params || params.length === 0) {
             setCustomTooltip(null);
             return "";
           }
 
           const dataIndex = params[0].dataIndex;
-          const dataPoint = chartData[dataIndex];
-
-          if (!dataPoint) {
-            setCustomTooltip(null);
-            return "";
-          }
 
           const formatValueLocal = (value: any) => {
             const numValue =
@@ -421,41 +421,59 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
             return `$${numValue.toFixed(0)}`;
           };
 
-          const affiliatesWithEarnings = params
-            .filter((param: any) => param.value > 0)
-            .sort((a: any, b: any) => {
-              if (a.seriesName === "Others") return 1;
-              if (b.seriesName === "Others") return -1;
-              return b.value - a.value;
-            });
+          const interval = (data?.intervals || [])[dataIndex];
+          const intervalAffiliates =
+            interval?.affiliates || interval?.thornames || [];
 
-          const totalFees = affiliatesWithEarnings.reduce(
-            (sum: any, affiliate: any) => sum + affiliate.value,
-            0
+          const affiliatesUsdAll = (intervalAffiliates as any[])
+            .map((aff: any) => {
+              const name =
+                aff.affiliate || aff.thorname || aff.name || String(aff);
+              const usdCents =
+                aff.feeUSD ?? aff.volumeUSD ?? aff.earningsUSD ?? null;
+              const usd =
+                usdCents !== null && usdCents !== undefined
+                  ? Number(usdCents) / 1e2
+                  : (() => {
+                      const raw = aff.earnings || aff.fee || aff.volume || 0;
+                      const runePrice = interval?.runePriceUSD || 1;
+                      return (+raw / 1e8) * Number.parseFloat(runePrice);
+                    })();
+              return { name, value: usd };
+            })
+            .filter((x) => !!x.name && x.value > 0);
+
+          const sortedAffUsd = affiliatesUsdAll.sort(
+            (a, b) => b.value - a.value
           );
+          const topN = 4;
+          const topAffiliates = sortedAffUsd.slice(0, topN);
+          const othersValueCalc = sortedAffUsd
+            .slice(topN)
+            .reduce((s, x) => s + x.value, 0);
+
+          const totalFees = (() => {
+            const volUsdArr = (data as any)?.volumeUSDData;
+            if (Array.isArray(volUsdArr) && volUsdArr[dataIndex] != null) {
+              return Number(volUsdArr[dataIndex]) / 1e2;
+            }
+            return affiliatesUsdAll.reduce((s, x) => s + x.value, 0);
+          })();
 
           const mouseEvent = params[0].event?.event || window.event;
           const tooltipX = mouseEvent?.clientX || 0;
           const tooltipY = mouseEvent?.clientY || 0;
 
           const tooltipData = {
-            date: dataPoint.date,
-            affiliates: affiliatesWithEarnings
-              .filter((affiliate: any) => affiliate.seriesName !== "Others")
-              .map((affiliate: any) => ({
-                name: affiliate.seriesName,
-                value: affiliate.value,
-              })),
-            othersValue:
-              affiliatesWithEarnings.find((a: any) => a.seriesName === "Others")
-                ?.value || 0,
+            date: chartDataForECharts.labels?.[dataIndex] || "",
+            affiliates: topAffiliates,
+            othersValue: othersValueCalc,
             totalFees,
             formatValue: formatValueLocal,
             x: tooltipX,
             y: tooltipY,
           };
 
-          console.log("Setting custom tooltip:", tooltipData);
           setCustomTooltip(tooltipData);
 
           return "";
@@ -463,7 +481,7 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
       },
       xAxis: {
         type: "category",
-        data: chartData.map((item) => item.date),
+        data: chartDataForECharts.labels,
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: { show: false },
@@ -475,17 +493,8 @@ const AffiliateFeeChart: React.FC<AffiliateFeeChartProps> = ({
         axisLabel: { show: false },
         splitLine: { show: false },
       },
-      series: seriesNames.map((name, index) => ({
-        name,
-        type: "bar",
-        stack: "Total",
-        data: chartData.map((item) => (item[name] as number) || 0),
-        itemStyle: {
-          color: getSeriesColor(index),
-        },
-      })),
     };
-  }, [theme, chartData, seriesNames]);
+  }, [theme, chartDataForECharts]);
 
   if (loading) {
     return <ChartLoader />;

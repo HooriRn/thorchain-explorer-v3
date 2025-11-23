@@ -2,17 +2,16 @@ import React, { useState } from "react";
 import Link from "next/link";
 import addressMap from "@/utils/address";
 import Copy from "@/components/Copy";
+import GlassmorphismTooltip from "@/components/GlassmorphismTooltip";
 import styles from "./Address.module.css";
-import {
-  addressFormatV2
-} from "@/utils/global";
+import { addressFormatV2 } from "@/utils/global";
 
 interface AddressProps {
   address?: string;
   disable?: boolean;
   hoveredAddress?: string;
   useCustomName?: boolean;
-  copySize?: string;
+  copySize?: "normal" | "small";
   showCopyIcon?: boolean;
   onSetHovered?: (address: string) => void;
   onRemoveHovered?: () => void;
@@ -44,8 +43,6 @@ const Address: React.FC<AddressProps> = ({
     }
   };
 
-
-
   const getDisplayText = (): string => {
     if (!address) return "";
 
@@ -67,24 +64,26 @@ const Address: React.FC<AddressProps> = ({
       {address ? (
         <>
           {disable ? (
-            <span
-              className={`${styles["mono"]} ${styles["address"]} ${
-                isHovered ? styles["hovered"] : ""
-              }`}
-              title={address}
-            >
-              {displayText}
-            </span>
+            <GlassmorphismTooltip content={address} placement="top">
+              <span
+                className={`${styles["mono"]} ${styles["address"]} ${
+                  isHovered ? styles["hovered"] : ""
+                }`}
+              >
+                {displayText}
+              </span>
+            </GlassmorphismTooltip>
           ) : (
-            <Link
-              className={`${styles["mono"]} ${styles["address"]} clickable ${
-                isHovered ? styles["hovered"] : ""
-              }`}
-              href={`/address/${address}`}
-              title={address}
-            >
-              {displayText}
-            </Link>
+            <GlassmorphismTooltip content={address} placement="top">
+              <Link
+                className={`${styles["mono"]} ${styles["address"]} clickable ${
+                  isHovered ? styles["hovered"] : ""
+                }`}
+                href={`/address/${address}`}
+              >
+                {displayText}
+              </Link>
+            </GlassmorphismTooltip>
           )}
           {!disable && showCopyIcon && (
             <div className={styles["copy-icon"]}>

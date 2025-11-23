@@ -440,32 +440,56 @@ export function synthToAsset(assetString) {
 }
 
 export function assetToTrade(str) {
+  if (!str) {
+    return str;
+  }
   if (typeof str === "object") {
     str = assetToString(str);
+  }
+  if (!str) {
+    return str;
   }
 
   return str.replace(".", "~");
 }
 
 export function assetToSecure(str) {
+  if (!str) {
+    return str;
+  }
   if (typeof str === "object") {
     str = assetToString(str);
+  }
+  if (!str) {
+    return str;
   }
 
   return str.replace(".", "-");
 }
 
 export function tradeToAsset(str) {
+  if (!str) {
+    return str;
+  }
   if (typeof str === "object") {
     str = assetToString(str);
+  }
+  if (!str) {
+    return str;
   }
 
   return str.replace("~", ".");
 }
 
 export function securedToAsset(str) {
+  if (!str) {
+    return str;
+  }
   if (typeof str === "object") {
     str = assetToString(str);
+  }
+  if (!str) {
+    return str;
   }
 
   return str.replace("-", ".");
@@ -476,6 +500,9 @@ export function curFormat(number) {
 }
 
 export function formatAsset(asset) {
+  if (!asset) {
+    return asset;
+  }
   return asset.length > 10 ? asset.slice(0, 14) + "..." : asset;
 }
 

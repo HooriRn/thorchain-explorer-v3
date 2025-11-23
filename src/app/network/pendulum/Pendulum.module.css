@@ -1,0 +1,62 @@
+.pendulum-view {
+    max-width: 53rem;
+    margin: var(--space-0) auto;
+  }
+.balance-details {
+  margin-top: 1.25rem;
+}
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  height: 120px;
+  position: relative;
+}
+.metric-title {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  align-items: center;
+  font-size: 12px;
+}
+.metric-value {
+  font-size: 18px;
+  font-weight: bold;
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  right: 15px;
+  transform: translateY(-50%);
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--sec-font-color);
+}
+.network-balance-card {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.network-status {
+  margin-top: 2.5rem;
+  text-align: center;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+}
+.status-text {
+  color: var(--primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.reward-summary {
+  text-align: center;
+  background-color: var(--gradient-left);
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  color: var(--sec-font-color);
+  font-size: 12px;
+}
+.balance-svg {
+  transform: scale(1.2);
+}

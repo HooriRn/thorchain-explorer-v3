@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       });
     } catch (externalError) {
       console.warn(
-        "🔄 External API failed, trying Midgard fallback:",
+        "External API failed, trying Midgard fallback:",
         externalError
       );
 
@@ -33,13 +33,13 @@ export async function GET(request: NextRequest) {
           });
         }
       } catch (midgardError) {
-        console.error("🔄 Midgard fallback also failed:", midgardError);
+        console.error("Midgard fallback also failed:", midgardError);
       }
 
       throw externalError;
     }
   } catch (error) {
-    console.error("🔄 Error fetching pools:", error);
+    console.error("Error fetching pools:", error);
 
     return NextResponse.json(
       {

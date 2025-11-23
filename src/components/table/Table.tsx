@@ -6,15 +6,16 @@ import { useRowSelect } from "@table-library/react-table-library/select";
 import { useSort } from "@table-library/react-table-library/sort";
 import { useTheme } from "@table-library/react-table-library/theme";
 import { getTheme } from "@table-library/react-table-library/baseline";
-import { TableColumn, TableData, TableProps } from "./types.js";
+import { TableColumn, TableData, TableProps } from "./types";
 import styles from "./Table.module.css";
 import TableLoader from "../TableLoader";
 
-const Table: React.FC<TableProps> = ({
+const Table = <T extends TableData>({
   columns,
   data,
   loading = false,
   loadingText = "Loading...",
+  emptyMessage = "No data available",
   onSortChange,
   onRowSelectChange,
   rowProps,
@@ -22,6 +23,7 @@ const Table: React.FC<TableProps> = ({
   enableSelect = false,
   enableFilter = false,
   enablePagination = false,
+  showLineNumbers = false,
   customTheme,
   layout = {
     custom: true,
@@ -34,29 +36,74 @@ const Table: React.FC<TableProps> = ({
     isServer: false,
   },
   className = "",
-  emptyMessage = "No data available",
-}) => {
+  rowStyleClass,
+}: TableProps<T>) => {
   const tableData = useMemo(
     () => ({
-      nodes: data.map((item: TableData, index: number) => ({
+      nodes: data.map((item: T, index: number) => ({
         ...item,
         id: item.id || index.toString(),
+        _rowIndex: index,
       })),
     }),
     [data]
   );
 
+  const visibleColumns = useMemo(() => {
+    return columns.filter(col => !col.hidden);
+  }, [columns]);
+
+  const columnsWithLineNumbers = useMemo(() => {
+    let processedColumns = visibleColumns.map((column) => {
+      if (column.headerRender) {
+        return {
+          ...column,
+          label: column.headerRender() as any,
+        };
+      }
+      return column;
+    });
+
+    if (!showLineNumbers) {
+      return processedColumns;
+    }
+
+    const lineNumberColumn: TableColumn<T> = {
+      label: "#",
+      field: "_lineNumber",
+      sortKey: "_lineNumber",
+      minWidth: 50,
+      width: 50,
+      className: "line-numbers",
+      headerRender: () => <span>#</span>,
+      renderCell: (item: T & { _rowIndex?: number }) => {
+        const rowIndex = item._rowIndex;
+        return <span>{rowIndex !== undefined ? rowIndex + 1 : ""}</span>;
+      },
+    };
+
+    return [lineNumberColumn, ...processedColumns];
+  }, [visibleColumns, showLineNumbers]);
+
   const sortFns = useMemo(() => {
     const fns: { [key: string]: (array: any[]) => any[] } = {};
 
-    columns.forEach((column: TableColumn) => {
+    columnsWithLineNumbers.forEach((column: TableColumn<T>) => {
       if (column.sortKey && column.sortFn) {
         fns[column.sortKey] = column.sortFn;
-      } else if (column.sortKey) {
+      } else if (column.sortKey && column.sortKey !== "_lineNumber") {
         fns[column.sortKey] = (array: any[]) =>
           [...array].sort((a, b) => {
             const aVal = a[column.sortKey!];
             const bVal = b[column.sortKey!];
+
+            if (React.isValidElement(aVal) || React.isValidElement(bVal)) {
+              return 0; 
+            }
+
+            if (aVal == null && bVal == null) return 0;
+            if (aVal == null) return 1;
+            if (bVal == null) return -1;
 
             if (typeof aVal === "string" && typeof bVal === "string") {
               return aVal.localeCompare(bVal);
@@ -70,31 +117,78 @@ const Table: React.FC<TableProps> = ({
     });
 
     return fns;
-  }, [columns]);
+  }, [columnsWithLineNumbers]);
+
+  const gridTemplateColumns = useMemo(() => {
+    const customGridMatch = customTheme?.Table?.match(
+      /--data-table-library_grid-template-columns:\s*([^;]+);?/
+    );
+    if (customGridMatch) {
+      return `--data-table-library_grid-template-columns: ${customGridMatch[1]};`;
+    }
+    
+    const gridColumns = columnsWithLineNumbers.map((column) => {
+      if (column.width) {
+        return `${column.width}px`;
+      }
+      if (column.minWidth) {
+        return `minmax(${column.minWidth}px, ${column.maxWidth ? `${column.maxWidth}px` : '1fr'})`;
+      }
+      return "1fr";
+    });
+
+    return `--data-table-library_grid-template-columns: ${gridColumns.join(" ")};`;
+  }, [columnsWithLineNumbers, customTheme]);
 
   const theme = useTheme([
     getTheme(),
     {
       Table: `
-        font-size: 14px;
+        font-size: 16px;
         border: none;
         background: transparent;
-        ${customTheme?.Table || ""}
+        border-collapse: collapse;
+        table-layout: fixed;
+        ${gridTemplateColumns}
+        ${
+          customTheme?.Table?.replace(
+            /--data-table-library_grid-template-columns:[^;]*;?/g,
+            ""
+          ) || ""
+        }
       `,
       Header: `
         background: transparent;
         border-bottom: 1px solid var(--border) !important;
         position: relative;
+        color: var(--font-color);
         ${customTheme?.Header || ""}
       `,
       HeaderCell: `
         color: var(--sec-font-color);
         font-weight: 600;
-        font-size: 13px;
-        padding: 1rem 0.75rem;
-        border: none;
+        font-size: 14px;
         border-bottom: 1px solid var(--border) !important;
+        padding: .75em 1.5em .75em .75em;
         background: transparent;
+        color: var(--font-color);
+        min-width: auto;
+        width: auto;
+        text-align: left;
+        vertical-align: middle;
+
+        /* Styles for header with icons/images */
+        .header-content {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .header-icon {
+          display: flex;
+          align-items: center;
+        }
+
         ${customTheme?.HeaderCell || ""}
       `,
       Body: `
@@ -117,15 +211,44 @@ const Table: React.FC<TableProps> = ({
         &:not(:last-of-type) > .td {
           border-bottom: 1px solid var(--border) !important;
         }
+
         ${customTheme?.Row || ""}
       `,
       Cell: `
         color: var(--sec-font-color);
         font-size: 14px;
-        padding: 1rem 0.75rem;
         border: none;
         background: transparent;
         vertical-align: middle;
+        padding: .75em;
+        
+        /* Styles for cells containing images/icons */
+        img, svg {
+          vertical-align: middle;
+        }
+        
+        .table-image {
+          max-width: 100%;
+          height: auto;
+          object-fit: contain;
+        }
+        
+        .table-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .cell-content {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .text-content {
+          flex: 1;
+        }
+
         ${customTheme?.Cell || ""}
       `,
     },
@@ -138,7 +261,7 @@ const Table: React.FC<TableProps> = ({
     },
     {
       sortFns,
-      isServer: false,
+      isServer: options?.isServer || false,
     }
   );
 
@@ -146,45 +269,24 @@ const Table: React.FC<TableProps> = ({
     onChange: onRowSelectChange || (() => {}),
   });
 
-  if (loading) {
-    const loaderColumns = columns.map((col) => {
-      let type = "text";
-
-      const label = col.label.toLowerCase();
-      const sortKey = col.sortKey?.toLowerCase() || "";
-
-      if (
-        label.includes("height") ||
-        label.includes("age") ||
-        label.includes("count") ||
-        label.includes("ins") ||
-        label.includes("outs") ||
-        label.includes("since") ||
-        sortKey.includes("height") ||
-        sortKey.includes("age") ||
-        sortKey.includes("count")
-      ) {
-        type = "number";
-      } else if (
-        label.includes("percent") ||
-        label.includes("ratio") ||
-        label.includes("vb")
-      ) {
-        type = "percentage";
-      } else if (
-        label.includes("date") ||
-        label.includes("time") ||
-        label.includes("since")
-      ) {
-        type = "date";
-      }
-
+  const enhancedRowProps = useMemo(() => {
+    return (item: T & { _rowIndex?: number }) => {
+      const baseProps = rowProps ? rowProps(item) : {};
+      const styleClass = rowStyleClass ? rowStyleClass(item) : "";
+      
       return {
-        label: col.label,
-        field: col.sortKey || col.label.toLowerCase(),
-        type: type,
+        ...baseProps,
+        className: `${baseProps.className || ''} ${styleClass}`.trim(),
       };
-    });
+    };
+  }, [rowProps, rowStyleClass]);
+
+  if (loading) {
+    const loaderColumns = columnsWithLineNumbers.map((col) => ({
+      label: col.label,
+      field: col.sortKey || col.field,
+      type: col.loaderType || "text",
+    }));
 
     return (
       <div className={className}>
@@ -204,12 +306,12 @@ const Table: React.FC<TableProps> = ({
   return (
     <div className={`${styles.tableContainer} ${className}`}>
       <CompactTable
-        columns={columns}
+        columns={columnsWithLineNumbers}
         data={tableData}
         theme={theme}
         sort={enableSort ? sort : undefined}
         select={enableSelect ? rowSelect : undefined}
-        rowProps={rowProps}
+        rowProps={enhancedRowProps}
         layout={layout}
         options={options}
       />

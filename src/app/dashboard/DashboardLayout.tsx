@@ -40,14 +40,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       const response = await fetch("/api/chains-height");
       const data = await response.json();
 
-      const thorResponse = await fetch("/api/thor-last-block");
-      const thorData = await thorResponse.json();
-
-      setChainsHeight({
-        ...data,
-        THOR: thorData,
-      });
-    } catch (error) {}
+      if (data.success && data.data) {
+        setChainsHeight(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching chains height:", error);
+    }
   };
 
   const getRunePrice = async () => {

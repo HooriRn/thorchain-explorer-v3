@@ -1,0 +1,14 @@
+.tvl-page {
+}
+
+.tvl-page .chart {
+  width: 100%;
+  height: 400px;
+}
+
+.tooltip-body {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}

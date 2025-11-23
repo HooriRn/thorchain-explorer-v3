@@ -1,0 +1,239 @@
+.assetCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.assetName {
+  font-weight: 500;
+  color: var(--font-color);
+}
+
+.clickable {
+  cursor: pointer;
+  transition: color 0.2s ease;
+  color: var(--primary);
+}
+
+.clickable:hover {
+  color: var(--active-primary-color);
+}
+
+.numericCell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.mono {
+  font-family: "Roboto Mono", monospace;
+  font-size: 0.875rem;
+}
+
+.balancesCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.balanceRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.assetSymbol {
+  color: var(--sec-font-color);
+  font-size: 0.75rem;
+}
+
+.emptyValue {
+  color: var(--sec-font-color);
+  font-style: italic;
+}
+
+.actionContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.cellContent {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.actionSection {
+  position: relative;
+}
+
+.actionBtn {
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  border: none;
+  background: transparent;
+  padding: 0.25rem;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionBtn:hover {
+  background-color: var(--darker-bg);
+}
+
+.actionBtn svg {
+  height: 1.25rem;
+  width: 1.25rem;
+  fill: var(--font-color);
+}
+
+.swapInterfaces {
+  position: relative;
+}
+
+.swapMenu {
+  display: flex;
+  position: absolute;
+  padding: 0.5rem 0;
+  left: calc(100% + 10px);
+  top: 0;
+  background: var(--bg-color);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  min-width: 150px;
+}
+
+.swapMenu a {
+  display: flex;
+  align-items: center;
+  color: var(--font-color);
+  text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  margin: 0 0.25rem;
+  gap: 0.5rem;
+  font-family: "Exo 2";
+  font-size: 0.875rem;
+  text-wrap: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+.swapMenu a:hover {
+  background-color: var(--darker-bg);
+}
+
+.interface {
+  display: flex;
+  align-items: center;
+  color: var(--font-color);
+  text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  margin: 0.1rem 0.25rem;
+  gap: 0.5rem;
+  font-family: "Exo 2";
+  font-size: 0.875rem;
+  text-wrap: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+.interface:hover {
+  background-color: var(--darker-bg);
+}
+
+.financeIcon {
+  fill: #14b8a6;
+}
+
+.pools-box {
+  width: 100%;
+}
+
+.pools-type-table {
+  margin-bottom: var(--space-16) !important;
+}
+
+.no-pools-message {
+  text-align: center;
+  padding: var(--space-16);
+  color: var(--sec-font-color);
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+}
+
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+}
+
+.vgt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Exo 2", sans-serif;
+}
+
+.vgt-table th {
+  background-color: var(--darker-bg);
+  color: var(--font-color);
+  font-weight: 600;
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.vgt-table th:nth-child(2),
+.vgt-table th:nth-child(3),
+.vgt-table th:nth-child(4),
+.vgt-table th:nth-child(5),
+.vgt-table th:nth-child(6),
+.vgt-table th:nth-child(7),
+.vgt-table th:nth-child(8),
+.vgt-table th:nth-child(9) {
+  text-align: right;
+}
+
+.vgt-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.vgt-table tbody tr:hover {
+  background-color: var(--darker-bg);
+}
+
+.pools-type-table {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.pools-type-table .nav-item {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  color: var(--sec-font-color);
+}
+
+.pools-type-table .nav-item.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+.pools-type-table .nav-item:hover:not(.active) {
+  background-color: var(--darker-bg);
+  color: var(--font-color);
+}

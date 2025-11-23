@@ -343,14 +343,14 @@ export class MiddlewareAPI {
 
   async getAffiliateSwapsWeekly(): Promise<AffiliateSwap[]> {
     const response = await apiClient.getExternal<AffiliateSwap[]>(
-      `${this.config.SERVER_URL}api/affiliateSwapsWeekly`
+      `${this.config.SERVER_URL}api/weeklyLeaderboard`
     );
     return response.data;
   }
 
   async getAffiliateSwapsDaily(): Promise<AffiliateSwap[]> {
     const response = await apiClient.getExternal<AffiliateSwap[]>(
-      `${this.config.SERVER_URL}api/affiliateSwapsDaily`
+      `${this.config.SERVER_URL}api/dailyLeaderboard`
     );
     return response.data;
   }
@@ -434,14 +434,14 @@ export class MiddlewareAPI {
 
   async getReserveHistory(): Promise<ReserveHistory[]> {
     const response = await apiClient.getExternal<ReserveHistory[]>(
-      `${this.config.SERVER_URL}api/reserveHistory`
+      `${this.config.SERVER_URL}api/reserve`
     );
     return response.data;
   }
 
   async getVotes(period = "30d"): Promise<Vote[]> {
     const response = await apiClient.getExternal<Vote[]>(
-      `${this.config.SERVER_URL}api/votes`,
+      `${this.config.SERVER_URL}votes`,
       { period }
     );
     return response.data;
@@ -464,6 +464,13 @@ export class MiddlewareAPI {
   async getInfraRUJIMerge(): Promise<any> {
     const response = await apiClient.getExternal(
       `${this.config.SERVER_URL}api/rujiMerge`
+    );
+    return response.data;
+  }
+
+  async getRUJIStats(): Promise<any> {
+    const response = await apiClient.getExternal(
+      `${this.config.SERVER_URL}api/rujiStats`
     );
     return response.data;
   }
@@ -562,6 +569,7 @@ export const getReserveHistory = () => middlewareAPI.getReserveHistory();
 export const getVotes = (period = "30d") => middlewareAPI.getVotes(period);
 export const getBurnedBlocks = () => middlewareAPI.getBurnedBlocks();
 export const getInfraRUJIMerge = () => middlewareAPI.getInfraRUJIMerge();
+export const getRUJIStats = () => middlewareAPI.getRUJIStats();
 export const getExecutionQuality = () => middlewareAPI.getExecutionQuality();
 export const getAffiliateHistory = (params?: Record<string, any>) =>
   middlewareAPI.getAffiliateHistory(params);

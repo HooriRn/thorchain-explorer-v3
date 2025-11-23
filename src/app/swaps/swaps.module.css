@@ -1,0 +1,40 @@
+.header-top-swap {
+  margin-top: 0.5rem;
+}
+
+.header {
+  margin-bottom: 1rem;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--font-color);
+}
+
+.csv-download {
+  margin-left: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-right: 0.5rem;
+}
+
+.csv-download:hover svg {
+  fill: var(--primary);
+}
+
+.csv-download svg {
+  fill: var(--sec-font-color);
+  height: 1.2rem;
+  width: 1.2rem;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.mono {
+  font-family: "Courier New", Courier, monospace;
+}

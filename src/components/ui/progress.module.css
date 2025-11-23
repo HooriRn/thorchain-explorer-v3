@@ -1,0 +1,22 @@
+.progress-wrapper {
+  height: var(--bar-height);
+  border-radius: var(--radius-s);
+  width: 100%;
+  background-color: var(--border);
+}
+
+.progress-wrapper .progress-bar {
+  height: var(--bar-height);
+  border-radius: var(--radius-s);
+  width: 1%;
+  background: var(--primary-color);
+  transition: width 700ms;
+}
+
+.progress-wrapper .progress-text {
+  display: flex;
+  justify-content: center;
+  color: var(--sec-font-color);
+  margin-top: var(--bar-height);
+  font-size: var(--font-size-sm);
+}

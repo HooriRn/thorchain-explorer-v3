@@ -122,22 +122,16 @@ class ApiClient {
 
         switch (response.status) {
           case 400:
-            console.error("Bad Request:", error.message);
             break;
           case 401:
-            console.warn("Authentication error - please login again");
             break;
           case 429:
-            console.warn("Too many requests, try again later");
             break;
           case 501:
-            console.warn("Wrong Request");
             break;
           case 503:
-            console.warn("Service Unavailable");
             break;
           default:
-            console.error("Server Error:", error.message);
         }
 
         throw error;

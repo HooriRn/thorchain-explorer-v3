@@ -45,4 +45,11 @@
     format("truetype");
 }
 
+@font-face {
+  font-family: "Montserrat";
+  font-display: swap;
+  src: url("../assets/fonts/Montserrat-VariableFont_wght.ttf")
+    format("truetype");
+}
+
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap");

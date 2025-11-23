@@ -1,18 +1,24 @@
 import { ReactNode } from "react";
 
+export type CellContent = string | number | ReactNode;
+
 export interface TableColumn<T = any> {
   label: string;
+  field: string;
   sortKey?: string;
   minWidth?: number;
   maxWidth?: number;
   width?: number;
   sortFn?: (array: T[]) => T[];
-  renderCell: (item: T) => ReactNode;
+  renderCell: (item: T) => CellContent;
   headerRender?: () => ReactNode;
   resizable?: boolean;
   pinLeft?: boolean;
   pinRight?: boolean;
   hidden?: boolean;
+  loaderType?: "text" | "number" | "percentage" | "date" | "icon" | "image";
+  className?: string;
+  thClass?: string;
 }
 
 export interface TableData {
@@ -41,23 +47,25 @@ export interface TableOptions {
   isServer?: boolean;
 }
 
-export interface TableProps {
-  columns: TableColumn[];
-  data: TableData[];
+export interface TableProps<T = TableData> {
+  columns: TableColumn<T>[];
+  data: T[];
   loading?: boolean;
   loadingText?: string;
   emptyMessage?: string;
   onSortChange?: (action: any, state: any) => void;
   onRowSelectChange?: (action: any, state: any) => void;
-  rowProps?: (item: TableData) => any;
+  rowProps?: (item: T) => any;
   enableSort?: boolean;
   enableSelect?: boolean;
   enableFilter?: boolean;
   enablePagination?: boolean;
+  showLineNumbers?: boolean;
   customTheme?: TableTheme;
   layout?: TableLayout;
   options?: TableOptions;
   className?: string;
+  rowStyleClass?: (row: T) => string;
 }
 
 export interface SortableTableProps extends TableProps {

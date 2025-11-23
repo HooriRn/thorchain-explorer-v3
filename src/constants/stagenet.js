@@ -117,6 +117,10 @@ export const stagenetNav = {
       link: "/rujira",
       submenu: [
         {
+          name: "Ruji",
+          link: "/rujira",
+        },
+        {
           name: "Secured Assets",
           link: "/rujira/secured",
         },

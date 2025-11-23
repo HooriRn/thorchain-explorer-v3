@@ -1,0 +1,55 @@
+.navHeaders {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-10);
+}
+
+.preText {
+  color: var(--sec-font-color);
+  padding: var(--space-0) var(--space-10);
+    margin: auto var(--space-0);
+}
+
+.navItem {
+  cursor: pointer;
+  padding: var(--space-8) var(--space-12);
+  margin: var(--space-0) 0.1rem;
+  color: var(--font-color);
+  text-decoration: none;
+  border-radius: var(--radius-s);
+}
+
+.navItem.active,
+.navItem.nuxtLinkExactActive {
+  background-color: var(--active-bg-color);
+  color: var(--sec-font-color);
+}
+
+.navItem:hover {
+  background-color: var(--active-bg-color);
+}
+
+.navItem:firstoftype {
+  margin-left: 0;
+}
+
+.box {
+  padding: var(--space-3);
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-width: 1px;
+    margin: var(--space-0) var(--space-10) var(--space-10) var(--space-10);
+    border-radius: var(--radius-s);
+}
+@media (min-width: 1024px) {
+  .navHeaders.box {
+    margin: 0 0 0.625rem 0;
+  }
+}
+
+.navHeaders.box .navItem.active,
+.navHeaders.box .navItem.nuxtLinkExactActive {
+  color: var(--primary);
+}
+
+

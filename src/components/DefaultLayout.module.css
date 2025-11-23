@@ -5,16 +5,15 @@
 }
 
 .header {
-  top: 0;
-  position: sticky;
-  z-index: 1000;
-  display: flex;
   align-items: center;
   background: var(--card);
-  grid-area: header;
   border-bottom: 1px solid var(--border);
-  padding: var(--space-0) var(--space-10);
-  transition: all 0.3s ease;
+  display: flex;
+  grid-area: header;
+  padding: 0 10px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 @media (min-width: 1024px) {

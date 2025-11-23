@@ -14,7 +14,7 @@ interface TableLoaderProps {
 
 const TableLoader: React.FC<TableLoaderProps> = ({ cols }) => {
   const limitedRows = useMemo(() => {
-    const range = 8; 
+    const range = 8;
     const rows = [];
     for (let i = 0; i < range; i++) {
       rows.push({
@@ -25,7 +25,6 @@ const TableLoader: React.FC<TableLoaderProps> = ({ cols }) => {
   }, []);
 
   const getSkeletonWidth = () => {
-    
     return "70%";
   };
 
@@ -57,7 +56,7 @@ const TableLoader: React.FC<TableLoaderProps> = ({ cols }) => {
                       className={styles.skeletonBar}
                       style={{
                         width: getSkeletonWidth(),
-                        animationDelay: `${colIndex * 0.1}s`, 
+                        animationDelay: `${colIndex * 0.1}s`,
                       }}
                     />
                   </div>

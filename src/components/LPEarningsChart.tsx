@@ -245,6 +245,8 @@ const LPEarningsChart: React.FC<LPEarningsChartProps> = ({
       return { labels: [], series: [] };
     }
 
+    const lastIdx = Math.max(0, chartData.length - 1);
+
     const series = poolNames.map((poolName, index) => {
       const isEOD = poolName === "EOD";
       const isOtherPools = poolName === "Other Pools";
@@ -257,11 +259,31 @@ const LPEarningsChart: React.FC<LPEarningsChartProps> = ({
           : showAsset(poolName),
         type: "bar",
         stack: "Total",
-        data: chartData.map((item) => (item[poolName] as number) || 0),
-        itemStyle: {
-          color: isEOD ? "#F3BA2F" : getPoolColor(poolName, index),
-          borderRadius: isEOD ? [8, 8, 0, 0] : [0, 0, 0, 0],
-        },
+        z: isEOD ? (10 as any) : undefined,
+        data: chartData.map((item, i) => {
+          const value = (item[poolName] as number) || 0;
+          if (!isEOD) {
+            return value;
+          }
+          if (i === lastIdx) {
+            return {
+              value,
+              itemStyle: {
+                color: "transparent",
+                borderColor: "#F3BA2F",
+                borderWidth: 1,
+                borderRadius: [8, 8, 0, 0],
+              },
+            } as any;
+          }
+          return 0;
+        }),
+        itemStyle: !isEOD
+          ? {
+              color: getPoolColor(poolName, index),
+              borderRadius: [0, 0, 0, 0],
+            }
+          : undefined,
       };
     });
 
@@ -286,7 +308,7 @@ const LPEarningsChart: React.FC<LPEarningsChartProps> = ({
               return "─────────────";
             },
             label: function (context: any) {
-              return ""; 
+              return "";
             },
             afterBody: function (context: any) {
               const dataIndex = context[0].dataIndex;
@@ -369,25 +391,65 @@ const LPEarningsChart: React.FC<LPEarningsChartProps> = ({
         axisLabel: { show: false },
         splitLine: { show: false },
       },
-      series: poolNames.map((poolName, index) => {
-        const isEOD = poolName === "EOD";
-        const isOtherPools = poolName === "Other Pools";
+      tooltip: {
+        trigger: "axis",
+        formatter: function (params: any[]) {
+          if (!params || !params.length) return "";
+          const valueOf = (p: any) =>
+            typeof p?.value === "object" && p?.value !== null
+              ? Number(p.value.value || 0)
+              : Number(p?.value || 0);
 
-        return {
-          name: isOtherPools
-            ? "Other Pools"
-            : isEOD
-            ? "EOD"
-            : showAsset(poolName),
-          type: "bar",
-          stack: "Total",
-          data: chartData.map((item) => (item[poolName] as number) || 0),
-          itemStyle: {
-            color: isEOD ? "#F3BA2F" : getPoolColor(poolName, index),
-            borderRadius: isEOD ? [8, 8, 0, 0] : [0, 0, 0, 0],
-          },
-        };
-      }),
+          const header = `<div class=\"tooltip-header\">${params[0].name}</div>`;
+
+          const items = params.filter((p: any) => p && p.seriesName !== "EOD");
+          const bodyLines = items
+            .filter((p: any) => valueOf(p) > 0)
+            .map(
+              (p: any) => `
+            <span class=\"tooltip-item space\">\n              <span class=\"series-name-color\">\n                <span class=\"data-color\" style=\"background-color: ${
+              p.color
+            };\"></span>\n                <span>${
+                p.seriesName
+              }</span>\n              </span>\n              <span>${formatValue(
+                valueOf(p)
+              )}</span>\n            </span>`
+            )
+            .join("");
+
+          const eodItem = params.find((p: any) => p.seriesName === "EOD");
+          const eodVal = eodItem ? valueOf(eodItem) : 0;
+          const sumBase = items.reduce(
+            (acc: number, p: any) => acc + valueOf(p),
+            0
+          );
+          const idx = params[0].dataIndex ?? 0;
+          const lastIdx = Math.max(0, chartData.length - 1);
+
+          const totalsLine =
+            idx !== lastIdx
+              ? `
+            <span class=\"tooltip-item space\" style=\"border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px;\">\n              <span>Total Earnings</span>\n              <span>${formatValue(
+              sumBase
+            )}</span>\n            </span>`
+              : "";
+
+          const eodSection =
+            idx === lastIdx && eodVal
+              ? `
+            <span class=\"tooltip-item space\" style=\"border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px;\">\n              <span>Total Earnings (EOD)</span>\n              <span>${formatValue(
+              sumBase + eodVal
+            )}</span>\n            </span>\n            <span class=\"tooltip-item space\">\n              <span>EOD</span>\n              <span>${formatValue(
+                  eodVal
+                )}</span>\n            </span>`
+              : "";
+
+          return `
+            ${header}
+            <div class=\"tooltip-body\">\n              ${bodyLines}\n              ${totalsLine}\n              ${eodSection}\n            </div>
+          `;
+        },
+      },
     };
   }, [theme, chartData, poolNames]);
 

@@ -144,7 +144,6 @@ const OverviewPage = () => {
         fetchDashboardData(),
         fetchTCYInfo(),
         fetchPoolsData(),
-        fetchSwapHistory(),
         fetchEarningsData(),
         fetchAffiliateData(),
         fetchNetworkData(),
@@ -224,20 +223,6 @@ const OverviewPage = () => {
     } catch (error) {}
   };
 
-  const fetchSwapHistory = async () => {
-    try {
-      const swapResponse = await fetch("/api/swap-history");
-      if (swapResponse.ok) {
-        const swapData = await swapResponse.json();
-        if (swapData.success && swapData.data) {
-          setSwapHistory(swapData.data);
-          setTotalSwapVolumeUSD(swapData.data?.meta?.totalVolumeUSD);
-          setTotalSwapVolume(swapData.data?.meta?.totalVolume);
-        }
-      }
-    } catch (error) {}
-  };
-
   const fetchEarningsData = async () => {
     try {
       const plotsResponse = await fetch("/api/dashboard-plots");
@@ -249,6 +234,13 @@ const OverviewPage = () => {
               setPoolEarnings(plotsData.earning);
               setEarningsHistory(plotsData.earning);
             } catch (error) {}
+          }
+          if (plotsData.swaps) {
+            setSwapHistory(plotsData.swaps);
+            if (plotsData.swaps?.meta) {
+              setTotalSwapVolumeUSD(plotsData.swaps.meta.totalVolumeUSD);
+              setTotalSwapVolume(plotsData.swaps.meta.totalVolume);
+            }
           }
         }
       }
@@ -820,12 +812,10 @@ const OverviewPage = () => {
       } else if (poolMode === "affiliates-fees") {
         router.push("/charts/affiliates");
       } else {
-        // Default fallback
         router.push("/charts/earnings");
       }
     } catch (error) {
       console.error("Navigation error:", error);
-      // Fallback navigation
       router.push("/charts/earnings");
     }
   };

@@ -37,8 +37,10 @@ export class InfraAPI {
 
   async getInfraEarnings(params: InfraEarningsParams): Promise<InfraEarnings[]> {
     const response = await apiClient.getExternal<InfraEarnings[]>(
-      `${this.config.SERVER_URL}api/earnings`,
-      params
+      `${this.config.SERVER_URL}earnings`,
+      {
+        params,
+      }
     )
     return response.data
   }
@@ -67,7 +69,7 @@ export class InfraAPI {
 
   async getChurn(): Promise<Churn> {
     const response = await apiClient.getExternal<Churn>(
-      `${this.config.SERVER_URL}api/churn`
+      `${this.config.SERVER_URL}churns`
     )
     return response.data
   }

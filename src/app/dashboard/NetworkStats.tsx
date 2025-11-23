@@ -146,9 +146,9 @@ const NetworkStats = () => {
           <div className={styles["item-detail"]}>
             <div className={styles["header"]}>Volume (24hr)</div>
             {loading || totalSwap24USD === null ? (
-              <Skeleton className={`${styles["value"]} h-6 w-20`} />
+              <Skeleton className={`mono ${styles["value"]} h-6 w-20`} />
             ) : (
-              <div className={styles["value"]}>
+              <div className={`mono ${styles["value"]}`}>
                 {formatTrendCurrency(totalSwap24USD / 100)}
               </div>
             )}
@@ -164,9 +164,9 @@ const NetworkStats = () => {
           <div className={styles["item-detail"]}>
             <div className={styles["header"]}>Swaps (24hr)</div>
             {loading ? (
-              <Skeleton className={`${styles["value"]} h-6 w-20`} />
+              <Skeleton className={`mono ${styles["value"]} h-6 w-20`} />
             ) : (
-              <div className={styles["value"]}>
+              <div className={`mono ${styles["value"]}`}>
                 {formatTrendNumber(stats.swapCount24h, { decimals: 0 })}
               </div>
             )}
@@ -184,9 +184,9 @@ const NetworkStats = () => {
           <div className={styles["item-detail"]}>
             <div className={styles["header"]}>TVL (Pool + Bond)</div>
             {loading ? (
-              <Skeleton className={`${styles["value"]} h-6 w-20`} />
+              <Skeleton className={`mono ${styles["value"]} h-6 w-20`} />
             ) : (
-              <div className={styles["value"]}>
+              <div className={`mono ${styles["value"]}`}>
                 {formatTrendCurrency(tvl())}
               </div>
             )}
@@ -202,9 +202,9 @@ const NetworkStats = () => {
           <div className={styles["item-detail"]}>
             <div className={styles["header"]}>Bond | Pool APY</div>
             {loading ? (
-              <Skeleton className={`${styles["value"]} h-6 w-32`} />
+              <Skeleton className={`mono ${styles["value"]} h-6 w-32`} />
             ) : (
-              <div className={styles["value"]}>
+              <div className={`mono ${styles["value"]}`}>
                 {formatPercent(network.bondingAPY, 2)} |{" "}
                 {formatPercent(network.liquidityAPY, 2)}
               </div>
@@ -220,9 +220,9 @@ const NetworkStats = () => {
           <div className={styles["item-detail"]}>
             <div className={styles["header"]}>Total | Circulating | Burned</div>
             {loading ? (
-              <Skeleton className={`${styles["value"]} h-6 w-48`} />
+              <Skeleton className={`mono ${styles["value"]} h-6 w-48`} />
             ) : (
-              <div className={styles["value"]}>
+              <div className={`mono ${styles["value"]}`}>
                 {formatTrendNumber(runeSupply, { decimals: 1 })} |{" "}
                 {formatTrendNumber(circulating(), { decimals: 1 })} |{" "}
                 {formatTrendNumber(totalBurnedRune)}
@@ -236,9 +236,9 @@ const NetworkStats = () => {
           <div className={styles["item-detail"]}>
             <div className={styles["header"]}>Earnings (24hr)</div>
             {loading ? (
-              <Skeleton className={`${styles["value"]} h-6 w-20`} />
+              <Skeleton className={`mono ${styles["value"]} h-6 w-20`} />
             ) : (
-              <div className={styles["value"]}>
+              <div className={`mono ${styles["value"]}`}>
                 {formatTrendCurrency(totalEarning24())}
               </div>
             )}

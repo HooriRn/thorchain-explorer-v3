@@ -78,13 +78,14 @@ const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
 
   const getChainsHeight = async () => {
     try {
-      const { data } = await api.getChainsHeight();
-      const thorHeight = (await api.getTHORLastBlock()).data;
-      setChainsHeight({
-        ...data,
-        THOR: thorHeight,
-      });
-    } catch (error) {}
+      const response = await fetch("/api/chains-height");
+      const data = await response.json();
+      if (data.success && data.data) {
+        setChainsHeight(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching chains height:", error);
+    }
   };
 
   const getPools = async () => {

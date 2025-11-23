@@ -75,6 +75,8 @@ const Card: React.FC<CardProps> = ({
                     className={styles["stat-image"]}
                     src={imgSrc}
                     alt="stat"
+                    width={36}
+                    height={36}
                     style={imgStyle}
                   />
                 ) : typeof imgSrc === "function" ? (
