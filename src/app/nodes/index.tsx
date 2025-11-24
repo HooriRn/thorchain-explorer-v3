@@ -14,6 +14,9 @@ import Card from '@/components/ui/Card';
 import InfoCard from '@/components/InfoCard';
 import { useChainsHeight, useRunePrice } from '@/lib/store';
 import styles from './index.module.css';
+import {
+  getNodesInfo
+} from "@/lib/api";
 
 const NodesPage: React.FC = () => {
   const [network, setNetwork] = useState<any>([]);
@@ -54,6 +57,23 @@ const NodesPage: React.FC = () => {
   const chainsHeight = useChainsHeight();
 
   const error = useMemo(() => !nodesQuery, [nodesQuery]);
+  const averageApysCalc = useCallback(() => {
+    if (!nodesQuery || nodesQuery.length === 0) {
+      return 0;
+    }
+
+    let totalApy = 0;
+    let count = 0;
+    
+    for (const node of nodesQuery) {
+      if (node.status === 'Active' && node.apy !== undefined) {
+        totalApy += +node.apy;
+        count++;
+      }
+    }
+
+    return count > 0 ? totalApy / count : 0;
+  }, [nodesQuery]);
 
   const getRetiringVault = useCallback((vaults: any[]) => {
     return vaults
@@ -65,11 +85,11 @@ const NodesPage: React.FC = () => {
   const getNodeOverview = useCallback(async () => {
     try {
       const response = await fetch('/api/network');
-      const { data } = await response.json();
-
-      if (data) {
-        const { network: networkData, churn: churnData, blockRewards } = data;
-
+      const result: { data?: any } = await response.json(); 
+  
+      if (result.data) {
+        const { network: networkData, churn: churnData, blockRewards } = result.data;
+  
         setNetwork(networkData);
         setBondMetrics(networkData.bondMetrics);
         setChurn(churnData);
@@ -85,11 +105,22 @@ const NodesPage: React.FC = () => {
 
   const updateNodes = useCallback(async () => {
     try {
-      const response = await fetch('/api/nodes');
-      const { data: nodesInfo } = await response.json();
-      setNodesQuery(nodesInfo);
+      console.log('Fetching nodes data...');
+      const result = await getNodesInfo();
+      console.log('Nodes data received:', result);
+      
+      // بررسی ساختار داده و تنظیم state
+      if (result && Array.isArray(result)) {
+        setNodesQuery(result);
+      } else if (result && result.data && Array.isArray(result.data)) {
+        setNodesQuery(result.data);
+      } else {
+        console.warn('Unexpected nodes data structure:', result);
+        setNodesQuery([]);
+      }
     } catch (e) {
-      console.error(e);
+      console.error('Error in updateNodes:', e);
+      setNodesQuery([]);
     }
   }, []);
 
@@ -161,22 +192,6 @@ const NodesPage: React.FC = () => {
 
     return annualNodes;
   }, [totalAwards, nodesQuery, churnProgressValue, network, churnInterval, chainsHeight, churn]);
-
-  const averageApysCalc = useCallback(() => {
-    if (!nodesQuery || nodesQuery.length === 0) {
-      return 0;
-    }
-
-    let totalApy = 0;
-    for (const node of nodesQuery) {
-      totalApy += +node.apy;
-    }
-    const totalActiveNodes = nodesQuery.filter(
-      (node: any) => node.status === 'Active'
-    ).length;
-
-    return totalApy / (totalActiveNodes || 1);
-  }, [nodesQuery]);
 
   const churnProgress = useCallback(() => {
     if (!network || !churnInterval || !chainsHeight) {
@@ -717,78 +732,78 @@ const NodesPage: React.FC = () => {
     ];
   }, [network, bondMetrics, leastBondChurn, formatRune]);
 
-  const churnInfo = useMemo(() => {
-    let churnValue;
+const churnInfo = useMemo(() => {
+  let churnValue;
 
-    if (churnProgressTime > 600) {
-      churnValue = blockTime(churnProgressTime, true);
-    } else if (churnProgressTime) {
-      churnValue = `${churnProgressTime} Block`;
-    }
+  if (churnProgressTime > 600) {
+    churnValue = blockTime(churnProgressTime, true);
+  } else if (churnProgressTime) {
+    churnValue = `${churnProgressTime} Block`;
+  }
 
-    if (churnProgressValue) {
-      churnValue += ` | ${(churnProgressValue * 100).toFixed(3)}%`;
-    }
+  if (churnProgressValue) {
+    churnValue += ` | ${(churnProgressValue * 100).toFixed(3)}%`;
+  }
 
-    if (churnHalted) {
-      churnValue = 'Churn Halted';
-    }
+  if (churnHalted) {
+    churnValue = 'Churn Halted';
+  }
 
-    return [
-      {
-        title: 'Current Churn',
-        rowStart: 2,
-        colSpan: 1,
-        grid: true,
-        icon: '/assets/images/next-churn.svg',
-        items: [
-          {
-            name: 'Next Churn',
-            value: churnValue ?? 'No Churns',
-            valueSlot: 'churn',
-          },
-          {
-            name: 'Churn Interval',
-            value: churnInterval,
-            filter: (v: number) =>
-              `${churnInterval ? blockTime(v, true) : 'N/A'}`,
-          },
-          {
-            name: 'Total Rewards',
-            value: (totalAwards || 0) / 1e8,
-            usdValue: true,
-            filter: (v: number) => formatRune(v, '0,0a'),
-          },
-          {
-            name: 'Average APY ',
-            value: averageApysCalc(),
-            filter: (v: number) => `${(v * 100).toFixed(2)}%`,
-          },
-          {
-            name: 'Monthly Node Return',
-            value: (monthlyNodeReturn() || 0) / 1e8,
-            filter: (v: number) => formatRune(v, '0,0a'),
-            usdValue: true,
-          },
-          {
-            name: 'Annual Node Return ',
-            value: (annualNodeReturn() || 0) / 1e8,
-            filter: (v: number) => formatRune(v, '0,0a'),
-            usdValue: true,
-          },
-          {
-            name: 'Churn Duration',
-            value: churn ? `${churn.date}` : '',
-          },
-          {
-            name: 'Churn Start',
-            value: churn ? `${churn.height}` : '',
-            filter: (v: number) => v.toLocaleString(),
-          },
-        ],
-      },
-    ];
-  }, [churnProgressTime, churnProgressValue, churnHalted, churnInterval, totalAwards, averageApysCalc, monthlyNodeReturn, annualNodeReturn, churn, formatRune]);
+  return [
+    {
+      title: 'Current Churn',
+      rowStart: 2,
+      colSpan: 1,
+      grid: true,
+      icon: '/assets/images/next-churn.svg',
+      items: [
+        {
+          name: 'Next Churn',
+          value: churnValue ?? 'No Churns',
+          valueSlot: 'churn',
+        },
+        {
+          name: 'Churn Interval',
+          value: churnInterval,
+          filter: (v: number) =>
+            `${churnInterval ? blockTime(v, true) : 'N/A'}`,
+        },
+        {
+          name: 'Total Rewards',
+          value: (totalAwards || 0) / 1e8,
+          usdValue: true,
+          filter: (v: number) => formatRune(v, '0,0a'),
+        },
+        {
+          name: 'Average APY',
+          value: averageApysCalc(),
+          filter: (v: number) => `${(v * 100).toFixed(2)}%`,
+        },
+        {
+          name: 'Monthly Node Return',
+          value: (monthlyNodeReturn() || 0) / 1e8,
+          filter: (v: number) => formatRune(v, '0,0a'),
+          usdValue: true,
+        },
+        {
+          name: 'Annual Node Return',
+          value: (annualNodeReturn() || 0) / 1e8,
+          filter: (v: number) => formatRune(v, '0,0a'),
+          usdValue: true,
+        },
+        {
+          name: 'Churn Duration',
+          value: churn ? `${churn.date}` : '',
+        },
+        {
+          name: 'Churn Start',
+          value: churn ? `${churn.height}` : '',
+          filter: (v: number) => v.toLocaleString(),
+        },
+      ],
+    },
+  ];
+}, [churnProgressTime, churnProgressValue, churnHalted, churnInterval, totalAwards, averageApysCalc, monthlyNodeReturn, annualNodeReturn, churn, formatRune]);
 
   const blockRewardInfo = useMemo(() => {
     return [

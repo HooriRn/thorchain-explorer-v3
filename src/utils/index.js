@@ -553,6 +553,15 @@ export function fillNodeData(nodes, el, index) {
   if (index !== undefined) {
     rank = index + 1;
   }
+  
+  const location = el?.countryCode || el?.regionName || el?.city 
+    ? { 
+        code: el?.countryCode, 
+        region: el?.regionName, 
+        city: el?.city 
+      }
+    : undefined;
+  
   nodes.push({
     address: el.node_address,
     ip: el.ip_address,
@@ -565,9 +574,7 @@ export function fillNodeData(nodes, el, index) {
     behind: el.behind,
     age: el.age,
     apy: el.apy,
-    location:
-      { code: el?.countryCode, region: el?.regionName, city: el?.city } ??
-      undefined,
+    location: location,
     isp: el.isp,
     org: el.org,
     jail: el.jail,

@@ -16,7 +16,8 @@
 
 .asset-chain {
   height: 1.2rem;
-  border-radius: var(--radius-full);
+  width: 1.2rem;
+  max-width: fit-content;
 }
 
 .popover-content {
@@ -228,12 +229,17 @@
 .churning-in {
   background-color: rgba(0, 255, 0, 0.1);
 }
-
 .mini-bubble {
-  display: inline-block;
-  padding: 4px 8px;
+  display: inline-flex;
+  font-weight: bold;
+  font-size: 12px;
+  padding: var(--space-5);
+  justify-content: center;
+  align-items: center;
   border-radius: var(--radius-sm);
-  font-size: var(--font-size-xs);
+  background-color: var(--badge-green-bg);
+  color: var(--badge-green-text);
+  line-height: 1;
 }
 
 .mini-bubble.yellow {
@@ -253,6 +259,9 @@
 
 .hoverable {
   cursor: pointer;
+  &:hover {
+    background-color: #466d48;
+  }
 }
 
 .clickable {

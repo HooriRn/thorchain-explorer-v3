@@ -1,6 +1,7 @@
 import React from 'react';
 import { capitalize } from 'lodash';
 import Tooltip from '@/components/Tooltip';
+import styles from "./CloudImage.module.css";
 
 import AmazonIcon from '@/assets/images/clouds/amazon.svg';
 import GoogleIcon from '@/assets/images/clouds/google.svg';
@@ -51,8 +52,8 @@ const CloudImage: React.FC<CloudImageProps> = ({ name }) => {
 
   return (
     <Tooltip content={tooltipText}>
-      <div className="cloud-container">
-        <Icon className="asset-icon" />
+      <div className={styles['cloud-container']}>
+        <Icon className={styles['asset-icon']} />
       </div>
     </Tooltip>
   );

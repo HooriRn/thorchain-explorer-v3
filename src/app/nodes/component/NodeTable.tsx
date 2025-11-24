@@ -1,37 +1,43 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import Link from 'next/link';
-import { remove, orderBy } from 'lodash';
-import { rcompare } from 'semver';
-import { useRunePrice } from '@/lib/store';
-import { assetImage, addressFormatV2, normalFormat, formatCurrency, vaultColor } from '@/utils/global';
-import { number } from '@/utils/format';
-import { Table, TableColumn } from '@/components/table';
-import Copy from '@/components/Copy';
-import Ip from '@/components/Ip';
-import CloudImage from '@/components/CloudImage';
-import VFlag from '@/components/VFlag';
-import RuneAsset from '@/components/RuneAsset';
-import ColorHash from '@/components/ColorHash';
-import { ProgressIcon } from '@/components/ui/ProgressIcon';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import Link from "next/link";
+import { remove, orderBy } from "lodash";
+import { rcompare } from "semver";
+import { useRunePrice } from "@/lib/store";
+import {
+  assetImage,
+  addressFormatV2,
+  normalFormat,
+  formatCurrency,
+  vaultColor,
+} from "@/utils/global";
+import { number } from "@/utils/format";
+import { Table, TableColumn } from "@/components/table";
+import Copy from "@/components/Copy";
+import Ip from "@/components/Ip";
+import CloudImage from "@/components/CloudImage";
+import VFlag from "@/components/VFlag";
+import RuneAsset from "@/components/RuneAsset";
+import ColorHash from "@/components/ColorHash";
+import { ProgressIcon } from "@/components/ui/ProgressIcon";
 
-import JsonIcon from '@/assets/images/json.svg';
-import InfoIcon from '@/assets/images/info.svg';
-import StarIcon from '@/assets/images/bookmark.svg';
-import StaredIcon from '@/assets/images/bookmarked.svg';
-import ExitIcon from '@/assets/images/arrow-down-square.svg';
-import DangerIcon from '@/assets/images/danger.svg';
-import MarkerIcon from '@/assets/images/marker.svg';
-import RecycleIcon from '@/assets/images/recycle.svg';
-import ExternalIcon from '@/assets/images/external.svg';
-import VaultIcon from '@/assets/images/safe.svg';
-import HighlightList from '@/assets/images/highlight-list.svg';
-import CrossIcon from '@/assets/images/cross.svg';
-import NodeIcon from '@/assets/images/node.svg';
-import MissingBlock from '@/assets/images/missingblock.svg';
+import JsonIcon from "@/assets/images/json.svg";
+import InfoIcon from "@/assets/images/info.svg";
+import StarIcon from "@/assets/images/bookmark.svg";
+import StaredIcon from "@/assets/images/bookmarked.svg";
+import ExitIcon from "@/assets/images/arrow-down-square.svg";
+import DangerIcon from "@/assets/images/danger.svg";
+import MarkerIcon from "@/assets/images/marker.svg";
+import RecycleIcon from "@/assets/images/recycle.svg";
+import ExternalIcon from "@/assets/images/external.svg";
+import VaultIcon from "@/assets/images/safe.svg";
+import HighlightList from "@/assets/images/highlight-list.svg";
+import CrossIcon from "@/assets/images/cross.svg";
+import NodeIcon from "@/assets/images/node.svg";
+import MissingBlock from "@/assets/images/missingblock.svg";
 
-import styles from './NodeTable.module.css';
+import styles from "./NodeTable.module.css";
 
 interface NodeData {
   address: string;
@@ -88,12 +94,39 @@ interface HealthStatus {
   url: string;
   title: string;
 }
+const customTheme = {
+  HeaderCell: `
+      border-right: 1px solid var(--border) !important;
+      &:last-child {
+          border-right: none !important;
+        }
+      `,
+  Row: `
+      background: transparent;
+      border-bottom: 1px solid var(--border) !important;
+      
+      &:hover {
+        background-color: var(--muted);
+      }
+      
+      &:last-child {
+        border-bottom: none !important;
+      }
+      `,
+  Cell: `
+      border-right: 1px solid var(--border) !important;
+      border-bottom: 1px solid var(--border) !important;
 
+      &:last-child {
+        border-right: none !important;
+      }
+    `,
+};
 const NodeTable: React.FC<NodeTableProps> = ({
   rows,
   cols,
   name,
-  searchTerm = '',
+  searchTerm = "",
   onSortChanged,
 }) => {
   const [favs, setFavs] = useState<Favorite[]>([]);
@@ -117,27 +150,34 @@ const NodeTable: React.FC<NodeTableProps> = ({
   }, [favs, name]);
 
   const loadRank = useCallback(() => {
-    if (name === 'active-nodes' && favs.length > 0 && rows) {
+    if (name === "active-nodes" && favs.length > 0 && rows) {
       const updatedFavs = [...favs];
       rows.forEach((node, index) => {
-        const favIndex = updatedFavs.findIndex((f) => f.address === node.address);
+        const favIndex = updatedFavs.findIndex(
+          (f) => f.address === node.address
+        );
         if (favIndex !== -1) {
           if (!updatedFavs[favIndex].lastRank) {
             updatedFavs[favIndex].lastRank = updatedFavs[favIndex].rank;
           }
-          updatedFavs[favIndex].rank = updatedFavs[favIndex].lastRank || index + 1;
+          updatedFavs[favIndex].rank =
+            updatedFavs[favIndex].lastRank || index + 1;
         }
       });
       setFavs(updatedFavs);
     }
   }, [name, favs, rows]);
 
+  
+
   const unloadRank = useCallback(() => {
-    if (name === 'active-nodes' && favs.length > 0 && rows) {
+    if (name === "active-nodes" && favs.length > 0 && rows) {
       let changed = false;
       const updatedFavs = [...favs];
       rows.forEach((node, index) => {
-        const favIndex = updatedFavs.findIndex((f) => f.address === node.address);
+        const favIndex = updatedFavs.findIndex(
+          (f) => f.address === node.address
+        );
         if (favIndex !== -1 && updatedFavs[favIndex].lastRank !== index + 1) {
           updatedFavs[favIndex].lastRank = index + 1;
           changed = true;
@@ -149,12 +189,13 @@ const NodeTable: React.FC<NodeTableProps> = ({
     }
   }, [name, favs, rows]);
 
+
   useEffect(() => {
     loadRank();
     const handleVisibilityChange = () => unloadRank();
-    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [rows, loadRank, unloadRank]);
 
@@ -166,7 +207,7 @@ const NodeTable: React.FC<NodeTableProps> = ({
 
     let filtered = [...rows];
 
-    if (searchTerm && searchTerm.trim() !== '') {
+    if (searchTerm && searchTerm.trim() !== "") {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter((row) => {
         return Object.values(row).some((value) => {
@@ -176,7 +217,9 @@ const NodeTable: React.FC<NodeTableProps> = ({
       });
     }
 
-    setFilteredRows(filtered.map((row, index) => ({ ...row, originalIndex: index })));
+    setFilteredRows(
+      filtered.map((row, index) => ({ ...row, originalIndex: index }))
+    );
   }, [rows, searchTerm]);
 
   const isFav = useCallback(
@@ -189,47 +232,54 @@ const NodeTable: React.FC<NodeTableProps> = ({
   const getHighlightStyle = useCallback(
     (address: string) => {
       return {
-        color: isFav(address) ? vaultColor(address, true) : '',
-        fill: isFav(address) ? vaultColor(address, true) : '',
-        fontWeight: isFav(address) ? 'bold' : 'normal',
+        color: isFav(address) ? vaultColor(address, true) : "",
+        fill: isFav(address) ? vaultColor(address, true) : "",
+        fontWeight: isFav(address) ? "bold" : "normal",
       };
     },
     [isFav]
   );
 
-  const getHealthStatus = useCallback((value: boolean | string | null | undefined, row: NodeData, columnField: string): HealthStatus => {
-    if (value === null || value === undefined) {
-      return { text: '-', url: '', title: '' };
-    }
+  const getHealthStatus = useCallback(
+    (
+      value: boolean | string | null | undefined,
+      row: NodeData,
+      columnField: string
+    ): HealthStatus => {
+      if (value === null || value === undefined) {
+        return { text: "-", url: "", title: "" };
+      }
 
-    const ip = row.ip;
-    let url = '';
-    if (columnField === 'bifrostHealth') {
-      url = `http://${ip}:6040/p2pid`;
-    } else if (columnField === 'rpcHealth') {
-      url = `http://${ip}:27147/health?`;
-    }
+      const ip = row.ip;
+      let url = "";
+      if (columnField === "bifrostHealth") {
+        url = `http://${ip}:6040/p2pid`;
+      } else if (columnField === "rpcHealth") {
+        url = `http://${ip}:27147/health?`;
+      }
 
-    const errorMessages: Record<string, string> = {
-      ERR_BAD_RESPONSE: 'Unexpected response from the server',
-      ECONNREFUSED: 'Connection Refused By Server',
-      ECONNABORTED: 'Connection was interrupted',
-    };
+      const errorMessages: Record<string, string> = {
+        ERR_BAD_RESPONSE: "Unexpected response from the server",
+        ECONNREFUSED: "Connection Refused By Server",
+        ECONNABORTED: "Connection was interrupted",
+      };
 
-    if (value === true) {
-      return { text: 'OK', url, title: '' };
-    }
+      if (value === true) {
+        return { text: "OK", url, title: "" };
+      }
 
-    if (value === false) {
-      return { text: 'BAD', url, title: '' };
-    }
+      if (value === false) {
+        return { text: "BAD", url, title: "" };
+      }
 
-    if (typeof value === 'string') {
-      return { text: 'BAD', url, title: errorMessages[value] || value };
-    }
+      if (typeof value === "string") {
+        return { text: "BAD", url, title: errorMessages[value] || value };
+      }
 
-    return { text: '-', url: '', title: '' };
-  }, []);
+      return { text: "-", url: "", title: "" };
+    },
+    []
+  );
 
   const rankChange = useCallback(
     (address: string, rank: number) => {
@@ -251,7 +301,7 @@ const NodeTable: React.FC<NodeTableProps> = ({
 
   const isUpgrading = useCallback(
     (ver: string) => {
-      if (name !== 'active-nodes' || !rows) {
+      if (name !== "active-nodes" || !rows) {
         return false;
       }
 
@@ -265,30 +315,33 @@ const NodeTable: React.FC<NodeTableProps> = ({
     [name, rows]
   );
 
-  const filterProviders = useCallback((arr: Array<{ bond_address: string; bond: number }> | undefined) => {
-    if (!arr) {
-      return [];
-    }
-    return orderBy(
-      arr.map((a) => ({ ...a, bond: +a.bond })),
-      ['bond'],
-      ['desc']
-    );
-  }, []);
+  const filterProviders = useCallback(
+    (arr: Array<{ bond_address: string; bond: number }> | undefined) => {
+      if (!arr) {
+        return [];
+      }
+      return orderBy(
+        arr.map((a) => ({ ...a, bond: +a.bond })),
+        ["bond"],
+        ["desc"]
+      );
+    },
+    []
+  );
 
   const rowStyleClass = useCallback((row: NodeData) => {
     const classes: string[] = [];
     if (row.churn && row.churn.length > 0) {
-      if (row.churn.some((e) => e.type === 'churn-out' || e.type === 'leave')) {
-        classes.push(styles['churning-out']);
+      if (row.churn.some((e) => e.type === "churn-out" || e.type === "leave")) {
+        classes.push(styles["churning-out"]);
       }
 
-      if (row.churn.some((e) => e.type === 'churn-in')) {
-        classes.push(styles['churning-in']);
+      if (row.churn.some((e) => e.type === "churn-in")) {
+        classes.push(styles["churning-in"]);
       }
     }
 
-    return classes.join(' ');
+    return classes.join(" ");
   }, []);
 
   const addFav = useCallback(
@@ -331,36 +384,40 @@ const NodeTable: React.FC<NodeTableProps> = ({
         className: col.tdClass,
       };
 
-      if (col.field.includes('behind')) {
+      if (col.field.includes("behind")) {
         column.headerRender = () => (
-          <div className={styles['table-asset']}>
+          <div className={styles["table-asset"]}>
             <img
-              className={styles['asset-chain']}
+              className={styles["asset-chain"]}
               src={assetImage(`${col.label}.${col.label}`)}
               alt={col.label}
             />
           </div>
         );
-      } else if (col.field === 'highlight') {
-        column.headerRender = () => <HighlightList className={styles['table-icon']} />;
-      } else if (col.field === 'location') {
+      } else if (col.field === "highlight") {
+        column.headerRender = () => (
+          <HighlightList className={styles["table-icon"]} />
+        );
+      } else if (col.field === "location") {
         column.headerRender = () => (
           <div title="Node Location">
-            <MarkerIcon className={styles['table-icon']} />
+            <MarkerIcon className={styles["table-icon"]} />
           </div>
         );
-      } else if (col.field === 'churn') {
-        column.headerRender = () => <RecycleIcon className={styles['table-icon']} />;
-      } else if (col.field === 'vault') {
+      } else if (col.field === "churn") {
         column.headerRender = () => (
-          <div className={styles['table-asset']}>
-            <VaultIcon className={styles['table-icon']} />
+          <RecycleIcon className={styles["table-icon"]} />
+        );
+      } else if (col.field === "vault") {
+        column.headerRender = () => (
+          <div className={styles["table-asset"]}>
+            <VaultIcon className={styles["table-icon"]} />
           </div>
         );
-      } else if (col.field === 'missing_blocks') {
+      } else if (col.field === "missing_blocks") {
         column.headerRender = () => (
-          <div className={styles['table-asset']}>
-            <MissingBlock className={styles['table-icon']} />
+          <div className={styles["table-asset"]}>
+            <MissingBlock className={styles["table-icon"]} />
           </div>
         );
       }
@@ -369,13 +426,16 @@ const NodeTable: React.FC<NodeTableProps> = ({
         const fieldValue = row[col.field];
         const highlightStyle = getHighlightStyle(row.address);
 
-        if (col.field === 'address') {
+        if (col.field === "address") {
           return (
-            <div className={styles['table-wrapper-row']} style={highlightStyle}>
+            <div className={styles["table-wrapper-row"]} style={highlightStyle}>
               <Link
                 href={`/address/${row.address}`}
-                className={styles['clickable']}
-                style={highlightStyle}
+                className={styles["clickable"]}
+                style={{
+                  color: "var(--primary)",
+                  fontFamily: "Roboto Mono !important",
+                }}
                 title={row.address}
               >
                 {addressFormatV2(row.address, 4, true)}
@@ -386,7 +446,9 @@ const NodeTable: React.FC<NodeTableProps> = ({
                 target="_blank"
                 style={highlightStyle}
               >
-                <InfoIcon className={`${styles['table-icon']} ${styles['item-link']}`} />
+                <InfoIcon
+                  className={`${styles["table-icon"]} ${styles["item-link"]}`}
+                />
               </Link>
               <a
                 style={highlightStyle}
@@ -394,7 +456,9 @@ const NodeTable: React.FC<NodeTableProps> = ({
                 target="_blank"
                 rel="noreferrer"
               >
-                <JsonIcon className={`${styles['table-icon']} ${styles['item-link']}`} />
+                <JsonIcon
+                  className={`${styles["table-icon"]} ${styles["item-link"]}`}
+                />
               </a>
               <Ip strCopy={row.ip} />
               <a
@@ -403,57 +467,71 @@ const NodeTable: React.FC<NodeTableProps> = ({
                 target="_blank"
                 rel="noreferrer"
               >
-                <NodeIcon className={`${styles['table-icon']} ${styles['item-link']}`} />
+                <NodeIcon
+                  className={`${styles["table-icon"]} ${styles["item-link"]}`}
+                />
               </a>
             </div>
           );
         }
 
-        if (col.field === 'highlight') {
+        if (col.field === "highlight") {
           return isFav(row.address) ? (
             <StaredIcon
-              className={styles['table-icon']}
+              className={styles["table-icon"]}
               style={highlightStyle}
               onClick={() => delFav(row.address)}
             />
           ) : (
             <StarIcon
-              className={styles['table-icon']}
+              className={styles["table-icon"]}
               onClick={() => addFav(row.address, row.rank)}
             />
           );
         }
 
-        if (col.field === 'age') {
+        if (col.field === "age") {
           return row.age ? (
-            <span title={row.age.info} style={{ cursor: 'pointer' }}>
-              {number(row.age.number || 0, '0,0.00')}
+            <span title={row.age.info} style={{ cursor: "pointer" }}>
+              {number(row.age.number || 0, "0,0.00")}
             </span>
           ) : (
             <span>-</span>
           );
         }
 
-        if (col.field === 'isp') {
-          return row.isp ? <CloudImage name={[row.isp, row.org || '']} /> : <span>-</span>;
-        }
+if (col.field === "isp") {
+  console.log(`Rendering ISP for ${row.address}:`, row.isp, row.org);
+  
+  return row.isp || row.org ? (
+    <CloudImage name={[row.isp || '', row.org || '']} />
+  ) : (
+    <span>-</span>
+  );
+}
 
-        if (col.field === 'location') {
-          return row.location ? (
-            <div
-              className={styles['countries']}
-              title={`${row.location.code}, ${row.location.city}`}
-            >
-              <VFlag flag={row.location.code} />
-            </div>
-          ) : null;
-        }
+if (col.field === "location") {
+  console.log(`Rendering location for ${row.address}:`, row.location);
+  
+  return row.location ? (
+    <div
+      className={styles["countries"]}
+      title={`${row.location.code || ''}, ${row.location.city || ''}`}
+    >
+      <VFlag flag={row.location.code} />
+    </div>
+  ) : (
+    <span>-</span>
+  );
+}
 
-        if (col.field === 'total_bond') {
+        if (col.field === "total_bond") {
           return (
-            <span 
-              className={styles['hoverable']} 
-              title={formatCurrency(runePrice * row.total_bond, (v: number) => number(v, "0,0.00a"))}
+            <span
+              className={styles["hoverable"]}
+              title={formatCurrency(runePrice * row.total_bond, (v: number) =>
+                number(v, "0,0.00a")
+              )}
             >
               <RuneAsset height="0.7rem" />
               {normalFormat(row.total_bond, number)}
@@ -461,11 +539,13 @@ const NodeTable: React.FC<NodeTableProps> = ({
           );
         }
 
-        if (col.field === 'award') {
+        if (col.field === "award") {
           return (
-            <span 
-              className={styles['hoverable']} 
-              title={formatCurrency(runePrice * row.award, (v: number) => number(v, "0,0.00a"))}
+            <span
+              className={styles["hoverable"]}
+              title={formatCurrency(runePrice * row.award, (v: number) =>
+                number(v, "0,0.00a")
+              )}
             >
               <RuneAsset height="0.7rem" />
               {normalFormat(row.award, number)}
@@ -473,21 +553,29 @@ const NodeTable: React.FC<NodeTableProps> = ({
           );
         }
 
-        if (col.field === 'vault') {
+        if (col.field === "apy") {
+        return (
+          <span style={highlightStyle} className="mono center">
+            {number((fieldValue || 0) * 100, "0,0.00")}%
+          </span>
+        );
+      }
+
+        if (col.field === "vault") {
           return (
-            <div className={styles['vault-wrapper']} title={row.vault}>
-              <ColorHash name={row.vault || ''} />
+            <div className={styles["vault-wrapper"]} title={row.vault}>
+              <ColorHash name={row.vault || ""} />
             </div>
           );
         }
 
-        if (col.field === 'status') {
+        if (col.field === "status") {
           return (
             <div
-              className={`${styles['mini-bubble']} ${styles['hoverable']} ${
-                row.status === 'Standby' ? styles['yellow'] : ''
-              } ${row.status === 'Disabled' ? styles['danger'] : ''} ${
-                row.status === 'Whitelisted' ? styles['white'] : ''
+              className={`${styles["mini-bubble"]} ${styles["hoverable"]} ${
+                row.status === "Standby" ? styles["yellow"] : ""
+              } ${row.status === "Disabled" ? styles["danger"] : ""} ${
+                row.status === "Whitelisted" ? styles["white"] : ""
               }`}
               style={highlightStyle}
               title={row.preflight?.reason}
@@ -497,9 +585,9 @@ const NodeTable: React.FC<NodeTableProps> = ({
           );
         }
 
-        if (col.field === 'ip') {
+        if (col.field === "ip") {
           return row.ip ? (
-            <div className={styles['table-wrapper-row']}>
+            <div className={styles["table-wrapper-row"]}>
               <span>{row.ip}</span>
               <Copy strCopy={row.ip} />
             </div>
@@ -508,36 +596,47 @@ const NodeTable: React.FC<NodeTableProps> = ({
           );
         }
 
-        if (col.field === 'leave') {
+        if (col.field === "leave") {
           return (
-            <div className={styles['table-wrapper-row']} style={{ justifyContent: 'center' }}>
-              {row.leave === true && <ExitIcon className={styles['table-icon']} style={{ fill: 'var(--red)' }} />}
+            <div
+              className={styles["table-wrapper-row"]}
+              style={{ justifyContent: "center" }}
+            >
+              {row.leave === true && (
+                <ExitIcon
+                  className={styles["table-icon"]}
+                  style={{ fill: "var(--red)" }}
+                />
+              )}
             </div>
           );
         }
 
-        if (col.field === 'fee') {
-          return <span>{number((fieldValue || 0) * 100, '0,0.00')}%</span>;
+        if (col.field === "fee") {
+          return <span>{number((fieldValue || 0) * 100, "0,0.00")}%</span>;
         }
 
-        if (col.field === 'score') {
-          return <span>{number(fieldValue || 0, '0,0.00')}</span>;
+        if (col.field === "score") {
+          return <span>{number(fieldValue || 0, "0,0.00")}</span>;
         }
 
-        if (col.field === 'operator') {
+        if (col.field === "operator") {
           if (row.providers && row.providers.length > 10) {
             return (
-              <div style={{ cursor: 'pointer' }}>
-                <div className={styles['hoverable']}>
+              <div style={{ cursor: "pointer" }}>
+                <div className={styles["hoverable"]}>
                   <Link
-                    className={`${styles['clickable']} mono`}
+                    className={`${styles["clickable"]} mono`}
                     href={`/address/${row.operator}`}
                     target="_blank"
                     style={highlightStyle}
                   >
                     {row.operator?.slice(-4)}
                   </Link>
-                  <div className={`${styles['bubble-container']} ${styles['grey']}`} onClick={() => openModal(row)}>
+                  <div
+                    className={`${styles["bubble-container"]} ${styles["grey"]}`}
+                    onClick={() => openModal(row)}
+                  >
                     {row.providers.length}
                   </div>
                 </div>
@@ -546,9 +645,9 @@ const NodeTable: React.FC<NodeTableProps> = ({
           }
 
           return (
-            <div className={styles['hoverable']}>
+            <div className={styles["hoverable"]}>
               <Link
-                className={`${styles['clickable']} mono`}
+                className={`${styles["clickable"]} mono`}
                 href={`/address/${row.operator}`}
                 target="_blank"
                 style={highlightStyle}
@@ -556,7 +655,9 @@ const NodeTable: React.FC<NodeTableProps> = ({
                 {row.operator?.slice(-4)}
               </Link>
               {row.providers && row.providers.length !== 1 && (
-                <div className={`${styles['bubble-container']} ${styles['grey']}`}>
+                <div
+                  className={`${styles["bubble-container"]} ${styles["grey"]}`}
+                >
                   {row.providers ? row.providers.length : 0}
                 </div>
               )}
@@ -564,25 +665,35 @@ const NodeTable: React.FC<NodeTableProps> = ({
           );
         }
 
-        if (col.field === 'churn') {
+        if (col.field === "churn") {
           const churnData = rows[row.originalIndex || 0]?.churn || [];
           return (
-            <div className={styles['churn-wrapper']}>
+            <div className={styles["churn-wrapper"]}>
               {churnData.map((churnItem, index: number) => {
                 const IconComponent = churnItem.icon;
                 return (
-                  <div key={index} className={styles['churn-item']} title={churnItem.name}>
-                    {typeof IconComponent === 'string' ? (
-                      <img src={IconComponent} className={styles['table-icon']} alt={churnItem.name} />
+                  <div
+                    key={index}
+                    className={styles["churn-item"]}
+                    title={churnItem.name}
+                  >
+                    {typeof IconComponent === "string" ? (
+                      <img
+                        src={IconComponent}
+                        className={styles["table-icon"]}
+                        alt={churnItem.name}
+                      />
                     ) : IconComponent ? (
-                      React.createElement(IconComponent, { className: styles['table-icon'] })
+                      React.createElement(IconComponent, {
+                        className: styles["table-icon"],
+                      })
                     ) : null}
                   </div>
                 );
               })}
               {churnData.length === 0 && !isFav(row.address) && <span>-</span>}
-              {isFav(row.address) && name === 'active-nodes' && (
-                <div className={styles['rank-wrap']}>
+              {isFav(row.address) && name === "active-nodes" && (
+                <div className={styles["rank-wrap"]}>
                   <span>{row.rank}</span>
                   <ProgressIcon
                     dataNumber={rankChange(row.address, row.rank)}
@@ -594,41 +705,74 @@ const NodeTable: React.FC<NodeTableProps> = ({
           );
         }
 
-        if (col.field === 'version') {
+        if (col.field === "version") {
           return (
-            <span className={isUpgrading(fieldValue) ? styles['upgraded'] : ''}>
+            <span className={isUpgrading(fieldValue) ? styles["upgraded"] : ""}>
               {fieldValue}
             </span>
           );
         }
 
-        if (col.field.includes('behind.')) {
+        if (col.field.includes("behind.")) {
           const behindValue = parseInt(fieldValue);
           if (behindValue === 0) {
-            return <span style={highlightStyle} className={styles['version']}>OK</span>;
-          } else if (fieldValue === '' || fieldValue === null || fieldValue === undefined) {
+            return (
+              <span style={highlightStyle} className={styles["version"]}>
+                OK
+              </span>
+            );
+          } else if (
+            fieldValue === "" ||
+            fieldValue === null ||
+            fieldValue === undefined
+          ) {
             return <span>-</span>;
           } else if (behindValue > 0 && behindValue < 10000) {
             return (
-              <span style={highlightStyle} className={styles['number']}>
+              <span style={highlightStyle} className={styles["number"]}>
                 -{behindValue.toLocaleString()}
               </span>
             );
           } else if (behindValue < 0 && behindValue > -10000) {
-            return <DangerIcon title="Disabled" className={styles['table-icon']} style={{ color: '#ef5350' }} />;
+            return (
+              <DangerIcon
+                title="Disabled"
+                className={styles["table-icon"]}
+                style={{ color: "#ef5350" }}
+              />
+            );
           } else if (behindValue > 10000) {
-            return <DangerIcon title={`${behindValue}`} className={styles['table-icon']} style={{ fill: '#ffc107' }} />;
+            return (
+              <DangerIcon
+                title={`${behindValue}`}
+                className={styles["table-icon"]}
+                style={{ fill: "#ffc107" }}
+              />
+            );
           } else {
-            return <DangerIcon title={`${behindValue}`} className={styles['table-icon']} style={{ fill: '#ef5350' }} />;
+            return (
+              <DangerIcon
+                title={`${behindValue}`}
+                className={styles["table-icon"]}
+                style={{ fill: "#ef5350" }}
+              />
+            );
           }
         }
 
-        if (col.field === 'missing_blocks') {
+        if (col.field === "missing_blocks") {
           if (row.missing_blocks === 0) {
-            return <span style={highlightStyle} className={styles['version']}>OK</span>;
-          } else if (row.missing_blocks !== null && row.missing_blocks !== undefined) {
             return (
-              <span style={highlightStyle} className={styles['number']}>
+              <span style={highlightStyle} className={styles["version"]}>
+                OK
+              </span>
+            );
+          } else if (
+            row.missing_blocks !== null &&
+            row.missing_blocks !== undefined
+          ) {
+            return (
+              <span style={highlightStyle} className={styles["number"]}>
                 {(-row.missing_blocks).toLocaleString()}
               </span>
             );
@@ -637,13 +781,17 @@ const NodeTable: React.FC<NodeTableProps> = ({
           }
         }
 
-        if (col.field === 'rpcHealth' || col.field === 'bifrostHealth') {
-          const health = getHealthStatus(fieldValue as boolean | string, row, col.field);
-          if (health.text !== '-') {
+        if (col.field === "rpcHealth" || col.field === "bifrostHealth") {
+          const health = getHealthStatus(
+            fieldValue as boolean | string,
+            row,
+            col.field
+          );
+          if (health.text !== "-") {
             return (
               <a
-                className={`${styles['clickable']} ${styles['hoverable']} ${
-                  health.text === 'BAD' ? styles['bad-link'] : ''
+                className={`${styles["clickable"]} ${styles["hoverable"]} ${
+                  health.text === "BAD" ? styles["bad-link"] : ""
                 }`}
                 href={health.url}
                 target="_blank"
@@ -663,7 +811,20 @@ const NodeTable: React.FC<NodeTableProps> = ({
 
       return column as TableColumn<NodeData>;
     });
-  }, [cols, rows, runePrice, getHighlightStyle, isFav, addFav, delFav, openModal, rankChange, name, isUpgrading, getHealthStatus]);
+  }, [
+    cols,
+    rows,
+    runePrice,
+    getHighlightStyle,
+    isFav,
+    addFav,
+    delFav,
+    openModal,
+    rankChange,
+    name,
+    isUpgrading,
+    getHealthStatus,
+  ]);
 
   return (
     <div>
@@ -674,61 +835,74 @@ const NodeTable: React.FC<NodeTableProps> = ({
         enableSort={true}
         enableSelect={false}
         showLineNumbers={true}
-        className={`vgt-table net-table bordered condensed ${styles['node-table']}`}
+        className={`vgt-table net-table bordered condensed ${styles["node-table"]}`}
         rowStyleClass={rowStyleClass}
         onSortChange={handleSortChange}
         onRowSelectChange={() => {}}
+        customTheme={customTheme}
       />
 
       {showModal && selectedRow && (
-        <div className={styles['modal-overlay']}>
-          <div className={styles['modal-content']}>
-            <div className={styles['modal-header']}>
+        <div className={styles["modal-overlay"]}>
+          <div className={styles["modal-content"]}>
+            <div className={styles["modal-header"]}>
               <h3>Operator Details</h3>
-              <CrossIcon className={styles['close-btn']} onClick={closeModal} />
+              <CrossIcon className={styles["close-btn"]} onClick={closeModal} />
             </div>
-            <table className={styles['modal-table']}>
+            <table className={styles["modal-table"]}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left' }}>Address</th>
+                  <th style={{ textAlign: "left" }}>Address</th>
                   <th>Bond</th>
-                  <th style={{ textAlign: 'right' }}>Share</th>
+                  <th style={{ textAlign: "right" }}>Share</th>
                 </tr>
               </thead>
               <tbody>
                 {filterProviders(selectedRow.providers).map((p, i: number) => (
                   <tr key={i}>
-                    <td style={{ display: 'flex' }}>
+                    <td style={{ display: "flex" }}>
                       <Link
-                        className={`${styles['hoverable']} mono ${styles['external-link']}`}
+                        className={`${styles["hoverable"]} mono ${styles["external-link"]}`}
                         href={`/address/${p.bond_address}`}
                         target="_blank"
                       >
                         {addressFormatV2(p.bond_address, 4, true)}
-                        <ExternalIcon className={styles['asset-icon']} />
+                        <ExternalIcon className={styles["asset-icon"]} />
                       </Link>
-                      <Copy strCopy={p.bond_address} size="small" hideToast={true} />
+                      <Copy
+                        strCopy={p.bond_address}
+                        size="small"
+                        hideToast={true}
+                      />
                     </td>
                     <td className="mono">
                       <RuneAsset height="0.7rem" />
-                      {number(p.bond / 10 ** 8, '0,0')}
+                      {number(p.bond / 10 ** 8, "0,0")}
                     </td>
-                    <td style={{ textAlign: 'right' }}>
+                    <td style={{ textAlign: "right" }}>
                       <span className="mono">
-                        {number((p.bond / 10 ** 8 / selectedRow.total_bond) * 100, '0,0.00')}%
+                        {number(
+                          (p.bond / 10 ** 8 / selectedRow.total_bond) * 100,
+                          "0,0.00"
+                        )}
+                        %
                       </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <div className={styles['footer-table']}>
+            <div className={styles["footer-table"]}>
               <strong>Operator: </strong>
-              <span className="mono" style={{ marginLeft: '5px' }}>
-                <Link className={styles['clickable']} href={`/address/${selectedRow.operator}`} target="_blank">
+              <span className="mono" style={{ marginLeft: "5px" }}>
+                <Link
+                  className={styles["clickable"]}
+                  href={`/address/${selectedRow.operator}`}
+                  target="_blank"
+                >
                   {selectedRow.operator?.slice(-4)}
                 </Link>
-                - {number((selectedRow.fee || 0) * 100, '0,0.00')}%
+                - {number((selectedRow.fee || 0) * 100, "0,0.00")}%
               </span>
             </div>
           </div>
