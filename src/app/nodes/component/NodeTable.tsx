@@ -36,7 +36,9 @@ import HighlightList from "@/assets/images/highlight-list.svg";
 import CrossIcon from "@/assets/images/cross.svg";
 import NodeIcon from "@/assets/images/node.svg";
 import MissingBlock from "@/assets/images/missingblock.svg";
-
+import {
+  formatVueNumber,
+} from "@/utils/format";
 import styles from "./NodeTable.module.css";
 
 interface NodeData {
@@ -511,44 +513,43 @@ if (col.field === "isp") {
 }
 
 if (col.field === "location") {
-  console.log(`Rendering location for ${row.address}:`, row.location);
-  
   return row.location ? (
-    <div
-      className={styles["countries"]}
-      title={`${row.location.code || ''}, ${row.location.city || ''}`}
+    <div 
+      className={styles["location-cell"]}
+      title={`${row.location.city || ''}, ${row.location.code || ''}`}
     >
-      <VFlag flag={row.location.code} />
+      <VFlag 
+        flag={row.location.code} 
+        className={styles["country-flag"]}
+      />
+    
     </div>
   ) : (
     <span>-</span>
   );
 }
 
-        if (col.field === "total_bond") {
-          return (
-            <span
-              className={styles["hoverable"]}
-              title={formatCurrency(runePrice * row.total_bond, (v: number) =>
-                number(v, "0,0.00a")
-              )}
-            >
-              <RuneAsset height="0.7rem" />
-              {normalFormat(row.total_bond, number)}
-            </span>
-          );
-        }
+if (col.field === "total_bond") {
+  return (
+    <span
+      className={styles["hoverable"]}
+      title={formatVueNumber(runePrice * row.total_bond)}
+    >
+      <RuneAsset height="0.7rem" />
+      {normalFormat(row.total_bond, formatVueNumber)} 
+    </span>
+  );
+}
 
         if (col.field === "award") {
           return (
             <span
               className={styles["hoverable"]}
-              title={formatCurrency(runePrice * row.award, (v: number) =>
-                number(v, "0,0.00a")
+              title={(runePrice * row.award, 
               )}
             >
               <RuneAsset height="0.7rem" />
-              {normalFormat(row.award, number)}
+              {(row.award)}
             </span>
           );
         }
@@ -714,18 +715,27 @@ if (col.field === "location") {
         }
 
         if (col.field.includes("behind.")) {
-          const behindValue = parseInt(fieldValue);
+          const chain = col.field.replace("behind.", "");
+          const behindRawValue = row.behind ? row.behind[chain] : undefined;
+          
+          console.log(`Behind debug - Chain: ${chain}, Row: ${row.address}`, {
+            behind: row.behind,
+            chain: chain,
+            rawValue: behindRawValue,
+            type: typeof behindRawValue,
+            isZero: behindRawValue === 0,
+            isStringZero: behindRawValue === "0",
+          });
+          
+          const behindValue = behindRawValue !== undefined ? parseInt(behindRawValue) : null;
+          
           if (behindValue === 0) {
             return (
               <span style={highlightStyle} className={styles["version"]}>
                 OK
               </span>
             );
-          } else if (
-            fieldValue === "" ||
-            fieldValue === null ||
-            fieldValue === undefined
-          ) {
+          } else if (behindValue === null || behindValue === undefined || isNaN(behindValue)) {
             return <span>-</span>;
           } else if (behindValue > 0 && behindValue < 10000) {
             return (
@@ -759,21 +769,51 @@ if (col.field === "location") {
             );
           }
         }
-
+        
         if (col.field === "missing_blocks") {
-          if (row.missing_blocks === 0) {
+          const missingBlocksValue = row.missing_blocks;
+          
+          console.log(`Missing blocks debug - Row: ${row.address}`, {
+            missing_blocks: missingBlocksValue,
+            type: typeof missingBlocksValue,
+            isZero: missingBlocksValue === 0,
+            isStringZero: missingBlocksValue === "0",
+          });
+          
+          const numericValue = typeof missingBlocksValue === 'string' 
+            ? parseInt(missingBlocksValue) 
+            : missingBlocksValue;
+          
+          if (numericValue === 0) {
             return (
               <span style={highlightStyle} className={styles["version"]}>
                 OK
               </span>
             );
-          } else if (
-            row.missing_blocks !== null &&
-            row.missing_blocks !== undefined
-          ) {
+          } else if (numericValue !== null && numericValue !== undefined && numericValue > 0) {
             return (
               <span style={highlightStyle} className={styles["number"]}>
-                {(-row.missing_blocks).toLocaleString()}
+                {(-numericValue).toLocaleString()}
+              </span>
+            );
+          } else {
+            return <span>-</span>;
+          }
+        }
+
+        if (col.field === "missing_blocks") {
+          const missingBlocksValue = row.missing_blocks;
+          
+          if (missingBlocksValue === 0) {
+            return (
+              <span style={highlightStyle} className={styles["version"]}>
+                OK
+              </span>
+            );
+          } else if (missingBlocksValue !== null && missingBlocksValue !== undefined && missingBlocksValue > 0) {
+            return (
+              <span style={highlightStyle} className={styles["number"]}>
+                {(-missingBlocksValue).toLocaleString()}
               </span>
             );
           } else {

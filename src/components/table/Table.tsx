@@ -53,17 +53,36 @@ const Table = <T extends TableData>({
     return columns.filter(col => !col.hidden);
   }, [columns]);
 
-  const columnsWithLineNumbers = useMemo(() => {
-    let processedColumns = visibleColumns.map((column) => {
+  const processedColumns = useMemo(() => {
+    return visibleColumns.map((column) => {
+      if (column.formatFn && !column.renderCell) {
+        return {
+          ...column,
+          renderCell: (item: T & { _rowIndex?: number }) => {
+            const value = item[column.field as keyof T];
+            const formattedValue = column.formatFn!(value, item);
+            
+            if (typeof formattedValue === 'string') {
+              return <span className={column.className}>{formattedValue}</span>;
+            }
+            
+            return formattedValue;
+          }
+        };
+      }
+      
       if (column.headerRender) {
         return {
           ...column,
           label: column.headerRender() as any,
         };
       }
+      
       return column;
     });
+  }, [visibleColumns]);
 
+  const columnsWithLineNumbers = useMemo(() => {
     if (!showLineNumbers) {
       return processedColumns;
     }
@@ -83,7 +102,7 @@ const Table = <T extends TableData>({
     };
 
     return [lineNumberColumn, ...processedColumns];
-  }, [visibleColumns, showLineNumbers]);
+  }, [processedColumns, showLineNumbers]);
 
   const sortFns = useMemo(() => {
     const fns: { [key: string]: (array: any[]) => any[] } = {};
@@ -177,7 +196,6 @@ const Table = <T extends TableData>({
         text-align: left;
         vertical-align: middle;
 
-        /* Styles for header with icons/images */
         .header-content {
           display: flex;
           align-items: center;
@@ -222,7 +240,6 @@ const Table = <T extends TableData>({
         vertical-align: middle;
         padding: .75em;
         
-        /* Styles for cells containing images/icons */
         img, svg {
           vertical-align: middle;
         }

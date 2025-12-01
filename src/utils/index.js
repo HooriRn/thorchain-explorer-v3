@@ -562,6 +562,12 @@ export function fillNodeData(nodes, el, index) {
       }
     : undefined;
   
+  console.log("fillNodeData debug:", {
+    node: el.node_address,
+    behind: el.behind,
+    missing_blocks: el.missing_blocks,
+  });
+  
   nodes.push({
     address: el.node_address,
     ip: el.ip_address,
@@ -571,7 +577,7 @@ export function fillNodeData(nodes, el, index) {
     award: (Number.parseFloat(el.current_award) / 10 ** 8).toFixed(2),
     providers: el.bond_providers?.providers,
     total_bond: el.total_bond / 10 ** 8 < 0.01 ? 0 : el.total_bond / 10 ** 8,
-    behind: el.behind,
+    behind: el.behind || {}, 
     age: el.age,
     apy: el.apy,
     location: location,
@@ -586,6 +592,7 @@ export function fillNodeData(nodes, el, index) {
     preflight: el.preflight_status,
     rpcHealth: el.rpcHealth,
     bifrostHealth: el.bifrostHealth,
+    missing_blocks: Number.parseInt(el.missing_blocks) || 0, // تبدیل به عدد
     ...(rank && { rank }),
   });
 }

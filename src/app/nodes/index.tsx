@@ -17,6 +17,9 @@ import styles from './index.module.css';
 import {
   getNodesInfo
 } from "@/lib/api";
+import {
+  normalFormat,
+} from "@/utils/global";
 
 const NodesPage: React.FC = () => {
   const [network, setNetwork] = useState<any>([]);
@@ -103,26 +106,34 @@ const NodesPage: React.FC = () => {
     }
   }, [minBond]);
 
-  const updateNodes = useCallback(async () => {
-    try {
-      console.log('Fetching nodes data...');
-      const result = await getNodesInfo();
-      console.log('Nodes data received:', result);
+const updateNodes = useCallback(async () => {
+  try {
+    console.log('Fetching nodes data...');
+    const result = await getNodesInfo();
+    
+    if (result && Array.isArray(result)) {
+      console.log('First node from API:', {
+        node_address: result[0]?.node_address,
+        behind: result[0]?.behind,
+        missing_blocks: result[0]?.missing_blocks,
+        behindType: typeof result[0]?.behind,
+        behindKeys: result[0]?.behind ? Object.keys(result[0]?.behind) : [],
+      });
       
-      // بررسی ساختار داده و تنظیم state
-      if (result && Array.isArray(result)) {
-        setNodesQuery(result);
-      } else if (result && result.data && Array.isArray(result.data)) {
-        setNodesQuery(result.data);
-      } else {
-        console.warn('Unexpected nodes data structure:', result);
-        setNodesQuery([]);
+      if (result[0]?.behind) {
+        const firstChain = Object.keys(result[0]?.behind)[0];
+        if (firstChain) {
+          console.log(`Behind value for ${firstChain}:`, result[0]?.behind[firstChain]);
+        }
       }
-    } catch (e) {
-      console.error('Error in updateNodes:', e);
-      setNodesQuery([]);
+      
+      setNodesQuery(result);
     }
-  }, []);
+  } catch (e) {
+    console.error('Error in updateNodes:', e);
+    setNodesQuery([]);
+  }
+}, []);
 
   const saveFilters = useCallback(() => {
     localStorage.setItem('filterSettings', JSON.stringify(hides));
@@ -271,9 +282,7 @@ const NodesPage: React.FC = () => {
     return value;
   }, []);
 
-  const normalFormat = useCallback((value: number) => {
-    return value;
-  }, []);
+  
 
   const versionSort = useCallback((x: any, y: any) => {
     return rcompare(x, y);

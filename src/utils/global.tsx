@@ -303,7 +303,7 @@ export const minFormat = (number, numberFormatter) => {
   return number ? numberFormatter(+number, "0,0a") : "-";
 };
 
-export const normalFormat = (number, numberFormatter) => {
+export const normalFormat = (number: string | number | undefined, numberFormatter: (value: number, format: string) => string): string => {
   return number ? numberFormatter(+number, "0,0") : "-";
 };
 

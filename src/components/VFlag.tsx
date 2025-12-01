@@ -1,50 +1,38 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import * as Flags from 'country-flag-icons/react/3x2';
 
 interface VFlagProps {
   flag: string;
+  className?: string;
+  style?: React.CSSProperties;
 }
 
-const VFlag: React.FC<VFlagProps> = ({ flag }) => {
-  const [FlagComponent, setFlagComponent] = useState<React.ComponentType<any> | null>(null);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    if (!flag) {
-      return;
-    }
-
-    const loadFlag = async () => {
-      try {
-        const flagModule = await import(`country-flag-icons/react/3x2/${flag}`);
-        setFlagComponent(() => flagModule.default);
-      } catch {
-        console.warn(`Flag not found for country code: ${flag}`);
-        setError(true);
-      }
-    };
-
-    loadFlag();
-  }, [flag]);
-
+const VFlag: React.FC<VFlagProps> = ({ flag, className = "", style = {} }) => {
   if (!flag) {
     return <span>-</span>;
   }
 
-  if (error) {
-    return <span>{flag}</span>;
-  }
-
+  const countryCode = flag.toUpperCase();
+  
+  const FlagComponent = Flags[countryCode as keyof typeof Flags];
+  
   if (!FlagComponent) {
-    return <span>...</span>;
+    return <span title={` ${countryCode}`}>{countryCode}</span>;
   }
 
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center' }} title={countryCode}>
       <FlagComponent 
-        className="asset-icon country-icon" 
-        style={{ width: '20px', height: '15px' }}
+        className={`asset-icon country-icon ${className}`} 
+        style={{ 
+          width: '20px', 
+          height: '15px',
+          borderRadius: '2px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+          ...style 
+        }}
       />
     </div>
   );
