@@ -503,7 +503,6 @@ const NodeTable: React.FC<NodeTableProps> = ({
         }
 
 if (col.field === "isp") {
-  console.log(`Rendering ISP for ${row.address}:`, row.isp, row.org);
   
   return row.isp || row.org ? (
     <CloudImage name={[row.isp || '', row.org || '']} />
@@ -545,8 +544,7 @@ if (col.field === "total_bond") {
           return (
             <span
               className={styles["hoverable"]}
-              title={(runePrice * row.award, 
-              )}
+              title={formatVueNumber(runePrice * row.award)}
             >
               <RuneAsset height="0.7rem" />
               {(row.award)}
@@ -718,14 +716,7 @@ if (col.field === "total_bond") {
           const chain = col.field.replace("behind.", "");
           const behindRawValue = row.behind ? row.behind[chain] : undefined;
           
-          console.log(`Behind debug - Chain: ${chain}, Row: ${row.address}`, {
-            behind: row.behind,
-            chain: chain,
-            rawValue: behindRawValue,
-            type: typeof behindRawValue,
-            isZero: behindRawValue === 0,
-            isStringZero: behindRawValue === "0",
-          });
+        
           
           const behindValue = behindRawValue !== undefined ? parseInt(behindRawValue) : null;
           
@@ -773,12 +764,7 @@ if (col.field === "total_bond") {
         if (col.field === "missing_blocks") {
           const missingBlocksValue = row.missing_blocks;
           
-          console.log(`Missing blocks debug - Row: ${row.address}`, {
-            missing_blocks: missingBlocksValue,
-            type: typeof missingBlocksValue,
-            isZero: missingBlocksValue === 0,
-            isStringZero: missingBlocksValue === "0",
-          });
+         
           
           const numericValue = typeof missingBlocksValue === 'string' 
             ? parseInt(missingBlocksValue) 

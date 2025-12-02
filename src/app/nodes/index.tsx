@@ -112,20 +112,9 @@ const updateNodes = useCallback(async () => {
     const result = await getNodesInfo();
     
     if (result && Array.isArray(result)) {
-      console.log('First node from API:', {
-        node_address: result[0]?.node_address,
-        behind: result[0]?.behind,
-        missing_blocks: result[0]?.missing_blocks,
-        behindType: typeof result[0]?.behind,
-        behindKeys: result[0]?.behind ? Object.keys(result[0]?.behind) : [],
-      });
+    
       
-      if (result[0]?.behind) {
-        const firstChain = Object.keys(result[0]?.behind)[0];
-        if (firstChain) {
-          console.log(`Behind value for ${firstChain}:`, result[0]?.behind[firstChain]);
-        }
-      }
+   
       
       setNodesQuery(result);
     }
@@ -652,6 +641,12 @@ const updateNodes = useCallback(async () => {
   }, [addressFormatV2, cSort, versionSort, normalFormat, aSort]);
 
   const activeInfo = useMemo(() => {
+    console.log('activeInfo calculation:', {
+      network: network,
+      activeNodeCount: network?.activeNodeCount,
+      bondMetrics: bondMetrics,
+      totalActiveBond: bondMetrics?.totalActiveBond
+    });
     return [
       {
         title: 'Active',
@@ -662,7 +657,7 @@ const updateNodes = useCallback(async () => {
         items: [
           {
             name: 'Node',
-            value: network?.activeNodeCount,
+            value: network?.activeNodeCount || 0, 
           },
           {
             name: 'Bond',
@@ -861,37 +856,37 @@ const churnInfo = useMemo(() => {
       return undefined;
     }
     let actNodes = nodesQuery.filter((e: any) => e.status === 'Active');
-
+  
     actNodes = orderBy(actNodes, [(o: any) => +o.slash_points]);
     const filteredNodes: any[] = [];
-
+  
     let lowestBond: number | null = null;
     let highestSlash = 0;
     let oldest = chainsHeight?.THOR ?? Number.MAX_SAFE_INTEGER;
     let oldestIndex: number | undefined = undefined;
-
+  
     const lowVersions: string[] = [];
     const nodesVersion = actNodes.map((r: any) => r.version).sort(rcompare);
     const versions = countBy(nodesVersion);
-
+  
     for (let i = 0; i < actNodes.length; i++) {
       const el = actNodes[i];
       if (+el.slash_points > highestSlash) {
         highestSlash = +el.slash_points;
       }
-
+  
       if (el.status_since < oldest && el.requested_to_leave === false) {
         oldest = el.status_since;
         oldestIndex = i;
       }
-
+  
       if (
         (!lowestBond || lowestBond > +el.total_bond) &&
         el.requested_to_leave === false
       ) {
         lowestBond = +el.total_bond;
       }
-
+  
       if (
         Object.keys(versions).length > 1 &&
         el.version !== Object.keys(versions)[0] &&
@@ -900,15 +895,15 @@ const churnInfo = useMemo(() => {
         lowVersions.push(el.node_address);
       }
     }
-
+  
     let extraChurn = 0;
     let leavingCountLocal = 0;
     let leavingBondLocal = 0;
     actNodes.forEach((el: any, index: number) => {
       fillNodeData(filteredNodes, el, index);
-
+  
       filteredNodes[index].churn = [];
-
+  
       if (lowestBond !== null && +el.total_bond === lowestBond) {
         filteredNodes[index].churn.push({
           name: 'Lowest Bond',
@@ -917,11 +912,12 @@ const churnInfo = useMemo(() => {
             churnProgressValue > 0.5
               ? 'churn-out'
               : 'churn-out-candidate',
+          className: 'table-icon'
         });
         leavingBondLocal += +el.total_bond;
         leavingCountLocal += 1;
       }
-
+  
       if (index === oldestIndex) {
         filteredNodes[index].churn.push({
           name: 'Oldest',
@@ -930,11 +926,12 @@ const churnInfo = useMemo(() => {
             churnProgressValue > 0.5
               ? 'churn-out'
               : 'churn-out-candidate',
+          className: 'table-icon' 
         });
         leavingBondLocal += +el.total_bond;
         leavingCountLocal += 1;
       }
-
+  
       if (+el.slash_points === highestSlash) {
         filteredNodes[index].churn.push({
           name: 'Highest Slashes',
@@ -943,11 +940,12 @@ const churnInfo = useMemo(() => {
             churnProgressValue > 0.5
               ? 'churn-out'
               : 'churn-out-candidate',
+          className: 'table-icon' 
         });
         leavingBondLocal += +el.total_bond;
         leavingCountLocal += 1;
       }
-
+  
       if (
         lowVersions.includes(el.node_address) &&
         churnProgressValue > 0.9
@@ -956,17 +954,19 @@ const churnInfo = useMemo(() => {
           name: 'Low Version',
           icon: '/assets/images/version.svg',
           type: churnProgressValue > 0.9 ? 'churn-out' : '',
+          className: 'table-icon' 
         });
         extraChurn += 1;
       }
-
+  
       if (el.requested_to_leave) {
         filteredNodes[index].churn.push({
           name: 'Requested to leave',
           icon: '/assets/images/arrow-down-square.svg',
           type: 'leave',
+          className: 'table-icon' 
         });
-
+  
         if (
           mimirs &&
           +mimirs?.DESIREDVALIDATORSET >= actNodes.length + extraChurn
@@ -977,7 +977,7 @@ const churnInfo = useMemo(() => {
         leavingCountLocal += 1;
       }
     });
-
+  
     setExtraChurnValue(extraChurn);
     setLeavingValues(leavingBondLocal, leavingCountLocal);
     return filteredNodes;
@@ -991,25 +991,25 @@ const churnInfo = useMemo(() => {
     const nodesVersion = actNodes?.map((r: any) => r.version).sort(rcompare);
     const versions = countBy(nodesVersion);
     const activeVersion = Object.keys(versions);
-
+  
     const latestVersion = activeVersion[0];
     let justLatest = false;
     if (versions[latestVersion] > Math.floor((actNodes.length * 2) / 3)) {
       justLatest = true;
     }
-
+  
     let stbNodesData = nodesQuery?.filter(
       (e: any) =>
         (e.status === 'Standby' || e.status === 'Ready') &&
         (activeVersion.includes(e.version) || e.total_bond >= minBond)
     );
-
+  
     if (stbNodesData.length === 0) {
       return [];
     }
-
+  
     stbNodesData = orderBy(stbNodesData, [(o: any) => +o.total_bond], ['desc']);
-
+  
     const filteredNodes: any[] = [];
     const churnInNumbers = 3 + newNodesChurn + extraNodeChurn;
     const remainingCount =
@@ -1023,11 +1023,11 @@ const churnInfo = useMemo(() => {
     for (let i = 0; i < stbNodesData.length; i++) {
       const el = stbNodesData[i];
       fillNodeData(filteredNodes, el);
-
+  
       const chainHeight = chainsHeight?.THOR;
-
+  
       filteredNodes[i].churn = [];
-
+  
       if (el.jail?.release_height > chainHeight) {
         filteredNodes[i].churn.push({
           name: {
@@ -1041,10 +1041,11 @@ const churnInfo = useMemo(() => {
           },
           icon: '/assets/images/handcuffs.svg',
           type: 'jail',
+          className: 'table-icon' 
         });
         continue;
       }
-
+  
       if (churnInNumbers > churnNodes) {
         if (justLatest && el.version !== latestVersion) {
           continue;
@@ -1071,31 +1072,34 @@ const churnInfo = useMemo(() => {
             churnProgressValue > 0.5
               ? 'churn-in'
               : 'churn-in-candidate',
+          className: 'table-icon' 
         });
         churnNodes++;
         enteringBondLocal += +el.total_bond;
         enteringCountLocal += 1;
         lastChurnIndex = i;
       }
-
+  
       if (retiringVaults.includes(el.pub_key_set?.secp256k1)) {
         filteredNodes[i].churn.push({
           name: "Retiring Vault, Can't unbond",
           icon: '/assets/images/walker.svg',
+          className: 'table-icon' 
         });
       }
-
+  
       if (el.maintenance) {
         filteredNodes[i].churn.push({
           name: "Maintenance mode, won't churn",
           icon: '/assets/images/hammer.svg',
+          className: 'table-icon' 
         });
       }
     }
-
+  
     setEnteringValues(enteringBondLocal, enteringCountLocal);
     setTheLeastBondChurnValue(filteredNodes[lastChurnIndex]?.total_bond || 0);
-
+  
     return filteredNodes;
   }, [nodesQuery, minBond, newNodesChurn, extraNodeChurn, mimirs, activeNodes, leavingCount, chainsHeight, churnProgressValue, retiringVaults, setEnteringValues, setTheLeastBondChurnValue]);
 
