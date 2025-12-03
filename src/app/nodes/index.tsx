@@ -20,6 +20,9 @@ import {
 import {
   normalFormat,
 } from "@/utils/global";
+import {
+  formatTrendNumber,
+} from "@/utils/format";
 
 const NodesPage: React.FC = () => {
   const [network, setNetwork] = useState<any>([]);
@@ -87,7 +90,7 @@ const NodesPage: React.FC = () => {
 
   const getNodeOverview = useCallback(async () => {
     try {
-      const response = await fetch('/api/network');
+      const response = await fetch('/api/node-overview');
       const result: { data?: any } = await response.json(); 
   
       if (result.data) {
@@ -663,7 +666,7 @@ const updateNodes = useCallback(async () => {
             name: 'Bond',
             value: (bondMetrics?.totalActiveBond || 0) / 10 ** 8,
             usdValue: true,
-            filter: (v: number) => formatRune(v, '0,0.00a'),
+            filter: (v: number) => formatTrendNumber(v, { decimals: 2, compact: true, currency: false })+ ' RUNE',
           },
           {
             name: 'Average',
@@ -704,31 +707,31 @@ const updateNodes = useCallback(async () => {
           {
             name: 'Bond',
             value: (bondMetrics?.totalStandbyBond || 0) / 10 ** 8,
-            filter: (v: number) => formatRune(v, '0,0a'),
+            filter: (v: number) => formatTrendNumber(v, { decimals: 2, compact: true, currency: false, }) + ' RUNE',
             usdValue: true,
           },
           {
             name: 'Average',
             value: (bondMetrics?.averageStandbyBond || 0) / 10 ** 8,
-            filter: (v: number) => formatRune(v, '0,0a'),
+              filter: (v: number) => formatTrendNumber(v, { decimals: 2, compact: true, currency: false,  }) + ' RUNE',
             usdValue: true,
           },
           {
             name: 'Maximum',
             value: Math.floor((bondMetrics?.maximumStandbyBond || 0) / 10 ** 8),
-            filter: (v: number) => formatRune(v, '0,0a'),
+            filter: (v: number) => formatTrendNumber(v, { decimals: 2, compact: true, currency: false,  }) + ' RUNE',
             usdValue: true,
           },
           {
             name: 'Minimum',
             value: (bondMetrics?.minimumStandbyBond || 0) / 10 ** 8,
-            filter: (v: number) => formatRune(v, '0,0.00a'),
+            filter: (v: number) => formatTrendNumber(v, { decimals: 2, compact: true, currency: false, }) + ' RUNE',
             usdValue: true,
           },
           {
             name: 'Least Churn',
             value: leastBondChurn,
-            filter: (v: number) => formatRune(v, '0,0.00a'),
+            filter: (v: number) => formatTrendNumber(v, { decimals: 2, compact: true, currency: false, }) + ' RUNE',
             usdValue: true,
           },
         ],
@@ -776,7 +779,7 @@ const churnInfo = useMemo(() => {
           name: 'Total Rewards',
           value: (totalAwards || 0) / 1e8,
           usdValue: true,
-          filter: (v: number) => formatRune(v, '0,0a'),
+          filter: (v: number) => formatTrendNumber(v, { decimals: 2, compact: true, currency: false }),
         },
         {
           name: 'Average APY',
@@ -786,13 +789,13 @@ const churnInfo = useMemo(() => {
         {
           name: 'Monthly Node Return',
           value: (monthlyNodeReturn() || 0) / 1e8,
-          filter: (v: number) => formatRune(v, '0,0a'),
+          filter: (v: number) => formatTrendNumber(v, { decimals: 2, compact: true, currency: false })+ ' RUNE',
           usdValue: true,
         },
         {
           name: 'Annual Node Return',
           value: (annualNodeReturn() || 0) / 1e8,
-          filter: (v: number) => formatRune(v, '0,0a'),
+          filter: (v: number) => formatTrendNumber(v, { decimals: 2, compact: true, currency: false })+ ' RUNE',
           usdValue: true,
         },
         {
@@ -802,7 +805,7 @@ const churnInfo = useMemo(() => {
         {
           name: 'Churn Start',
           value: churn ? `${churn.height}` : '',
-          filter: (v: number) => v.toLocaleString(),
+          filter: (v: number) => formatTrendNumber(v, { decimals: 2, compact: true, currency: false }),
         },
       ],
     },
@@ -826,7 +829,7 @@ const churnInfo = useMemo(() => {
           {
             name: 'Leaving Bond',
             value: leavingBond / 1e8,
-            filter: (v: number) => formatRune(v, '0,0.00a'),
+            filter: (v: number) => formatTrendNumber(v, { decimals: 2, compact: true, currency: false })+ ' RUNE',
             usdValue: true,
           },
           {
@@ -837,13 +840,13 @@ const churnInfo = useMemo(() => {
           {
             name: 'Entering Bond',
             value: enteringBond / 1e8,
-            filter: (v: number) => formatRune(v, '0,0.00a'),
+            filter: (v: number) => formatTrendNumber(v, { decimals: 2, compact: true, currency: false })+ ' RUNE',
             usdValue: true,
           },
           {
             name: 'Bond Difference',
             value: (enteringBond - leavingBond) / 1e8,
-            filter: (v: number) => formatRune(v, '0,0a'),
+            filter: (v: number) => formatTrendNumber(v, { decimals: 2, compact: true, currency: false })+ ' RUNE',
             usdValue: true,
           },
         ],
