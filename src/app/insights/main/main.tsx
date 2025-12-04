@@ -6,16 +6,73 @@ import { orderBy } from 'lodash';
 import Card from '@/components/ui/Card';
 import TradingViewChart from '@/components/TradingViewChart';
 import ChartLoader from '@/components/ChartLoader';
-import SkeletonItem from '@/components/ui/Skeleton';
+import { Skeleton } from "@/components/ui/Skeleton";
 import RuneAsset from '@/components/RuneAsset';
 import EChartsWrapper from '@/components/charts/EChartsWrapper';
-import { api } from '@/lib/api';
 import { formatTrendCurrency, formatNumber, formatPercent } from '@/utils/format';
 import { ProgressIcon } from '@/components/ui/ProgressIcon';
 import FlipSideIcon from '@/assets/images/flipside.svg';
 import { useTheme } from '@/lib/store';
 import { getChartColor, getCurrentChartTheme } from '@/utils/global';
 import './main.scss';
+import { 
+  getCoinMarketInfo, 
+  getSwapsHistory, 
+  getAffiliateSwapsMonthly, 
+  getDashboardPlots 
+} from "@/lib/api";
+
+interface ChartDataset {
+  label: string;
+  data: any[];
+  type: 'bar' | 'line';
+  backgroundColor: string;
+  borderColor: string;
+  borderWidth: number;
+  borderRadius?: {
+    topLeft: number;
+    topRight: number;
+    bottomLeft: number;
+    bottomRight: number;
+  };
+  borderSkipped?: boolean;
+  stack?: string;
+  pointRadius?: number;
+  borderDash?: number[];
+  fill?: boolean;
+  tension?: number;
+}
+
+interface ChartDataStructure {
+  data: {
+    labels: string[];
+    datasets: ChartDataset[];
+  };
+  options: any;
+  dataPoints: any[];
+  showCount: boolean;
+  isNormalized: boolean;
+}
+
+interface ChartDataState {
+  swapsStats: ChartDataStructure | null;
+  swapsStatsNorm: ChartDataStructure | null;
+  feesRewards: ChartDataStructure | null;
+  feesRewardsNorm: ChartDataStructure | null;
+  rewards: ChartDataStructure | null;
+  supplyBurn: ChartDataStructure | null;
+  affiliate: ChartDataStructure | null;
+}
+
+interface MarketInfo {
+  price: number | undefined;
+  rank: number | undefined;
+  marketCap: number | undefined;
+  tradeVolume: number | undefined;
+  totalSupply: number | undefined;
+  change_24h: number | undefined;
+  percent_change_24h: number | undefined;
+}
 
 const Main = () => {
   const theme = useTheme();
@@ -25,7 +82,8 @@ const Main = () => {
     dashboard: false,
     market: false,
   });
-  const [chartData, setChartData] = useState({
+  
+  const [chartData, setChartData] = useState<ChartDataState>({
     swapsStats: null,
     swapsStatsNorm: null,
     feesRewards: null,
@@ -34,7 +92,8 @@ const Main = () => {
     supplyBurn: null,
     affiliate: null,
   });
-  const [marketInfo, setMarketInfo] = useState({
+  
+  const [marketInfo, setMarketInfo] = useState<MarketInfo>({
     price: undefined,
     rank: undefined,
     marketCap: undefined,
@@ -61,7 +120,13 @@ const Main = () => {
     return `$${numValue.toFixed(0)}`;
   };
 
-  const formatChartDataForEChartsWrapper = (xAxis: string[], seriesConfig: any[], dataPoints: any[], showCount = false, isNormalized = false) => {
+  const formatChartDataForEChartsWrapper = (
+    xAxis: string[], 
+    seriesConfig: any[], 
+    dataPoints: any[], 
+    showCount = false, 
+    isNormalized = false
+  ): ChartDataStructure => {
     const datasets = seriesConfig.map((config, index) => {
       if (config.name === 'Half Line') {
         return {
@@ -191,7 +256,7 @@ const Main = () => {
     };
   };
 
-  const formatRewardsData = (earningData) => {
+  const formatRewardsData = (earningData: any): ChartDataStructure | null => {
     if (!earningData?.intervals) return null;
 
     const top = 6;
@@ -211,11 +276,11 @@ const Main = () => {
       .map(p => p.pool);
 
     const xAxis = [];
-    const seriesData = {};
+    const seriesData: Record<string, number[]> = {};
     const otherPoolsData = [];
     const dataPoints = [];
 
-    earningData.intervals.forEach((interval, index) => {
+    earningData.intervals.forEach((interval: any, index: number) => {
       if (index === earningData.intervals.length - 1) return;
 
       const date = moment(
@@ -225,18 +290,18 @@ const Main = () => {
       xAxis.push(date);
 
       const otherEarnings = interval.pools
-        ?.filter(p => 
+        ?.filter((p: any) => 
           !poolEarnings.includes(p.pool) &&
           p.pool !== 'income_burn' &&
           p.pool !== 'dev_fund_reward' &&
           p.pool !== 'tcy_stake_reward'
         )
-        .reduce((sum, p) => sum + (-1 * (+p.rewards || 0) * (+interval.runePriceUSD || 0)) / 1e8, 0) || 0;
+        .reduce((sum: number, p: any) => sum + (-1 * (+p.rewards || 0) * (+interval.runePriceUSD || 0)) / 1e8, 0) || 0;
 
       otherPoolsData.push(otherEarnings);
 
       poolEarnings.forEach((poolName) => {
-        const pool = interval.pools?.find(p => p.pool === poolName);
+        const pool = interval.pools?.find((p: any) => p.pool === poolName);
         const value = pool ? (+pool.rewards * -1 * +interval.runePriceUSD) / 1e8 : 0;
         
         if (!seriesData[poolName]) {
@@ -282,7 +347,7 @@ const Main = () => {
     return formatChartDataForEChartsWrapper(xAxis, seriesConfig, dataPoints);
   };
 
-  const formatSwapsStatsData = (swapsData) => {
+  const formatSwapsStatsData = (swapsData: any): ChartDataStructure | null => {
     if (!swapsData?.intervals) return null;
 
     const xAxis = [];
@@ -292,7 +357,7 @@ const Main = () => {
     const securedData = [];
     const dataPoints = [];
 
-    swapsData.intervals.forEach((interval, index) => {
+    swapsData.intervals.forEach((interval: any, index: number) => {
       if (index === swapsData.intervals.length - 1) return;
 
       const date = moment(
@@ -348,7 +413,7 @@ const Main = () => {
     return formatChartDataForEChartsWrapper(xAxis, seriesConfig, dataPoints, true);
   };
 
-  const formatSwapsStatsNormData = (swapsData) => {
+  const formatSwapsStatsNormData = (swapsData: any): ChartDataStructure | null => {
     if (!swapsData?.intervals) return null;
 
     const xAxis = [];
@@ -358,7 +423,7 @@ const Main = () => {
     const securedData = [];
     const dataPoints = [];
 
-    swapsData.intervals.forEach((interval, index) => {
+    swapsData.intervals.forEach((interval: any, index: number) => {
       if (index === swapsData.intervals.length - 1) return;
 
       const date = moment(
@@ -418,7 +483,7 @@ const Main = () => {
     return formatChartDataForEChartsWrapper(xAxis, seriesConfig, dataPoints, false, true);
   };
 
-  const formatFeesRewardsData = (intervals) => {
+  const formatFeesRewardsData = (intervals: any): ChartDataStructure | null => {
     if (!intervals?.length) return null;
 
     const xAxis = [];
@@ -426,7 +491,7 @@ const Main = () => {
     const rewardsData = [];
     const dataPoints = [];
 
-    intervals.forEach((interval) => {
+    intervals.forEach((interval: any) => {
       const intervalDate = moment(
         Math.floor((+interval.endTime + +interval.startTime) / 2) * 1e3
       );
@@ -466,7 +531,7 @@ const Main = () => {
     return formatChartDataForEChartsWrapper(xAxis, seriesConfig, dataPoints);
   };
 
-  const formatFeesRewardsNormData = (intervals) => {
+  const formatFeesRewardsNormData = (intervals: any): ChartDataStructure | null => {
     if (!intervals?.length) return null;
 
     const xAxis = [];
@@ -475,7 +540,7 @@ const Main = () => {
     const halfLineData = [];
     const dataPoints = [];
 
-    intervals.forEach((interval) => {
+    intervals.forEach((interval: any) => {
       const intervalDate = moment(
         Math.floor((+interval.endTime + +interval.startTime) / 2) * 1e3
       );
@@ -524,14 +589,14 @@ const Main = () => {
     return formatChartDataForEChartsWrapper(xAxis, seriesConfig, dataPoints, false, true);
   };
 
-  const formatSupplyBurnData = (earningData) => {
+  const formatSupplyBurnData = (earningData: any): ChartDataStructure | null => {
     if (!earningData?.intervals) return null;
 
     const xAxis = [];
     const burnData = [];
     const dataPoints = [];
 
-    earningData.intervals.forEach((interval) => {
+    earningData.intervals.forEach((interval: any) => {
       const intervalDate = moment(
         Math.floor((+interval.endTime + +interval.startTime) / 2) * 1e3
       );
@@ -541,7 +606,7 @@ const Main = () => {
       const date = intervalDate.format('dddd, MMM D');
       
       xAxis.push(date);
-      const burns = interval.pools?.find(p => p.pool === 'income_burn')?.earnings || 0;
+      const burns = interval.pools?.find((p: any) => p.pool === 'income_burn')?.earnings || 0;
       const burn = +burns / 1e8;
       burnData.push(burn);
 
@@ -566,15 +631,15 @@ const Main = () => {
     return chartData;
   };
 
-  const formatAffiliateData = (affiliateData) => {
+  const formatAffiliateData = (affiliateData: any): ChartDataStructure | null => {
     if (!affiliateData?.length) return null;
 
-    const filtered = affiliateData.filter(item => item.affiliate !== 'No Affiliate');
-    const sorted = filtered.sort((a, b) => b.total_volume_usd - a.total_volume_usd);
+    const filtered = affiliateData.filter((item: any) => item.affiliate !== 'No Affiliate');
+    const sorted = filtered.sort((a: any, b: any) => b.total_volume_usd - a.total_volume_usd);
     
-    const xAxis = sorted.map(item => item.affiliate);
-    const volumeData = sorted.map(item => item.total_volume_usd);
-    const dataPoints = sorted.map(item => ({
+    const xAxis = sorted.map((item: any) => item.affiliate);
+    const volumeData = sorted.map((item: any) => item.total_volume_usd);
+    const dataPoints = sorted.map((item: any) => ({
       date: item.affiliate,
       volume: item.total_volume_usd
     }));
@@ -600,53 +665,67 @@ const Main = () => {
   const fetchSwapsHistory = async () => {
     setLoading(prev => ({ ...prev, swaps: true }));
     try {
-      const response = await api.getSwapsHistory({
+      const result = await getSwapsHistory({
         interval: 'day',
         count: 30,
       });
-      const data = response.data;
       
-      setChartData(prev => ({
-        ...prev,
-        swapsStats: formatSwapsStatsData(data),
-        swapsStatsNorm: formatSwapsStatsNormData(data),
-      }));
+      console.log('Swap History Result:', result);
+      
+      const data = result;
+      
+      if (data && data.intervals) {
+        setChartData(prev => ({
+          ...prev,
+          swapsStats: formatSwapsStatsData(data),
+          swapsStatsNorm: formatSwapsStatsNormData(data),
+        }));
+      }
+      
     } catch (error) {
       console.error('Error fetching swap history:', error);
     } finally {
       setLoading(prev => ({ ...prev, swaps: false }));
     }
   };
-
   const fetchAffiliateSwapsMonthly = async () => {
     setLoading(prev => ({ ...prev, affiliate: true }));
     try {
-      const response = await api.getAffiliateSwapsMonthly();
-      const data = response.data;
-      setChartData(prev => ({
-        ...prev,
-        affiliate: formatAffiliateData(data),
-      }));
+      const result = await getAffiliateSwapsMonthly();
+      console.log('Affiliate Swaps Result:', result);
+      
+      const data = result;
+      
+      if (data) {
+        setChartData(prev => ({
+          ...prev,
+          affiliate: formatAffiliateData(data),
+        }));
+      }
     } catch (error) {
       console.error('Error fetching affiliate swaps:', error);
     } finally {
       setLoading(prev => ({ ...prev, affiliate: false }));
     }
   };
-
+  
   const fetchDashboardPlots = async () => {
     setLoading(prev => ({ ...prev, dashboard: true }));
     try {
-      const response = await api.getDashboardPlots();
-      const data = response.data;
+      const result = await getDashboardPlots();
+      console.log('Dashboard Plots Result:', result);
       
-      setChartData(prev => ({
-        ...prev,
-        feesRewards: formatFeesRewardsData(data.earning?.intervals),
-        feesRewardsNorm: formatFeesRewardsNormData(data.earning?.intervals),
-        rewards: formatRewardsData(data.earning),
-        supplyBurn: formatSupplyBurnData(data.earning),
-      }));
+      const data = result;
+      
+      if (data && data.earning) {
+        setChartData(prev => ({
+          ...prev,
+          feesRewards: formatFeesRewardsData(data.earning?.intervals),
+          feesRewardsNorm: formatFeesRewardsNormData(data.earning?.intervals),
+          rewards: formatRewardsData(data.earning),
+          supplyBurn: formatSupplyBurnData(data.earning),
+        }));
+      }
     } catch (error) {
       console.error('Error fetching dashboard plots:', error);
     } finally {
@@ -654,33 +733,37 @@ const Main = () => {
     }
   };
 
-  const getCoinMarketInfo = async () => {
+  const fetchCoinMarketInfo = async () => {
     setLoading(prev => ({ ...prev, market: true }));
     try {
-      const response = await api.getCoinMarketInfo();
-      const data = response.data;
-
-      setMarketInfo({
-        price: data.quote?.USD?.price,
-        rank: data.cmc_rank,
-        marketCap: data.quote?.USD?.market_cap,
-        tradeVolume: data.quote?.USD?.volume_24h,
-        change_24h: data.quote?.USD?.volume_change_24h,
-        percent_change_24h: data.quote?.USD?.percent_change_24h,
-        totalSupply: data.total_supply,
-      });
+      const response = await getCoinMarketInfo();
+      console.log('Market API Response:', response);
+      
+      if (response) {
+        const coinData = response;
+        const usdQuote = coinData.quote?.USD;
+        
+        setMarketInfo({
+          price: usdQuote?.price || 0,
+          rank: coinData.cmc_rank || 0,
+          marketCap: usdQuote?.market_cap || 0,
+          tradeVolume: usdQuote?.volume_24h || 0,
+          change_24h: usdQuote?.volume_change_24h || 0,
+          percent_change_24h: usdQuote?.percent_change_24h || 0,
+          totalSupply: coinData.total_supply || 0,
+        });
+      }
     } catch (error) {
-      console.error('Error coin market info:', error);
-    } finally {
-      setLoading(prev => ({ ...prev, market: false }));
+      console.error('Error fetching coin market info:', error);
     }
+    setLoading(prev => ({ ...prev, market: false }));
   };
-
+  
   useEffect(() => {
     fetchSwapsHistory();
     fetchAffiliateSwapsMonthly();
     fetchDashboardPlots();
-    getCoinMarketInfo();
+    fetchCoinMarketInfo();
   }, []);
 
   return (
@@ -690,48 +773,75 @@ const Main = () => {
         <div className="crypto-stats">
           <div className="crypto-stat">
             <span className="name">Crypto Rank</span>
-            <SkeletonItem loading={!marketInfo.rank && loading.market} className="value">
-              {marketInfo.rank || '--'}
-            </SkeletonItem>
+            {loading.market ? (
+              <div className="value" style={{ minWidth: "70px" }}>
+                <Skeleton variant="text" width="100%" height="10px" />
+              </div>
+            ) : (
+              <div className="value">
+                {marketInfo.rank !== undefined && marketInfo.rank !== 0 ? marketInfo.rank : '--'}
+              </div>
+            )}
           </div>
           <div className="crypto-stat">
             <span className="name">Market Cap</span>
-            <SkeletonItem loading={!marketInfo.marketCap && loading.market} className="value">
-              {marketInfo.marketCap ? formatTrendCurrency(marketInfo.marketCap) : '--'}
-            </SkeletonItem>
+            {loading.market ? (
+              <div className="value" style={{ minWidth: "70px" }}>
+                <Skeleton variant="text" width="100%" height="10px" />
+              </div>
+            ) : (
+              <div className="value">
+                {marketInfo.marketCap !== undefined && marketInfo.marketCap !== 0 ? 
+                  formatTrendCurrency(marketInfo.marketCap) : '--'}
+              </div>
+            )}
           </div>
           <div className="crypto-stat">
             <span className="name">Trade Volume</span>
-            <SkeletonItem loading={!marketInfo.tradeVolume && loading.market} className="value">
-              {marketInfo.tradeVolume ? (
-                <>
-                  {formatTrendCurrency(marketInfo.tradeVolume)}
-                  <ProgressIcon
-                    dataNumber={marketInfo.change_24h}
-                    isDown={marketInfo.change_24h < 0}
-                    filter={(v) => formatPercent(v, 1)}
-                  />
-                </>
-              ) : '--'}
-            </SkeletonItem>
+            {loading.market ? (
+              <div className="value" style={{ minWidth: "70px" }}>
+                <Skeleton variant="text" width="100%" height="10px" />
+              </div>
+            ) : (
+              <div className="value">
+                {marketInfo.tradeVolume !== undefined && marketInfo.tradeVolume !== 0 ? (
+                  <>
+                    {formatTrendCurrency(marketInfo.tradeVolume)}
+                    <ProgressIcon
+                      dataNumber={marketInfo.change_24h}
+                      isDown={marketInfo.change_24h < 0}
+                      filter={(v) => formatPercent(v, 1)}
+                    />
+                  </>
+                ) : '--'}
+              </div>
+            )}
           </div>
           <div className="crypto-stat">
             <span className="name">Total Supply</span>
-            <SkeletonItem loading={!marketInfo.totalSupply && loading.market} className="value">
-              {marketInfo.totalSupply ? (
-                <>
-                  {formatNumber(marketInfo.totalSupply, '0,0')}
-                  <RuneAsset height="0.7rem" />
-                </>
-              ) : '--'}
-            </SkeletonItem>
+            {loading.market ? (
+              <div className="value" style={{ minWidth: "70px" }}>
+                <Skeleton variant="text" width="100%" height="10px" />
+              </div>
+            ) : (
+              <div className="value">
+                {marketInfo.totalSupply !== undefined && marketInfo.totalSupply !== 0 ? (
+                  <>
+                    {formatNumber(marketInfo.totalSupply, '0,0')}
+                    <RuneAsset height="0.7rem" />
+                  </>
+                ) : '--'}
+              </div>
+            )}
           </div>
         </div>
       </Card>
       
       <div className="chart-inner-container">
         <Card title="Type Swap Chart">
-          {chartData.swapsStats ? (
+          {loading.swaps ? (
+            <ChartLoader barCount={15} />
+          ) : chartData.swapsStats ? (
             <EChartsWrapper
               type="bar"
               data={chartData.swapsStats.data}
@@ -739,11 +849,13 @@ const Main = () => {
               height="400px"
             />
           ) : (
-            <ChartLoader barCount={15} />
+            <div className="no-data-message">No swap data available</div>
           )}
         </Card>
         <Card title="Swap Chart Normalized">
-          {chartData.swapsStatsNorm ? (
+          {loading.swaps ? (
+            <ChartLoader barCount={15} />
+          ) : chartData.swapsStatsNorm ? (
             <EChartsWrapper
               type="bar"
               data={chartData.swapsStatsNorm.data}
@@ -751,7 +863,7 @@ const Main = () => {
               height="400px"
             />
           ) : (
-            <ChartLoader barCount={15} />
+            <div className="no-data-message">No normalized swap data available</div>
           )}
         </Card>
       </div>
@@ -761,7 +873,9 @@ const Main = () => {
           <div className="card-header-icon">
             <FlipSideIcon style={{ fill: 'var(--sec-font-color)' }} />
           </div>
-          {chartData.feesRewards ? (
+          {loading.dashboard ? (
+            <ChartLoader barCount={15} />
+          ) : chartData.feesRewards ? (
             <EChartsWrapper
               type="bar"
               data={chartData.feesRewards.data}
@@ -769,14 +883,16 @@ const Main = () => {
               height="400px"
             />
           ) : (
-            <ChartLoader barCount={15} />
+            <div className="no-data-message">No fees/rewards data available</div>
           )}
         </Card>
         <Card title="Fees/Block Reward Chart Normalized">
           <div className="card-header-icon">
             <FlipSideIcon style={{ fill: 'var(--sec-font-color)' }} />
           </div>
-          {chartData.feesRewardsNorm ? (
+          {loading.dashboard ? (
+            <ChartLoader barCount={15} />
+          ) : chartData.feesRewardsNorm ? (
             <EChartsWrapper
               type="bar"
               data={chartData.feesRewardsNorm.data}
@@ -784,26 +900,33 @@ const Main = () => {
               height="400px"
             />
           ) : (
-            <ChartLoader barCount={15} />
+            <div className="no-data-message">No normalized fees/rewards data available</div>
           )}
         </Card>
       </div>
       
       <div className="chart-inner-container">
         <Card title="Reserve income from Pools">
-          {chartData.rewards ? (
-            <EChartsWrapper
-              type="bar"
-              data={chartData.rewards.data}
-              options={chartData.rewards.options}
-              height="400px"
-            />
-          ) : (
+          {loading.dashboard ? (
             <ChartLoader barCount={15} />
+          ) : chartData.rewards ? (
+            <EChartsWrapper
+            type="bar"
+            data={chartData.rewards.data}
+            options={{
+              ...chartData.rewards.options,
+              legend: { show: false } 
+            }}
+            height="400px"
+          />
+          ) : (
+            <div className="no-data-message">No rewards data available</div>
           )}
         </Card>
         <Card title="Supply / Burn">
-          {chartData.supplyBurn ? (
+          {loading.dashboard ? (
+            <ChartLoader barCount={15} />
+          ) : chartData.supplyBurn ? (
             <EChartsWrapper
               type="bar"
               data={chartData.supplyBurn.data}
@@ -811,7 +934,7 @@ const Main = () => {
               height="400px"
             />
           ) : (
-            <ChartLoader barCount={15} />
+            <div className="no-data-message">No supply/burn data available</div>
           )}
         </Card>
       </div>
