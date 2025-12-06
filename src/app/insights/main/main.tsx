@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import moment from 'moment';
 import { orderBy } from 'lodash';
 import Card from '@/components/ui/Card';
@@ -8,6 +8,7 @@ import TradingViewChart from '@/components/TradingViewChart';
 import ChartLoader from '@/components/ChartLoader';
 import { Skeleton } from "@/components/ui/Skeleton";
 import RuneAsset from '@/components/RuneAsset';
+import SwapChartNormalized from '@/app/insights/main/components/SwapChartNormalized';
 import EChartsWrapper from '@/components/charts/EChartsWrapper';
 import { formatTrendCurrency, formatNumber, formatPercent } from '@/utils/format';
 import { ProgressIcon } from '@/components/ui/ProgressIcon';
@@ -21,6 +22,10 @@ import {
   getAffiliateSwapsMonthly, 
   getDashboardPlots 
 } from "@/lib/api";
+import FeesRewardsNormalizedChart from '@/app/insights/main/components/FeesRewardsNormalizedChart';
+import RewardsByPoolChart from '@/app/insights/main/components/RewardsByPoolChart';
+import SupplyBurnChart from '@/app/insights/main/components/SupplyBurnChart';
+import AffiliateVolumeChart from '@/app/insights/main/components/AffiliateVolumeChart';
 
 interface ChartDataset {
   label: string;
@@ -56,7 +61,6 @@ interface ChartDataStructure {
 
 interface ChartDataState {
   swapsStats: ChartDataStructure | null;
-  swapsStatsNorm: ChartDataStructure | null;
   feesRewards: ChartDataStructure | null;
   feesRewardsNorm: ChartDataStructure | null;
   rewards: ChartDataStructure | null;
@@ -85,7 +89,6 @@ const Main = () => {
   
   const [chartData, setChartData] = useState<ChartDataState>({
     swapsStats: null,
-    swapsStatsNorm: null,
     feesRewards: null,
     feesRewardsNorm: null,
     rewards: null,
@@ -93,6 +96,7 @@ const Main = () => {
     affiliate: null,
   });
   
+  const [swapData, setSwapData] = useState<any>(null); 
   const [marketInfo, setMarketInfo] = useState<MarketInfo>({
     price: undefined,
     rank: undefined,
@@ -413,76 +417,6 @@ const Main = () => {
     return formatChartDataForEChartsWrapper(xAxis, seriesConfig, dataPoints, true);
   };
 
-  const formatSwapsStatsNormData = (swapsData: any): ChartDataStructure | null => {
-    if (!swapsData?.intervals) return null;
-
-    const xAxis = [];
-    const nativeData = [];
-    const tradeData = [];
-    const synthData = [];
-    const securedData = [];
-    const dataPoints = [];
-
-    swapsData.intervals.forEach((interval: any, index: number) => {
-      if (index === swapsData.intervals.length - 1) return;
-
-      const date = moment(
-        Math.floor((~~interval.endTime + ~~interval.startTime) / 2) * 1e3
-      ).format('dddd, MMM D');
-      
-      xAxis.push(date);
-
-      const nativeVolume = ((+interval.toRuneVolumeUSD || 0) + (+interval.toAssetVolumeUSD || 0)) / 100;
-      const tradeVolume = ((+interval.fromTradeVolumeUSD || 0) + (+interval.toTradeVolumeUSD || 0)) / 100;
-      const synthVolume = ((+interval.synthRedeemVolumeUSD || 0) + (+interval.synthMintVolumeUSD || 0)) / 100;
-      const securedVolume = ((+interval.fromSecuredVolumeUSD || 0) + (+interval.toSecuredVolumeUSD || 0)) / 100;
-      const total = nativeVolume + tradeVolume + synthVolume + securedVolume;
-
-      const nativePercent = total > 0 ? nativeVolume / total : 0;
-      const tradePercent = total > 0 ? tradeVolume / total : 0;
-      const synthPercent = total > 0 ? synthVolume / total : 0;
-      const securedPercent = total > 0 ? securedVolume / total : 0;
-
-      nativeData.push(nativePercent);
-      tradeData.push(tradePercent);
-      synthData.push(synthPercent);
-      securedData.push(securedPercent);
-
-      dataPoints.push({
-        date,
-        nativePercent,
-        tradePercent,
-        synthPercent,
-        securedPercent
-      });
-    });
-
-    const seriesConfig = [
-      {
-        name: 'Native Swap Volume',
-        data: nativeData,
-        stack: 'total',
-      },
-      {
-        name: 'Trade Swaps',
-        data: tradeData,
-        stack: 'total',
-      },
-      {
-        name: 'Synth Swaps',
-        data: synthData,
-        stack: 'total',
-      },
-      {
-        name: 'Secured Swaps',
-        data: securedData,
-        stack: 'total',
-      },
-    ];
-
-    return formatChartDataForEChartsWrapper(xAxis, seriesConfig, dataPoints, false, true);
-  };
-
   const formatFeesRewardsData = (intervals: any): ChartDataStructure | null => {
     if (!intervals?.length) return null;
 
@@ -678,8 +612,8 @@ const Main = () => {
         setChartData(prev => ({
           ...prev,
           swapsStats: formatSwapsStatsData(data),
-          swapsStatsNorm: formatSwapsStatsNormData(data),
         }));
+        setSwapData(data);
       }
       
     } catch (error) {
@@ -688,6 +622,7 @@ const Main = () => {
       setLoading(prev => ({ ...prev, swaps: false }));
     }
   };
+
   const fetchAffiliateSwapsMonthly = async () => {
     setLoading(prev => ({ ...prev, affiliate: true }));
     try {
@@ -852,19 +787,12 @@ const Main = () => {
             <div className="no-data-message">No swap data available</div>
           )}
         </Card>
+        
         <Card title="Swap Chart Normalized">
-          {loading.swaps ? (
-            <ChartLoader barCount={15} />
-          ) : chartData.swapsStatsNorm ? (
-            <EChartsWrapper
-              type="bar"
-              data={chartData.swapsStatsNorm.data}
-              options={chartData.swapsStatsNorm.options}
-              height="400px"
-            />
-          ) : (
-            <div className="no-data-message">No normalized swap data available</div>
-          )}
+          <SwapChartNormalized 
+            data={swapData}
+            loading={loading.swaps}
+          />
         </Card>
       </div>
       
