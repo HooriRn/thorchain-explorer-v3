@@ -1209,20 +1209,12 @@ const churnInfo = useMemo(() => {
   return (
     <Page error={error && !loading} fluid={true}>
       <div className={styles['grid-network']}>
-        <Card>
           <InfoCard options={activeInfo} inner={true} />
-        </Card>
-        <Card>
           <InfoCard options={standbyInfo} inner={true} />
-        </Card>
       </div>
       <div className={styles['grid-network']}>
-        <Card>
           <InfoCard options={churnInfo} inner={true} />
-        </Card>
-        <Card>
           <InfoCard options={blockRewardInfo} inner={true} />
-        </Card>
       </div>
       <div className={styles['search-container']}>
         <div id={styles['nodes-search-container']}>

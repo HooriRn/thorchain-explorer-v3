@@ -123,7 +123,6 @@ const SwapChartNormalized: React.FC<SwapChartNormalizedProps> = ({
         Math.floor((~~interval.endTime + ~~interval.startTime) / 2) * 1e3
       ).format("dddd, MMM D");
 
-      // محاسبه volume اصلی برای محاسبه درصد
       const nativeVolume = ((+interval.toRuneVolumeUSD || 0) + (+interval.toAssetVolumeUSD || 0)) / 100;
       const tradeVolume = ((+interval.fromTradeVolumeUSD || 0) + (+interval.toTradeVolumeUSD || 0)) / 100;
       const synthVolume = ((+interval.synthRedeemVolumeUSD || 0) + (+interval.synthMintVolumeUSD || 0)) / 100;
@@ -131,7 +130,6 @@ const SwapChartNormalized: React.FC<SwapChartNormalizedProps> = ({
       
       const totalVolume = nativeVolume + tradeVolume + synthVolume + securedVolume;
 
-      // محاسبه درصد نرمالایز شده
       const nativePercent = totalVolume > 0 ? nativeVolume / totalVolume : 0;
       const tradePercent = totalVolume > 0 ? tradeVolume / totalVolume : 0;
       const synthPercent = totalVolume > 0 ? synthVolume / totalVolume : 0;
@@ -290,7 +288,6 @@ const SwapChartNormalized: React.FC<SwapChartNormalizedProps> = ({
 
           const header = `<div class="tooltip-header">${dataPoint.date}</div>`;
           
-          // ساخت آیتم‌های tooltip با استفاده مستقیم از dataPoint
           const swapTypes = [
             { 
               name: "Native Swap Volume", 
@@ -315,7 +312,6 @@ const SwapChartNormalized: React.FC<SwapChartNormalizedProps> = ({
           ];
 
           const bodyLines = swapTypes.map((swapType) => {
-            // نمایش - فقط اگر مقدار دقیقاً 0 باشد (نه نزدیک به صفر)
             const showPercent = Math.abs(swapType.percent) > 0.0001;
             const percentText = showPercent ? formatPercentValue(swapType.percent) : "-";
 

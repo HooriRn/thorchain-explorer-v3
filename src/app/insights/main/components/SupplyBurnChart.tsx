@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useMemo } from "react";
 import moment from "moment";
-import BaseNormalizedChart from "./BaseNormalizedChart";
+import { useTheme } from "@/lib/store";
+import EChartsWrapper from "@/components/charts/EChartsWrapper";
+import ChartLoader from "@/components/ChartLoader";
 
 interface SupplyBurnData {
   date: string;
@@ -18,105 +20,219 @@ const SupplyBurnChart: React.FC<SupplyBurnChartProps> = ({
   data,
   loading = false,
 }) => {
-  const [chartData, setChartData] = useState<SupplyBurnData[]>([]);
+  const theme = useTheme();
 
-  useEffect(() => {
-    if (!data) {
-      setChartData([]);
-      return;
+  const normalFormat = (value: number, format: string = "0,0.00") => {
+    if (!value && value !== 0) return "-";
+    
+    const numValue = Math.abs(value);
+    
+    if (numValue >= 1e12) {
+      return `$${(numValue / 1e12).toFixed(2)}T`;
+    } else if (numValue >= 1e9) {
+      return `$${(numValue / 1e9).toFixed(2)}B`;
+    } else if (numValue >= 1e6) {
+      return `$${(numValue / 1e6).toFixed(2)}M`;
+    } else if (numValue >= 1e3) {
+      return `$${(numValue / 1e3).toFixed(2)}K`;
+    } else if (numValue >= 1) {
+      return `$${numValue.toFixed(2)}`;
     }
-
-    if (data?.intervals && Array.isArray(data.intervals)) {
-      const formattedData = formatSupplyBurnData(data);
-      setChartData(formattedData);
-    } else if (data?.series && Array.isArray(data.series)) {
-      const formattedData = formatChartOptionsToData(data);
-      setChartData(formattedData);
-    } else {
-      setChartData([]);
-    }
-  }, [data]);
-
-  const formatChartOptionsToData = (chartOptions: any): SupplyBurnData[] => {
-    const formattedData: SupplyBurnData[] = [];
-
-    if (!chartOptions.series || !Array.isArray(chartOptions.series)) {
-      return [];
-    }
-
-    const xAxis = chartOptions.xAxis?.data || [];
-    const seriesMap = new Map();
-
-    chartOptions.series.forEach((series: any) => {
-      if (series.name && series.data) {
-        seriesMap.set(series.name, series.data);
-      }
-    });
-
-    if (xAxis.length > 0) {
-      xAxis.forEach((date: string, index: number) => {
-        const dataPoint: SupplyBurnData = {
-          date,
-          "Burned Rune": 0,
-        };
-
-        const burnSeries = seriesMap.get("Burned Rune");
-
-        if (burnSeries && burnSeries[index] !== undefined) {
-          dataPoint["Burned Rune"] =
-            typeof burnSeries[index] === "object"
-              ? burnSeries[index].value
-              : burnSeries[index];
-        }
-
-        formattedData.push(dataPoint);
-      });
-    }
-
-    return formattedData;
+    return `$${numValue.toFixed(4)}`;
   };
 
-  const formatSupplyBurnData = (earningData: any): SupplyBurnData[] => {
-    const formattedData: SupplyBurnData[] = [];
-
-    if (!earningData?.intervals || !Array.isArray(earningData.intervals)) {
-      return [];
+  const { labels, burnData, supplyData, rawData } = useMemo(() => {
+    if (!data?.intervals || !Array.isArray(data.intervals)) {
+      return {
+        labels: [] as string[],
+        burnData: [] as number[],
+        supplyData: [] as number[],
+        rawData: [] as SupplyBurnData[],
+      };
     }
 
-    earningData.intervals.forEach((interval: any) => {
+    const labels: string[] = [];
+    const burnData: number[] = [];
+    const supplyData: number[] = [];
+    const rawData: SupplyBurnData[] = [];
+    let burnCumulative = 0;
+
+    data.intervals.forEach((interval: any) => {
       const intervalDate = moment(
         Math.floor((+interval.endTime + +interval.startTime) / 2) * 1e3
       );
 
-      if (intervalDate.isSame(moment(), 'day')) return;
+      if (intervalDate.isSame(moment(), 'day')) {
+        return;
+      }
 
-      const date = intervalDate.format("dddd, MMM D");
+      const date = intervalDate.format('dddd, MMM D');
+      labels.push(date);
       
-      const burns = interval.pools?.find((p: any) => p.pool === 'income_burn')?.earnings || 0;
-      const burn = +burns / 1e8;
+      const burns = interval?.pools?.find(
+        (p: any) => p.pool === 'income_burn'
+      )?.earnings;
 
-      const dataPoint: SupplyBurnData = {
+      const burn = burns ? +burns / 1e8 : 0;
+      burnCumulative += burn;
+      
+      burnData.push(burn);
+      supplyData.push(5 * 1e8 - burnCumulative);
+      
+      rawData.push({
         date,
         "Burned Rune": burn,
-      };
-
-      formattedData.push(dataPoint);
+      });
     });
 
-    return formattedData;
-  };
+    return {
+      labels,
+      burnData,
+      supplyData,
+      rawData,
+    };
+  }, [data]);
+
+  const chartOptions = useMemo(() => {
+    if (burnData.length === 0) return null;
+
+    const BURN_COLOR = '#ff9962';
+    
+    const series = [
+      {
+        type: 'bar',
+        name: 'Burned Rune',
+        showSymbol: false,
+        data: burnData,
+        yAxisIndex: 1,
+        itemStyle: {
+          borderRadius: [8, 8, 0, 0],
+          color: BURN_COLOR,
+        },
+      },
+    ];
+
+    const tooltipFormatter = (params: any[]) => {
+      if (!params || params.length === 0) return '';
+      
+      const dataIndex = params[0].dataIndex;
+      const dataPoint = rawData[dataIndex];
+      
+      if (!dataPoint) return '';
+      
+      return `
+        <div class="tooltip-header">
+          <div class="data-color" style="background-color: ${params[0].color}"></div>
+          ${params[0].name}
+        </div>
+        <div class="tooltip-body">
+          ${params
+            .map(
+              (p) => `<span>
+              <span>${p.seriesName}</span>
+              <b>${p.value ? normalFormat(p.value, '0,0.00') : '-'}</b>
+            </span>`
+            )
+            .join('')}
+        </div>
+      `;
+    };
+
+    return {
+      legend: {
+        show: false, 
+      },
+    
+      xAxis: {
+        type: 'category',
+        data: labels,
+        axisLabel: {
+          show: false, 
+        },
+        axisLine: {
+          show: false,
+        },
+        axisTick: {
+          show: false
+        }
+      },
+      yAxis: [
+        {
+          type: 'value',
+          name: 'Max Supply',
+          position: 'left',
+          show: false, 
+          splitLine: {
+            show: true,
+            lineStyle: {
+              color: theme === 'light' ? '#e0e0e0' : '#424242',
+              type: 'dashed'
+            }
+          },
+          min: supplyData.length > 0 ? supplyData[supplyData.length - 1] - 50 : undefined,
+          max: 'dataMax',
+          axisLabel: {
+            formatter: (value: number) => normalFormat(value)
+          }
+        },
+        {
+          type: 'value',
+          name: 'Burned Rune',
+          position: 'right',
+          show: false, 
+          splitLine: {
+            show: true,
+            lineStyle: {
+              color: theme === 'light' ? '#e0e0e0' : '#424242',
+              type: 'dashed'
+            }
+          },
+          min: 'dataMin',
+          max: 'dataMax',
+          axisLabel: {
+            formatter: (value: number) => normalFormat(value)
+          }
+        },
+      ],
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        },
+        backgroundColor: theme === 'dark' ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.95)',
+        borderColor: theme === 'dark' ? '#424242' : '#e0e0e0',
+        borderWidth: 1,
+        textStyle: {
+          color: theme === 'dark' ? '#ffffff' : '#333333',
+          fontSize: 12,
+        },
+        formatter: tooltipFormatter,
+      },
+      series,
+    };
+  }, [theme, labels, burnData, supplyData, rawData]);
+
+  if (loading) {
+    return <ChartLoader barCount={15} />;
+  }
+
+  if (!data || !chartOptions) {
+    return <ChartLoader barCount={15} />;
+  }
 
   return (
-    <BaseNormalizedChart
-      data={chartData}
-      loading={loading}
-      seriesNames={["Burned Rune"]}
-      chartTitle="Supply Burn"
-      height="400px"
-      isNormalized={false}
-      formatValue={(value) => `$${(value / 1e6).toFixed(2)}M`}
-      customColors={["#FF6B6B"]}
-    />
+    <div className="h-full w-full" style={{ height: '400px' }}>
+      <EChartsWrapper
+        type="bar"
+        data={{
+          labels: chartOptions.xAxis.data || [],
+          series: chartOptions.series || [],
+        }}
+        options={chartOptions}
+        height="100%"
+        theme={theme === 'dark' ? 'dark' : 'light'}
+      />
+    </div>
   );
 };
 

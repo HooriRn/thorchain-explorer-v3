@@ -90,37 +90,6 @@ const AffiliateVolumeChart: React.FC<AffiliateVolumeChartProps> = ({
 
   const chartOptionsOverride = useMemo(() => {
     return {
-      xAxis: {
-        type: 'category',
-        data: chartData.map(item => item.date),
-        axisLabel: {
-          color: 'var(--sec-font-color)',
-          fontSize: 11,
-          rotate: 45,
-          margin: 10,
-          formatter: function(value: string) {
-            if (value.length > 15) {
-              return value.substring(0, 12) + '...';
-            }
-            return value;
-          }
-        },
-        axisLine: {
-          lineStyle: {
-            color: 'var(--border-color)'
-          }
-        },
-        axisTick: {
-          show: false
-        }
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '25%',
-        top: '10%',
-        containLabel: true
-      },
     };
   }, [chartData]);
 
