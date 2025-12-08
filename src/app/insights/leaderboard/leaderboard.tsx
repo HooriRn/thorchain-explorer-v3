@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Nav from "@/components/Nav";
 import CardsHeader from "@/components/CardsHeader";
-import AffiliateTables from "../component/affiliateTables";
+import AffiliateTables from "./component/affiliateTables";
 import {
   formatNumberToString,
   formatPercentToString,

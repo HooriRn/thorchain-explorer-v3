@@ -158,7 +158,7 @@ export const mainnetNav = {
         },
         {
           name: "Affiliates",
-          link: "/charts/affiliates",
+          link: "/insights/affiliates",
         },
         {
           name: "Burn",

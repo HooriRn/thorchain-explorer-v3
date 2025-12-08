@@ -21,7 +21,7 @@ import NetworkStats from "@/app/dashboard/NetworkStats";
 import LatestTransactions from "@/app/dashboard/LatestTransactions";
 import LatestBlocks from "@/app/dashboard/LatestBlocks";
 import InfoCard from "@/components/InfoCard";
-import AffiliateTables from "@/app/insights/component/affiliateTables";
+import AffiliateTables from "@/app/insights/leaderboard/component/affiliateTables";
 import Outbounds from "@/components/Outbounds";
 import Streaming from "@/components/Streaming";
 import SwapVolumeChart from "@/components/SwapVolumeChart";
