@@ -390,7 +390,7 @@ export class MiddlewareAPI {
     params?: Record<string, any>
   ): Promise<AffiliateStat[]> {
     const response = await apiClient.getExternal<AffiliateStat[]>(
-      `${this.config.SERVER_URL}api/affiliateStats`,
+      `${this.config.SERVER_URL}affiliate/stats`,
       params
     );
     return response.data;
@@ -514,7 +514,7 @@ export class MiddlewareAPI {
     period = "30d"
   ): Promise<SwapByThorname[]> {
     const response = await apiClient.getExternal<SwapByThorname[]>(
-      `${this.config.SERVER_URL}api/swapsByThorname`,
+      `${this.config.SERVER_URL}swaps`,
       { thorname, period }
     );
     return response.data;

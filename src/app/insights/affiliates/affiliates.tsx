@@ -15,16 +15,16 @@ import Nav from "@/components/Nav";
 import Card from "@/components/ui/Card";
 import Header from "@/components/Header";
 import { getAffiliateHistory, getSwapsByThorname, getAffiliateStats } from "@/lib/api";
-
 import { affiliateList, affiliateMap, interfaces } from "@/utils";
+import styles from "./Affiliate.module.css";
 
 const AffiliatesChart = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const theme = useTheme();
-
-  const [affiliateChart, setAffiliateChart] = useState(null);
-  const [affiliateStatsChart, setAffiliateStatsChart] = useState(null);
+  
+  const [affiliateChartData, setAffiliateChartData] = useState({ labels: [], series: [] });
+  const [affiliateStatsChartData, setAffiliateStatsChartData] = useState({ labels: [], series: [] });
   const [affiliateChartKey, setAffiliateChartKey] = useState(0);
   const [affiliateStatsChartKey, setAffiliateStatsChartKey] = useState(0);
   
@@ -34,8 +34,9 @@ const AffiliatesChart = () => {
   const [selectedFilter, setSelectedFilter] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [affiliate, setAffiliate] = useState('');
+  const [affiliateParam, setAffiliateParam] = useState('');
   
-  const [affiliateSwaps, setAffiliateSwaps] = useState(null);
+  const [affiliateSwaps, setAffiliateSwaps] = useState([]);
   const [affiliateGeneralStats, setAffiliateGeneralStats] = useState([
     { name: 'Volume', value: '-' },
     { name: 'Swaps', value: '-' },
@@ -43,28 +44,16 @@ const AffiliatesChart = () => {
     { name: 'Volume per Swap', value: '-' },
   ]);
 
-  const sortByVolume = useCallback((x, y, col, rowX, rowY) => {
-    const getVolumeFromRow = (row) => {
-      const inPrice = +row?.metadata?.swap?.inPriceUSD ?? 0;
-      const inAmount = +row?.in[0]?.coins[0].amount ?? 0;
-      return inPrice * inAmount;
-    };
-
-    const volumeX = getVolumeFromRow(rowX);
-    const volumeY = getVolumeFromRow(rowY);
-    return volumeX < volumeY ? -1 : volumeX > volumeY ? 1 : 0;
-  }, []);
-
-  const chartPeriods = [
+  const chartPeriods = useMemo(() => [
     { text: '1 Day', mode: '24h' },
     { text: '14 Days', mode: '14d' },
     { text: '30 Days', mode: '30d' },
-  ];
+  ], []);
 
   const chartPeriod = useMemo(() => {
     const period = searchParams.get('period');
     return period && chartPeriods.some((p) => p.mode === period) ? period : '24h';
-  }, [searchParams]);
+  }, [searchParams, chartPeriods]);
 
   const chartInterval = useMemo(() => 
     chartPeriod === '24h' ? 'hour' : 'day', 
@@ -72,7 +61,7 @@ const AffiliatesChart = () => {
   );
 
   const chartCount = useMemo(() => 
-    parseInt(chartPeriod), 
+    parseInt(chartPeriod) || 24, 
     [chartPeriod]
   );
 
@@ -81,19 +70,120 @@ const AffiliatesChart = () => {
     []
   );
 
+  const sortByVolume = useCallback((rowX, rowY) => {
+    const getVolumeFromRow = (row) => {
+      const inPrice = +row?.metadata?.swap?.inPriceUSD ?? 0;
+      const inAmount = +row?.in[0]?.coins[0]?.amount ?? 0;
+      return inPrice * inAmount;
+    };
+
+    const volumeX = getVolumeFromRow(rowX);
+    const volumeY = getVolumeFromRow(rowY);
+    return volumeX < volumeY ? -1 : volumeX > volumeY ? 1 : 0;
+  }, []);
+
   const tableColumns = useMemo(() => [
+    {
+      label: 'Hash',
+      field: 'hash',
+      renderCell: (item) => {
+        const hash = item?.tx?.hash || item?.hash || '';
+        return <span className={styles.mono}>{hash.slice(0, 8)}...</span>;
+      }
+    },
+    {
+      label: 'Date',
+      field: 'date',
+      renderCell: (item) => {
+        const date = item?.tx?.date 
+          ? moment.unix(item.tx.date).format('YYYY-MM-DD HH:mm')
+          : moment().format('YYYY-MM-DD HH:mm');
+        return <span>{date}</span>;
+      }
+    },
+    {
+      label: 'From',
+      field: 'from',
+      renderCell: (item) => {
+        const from = item?.in?.[0]?.address || '';
+        return <span className={styles.mono}>{from.slice(0, 8)}...</span>;
+      }
+    },
+    {
+      label: 'To',
+      field: 'to',
+      renderCell: (item) => {
+        const to = item?.out?.[0]?.address || '';
+        return <span className={styles.mono}>{to.slice(0, 8)}...</span>;
+      }
+    },
     {
       label: 'Volume',
       field: 'volume',
       sortFn: sortByVolume,
       renderCell: (item) => {
-        const volume = formatVolume(item);
-        return <span className="mono">{volume}</span>;
+        const inPrice = +item?.metadata?.swap?.inPriceUSD ?? 0;
+        const inAmount = +item?.in[0]?.coins[0]?.amount ?? 0;
+        const volume = inPrice * inAmount;
+        return <span className={styles.mono}>{formatValue(volume)}</span>;
       }
     },
   ], [sortByVolume]);
 
+  const formatValue = useCallback((value) => {
+    const numValue = Math.abs(value) / 1e8;
+    
+    if (numValue >= 1e9) {
+      return `$${(numValue / 1e9).toFixed(2)}B`;
+    } else if (numValue >= 1e6) {
+      return `$${(numValue / 1e6).toFixed(2)}M`;
+    } else if (numValue >= 1e3) {
+      return `$${(numValue / 1e3).toFixed(2)}K`;
+    } else if (numValue >= 1) {
+      return `$${numValue.toFixed(2)}`;
+    }
+    return `$${numValue.toFixed(4)}`;
+  }, []);
+
+  const formatDate = useCallback((interval) => {
+    const timestamp = +interval.startTime * 1e3;
+    const date = moment.utc(timestamp).local();
+    return chartPeriod === '24h'
+      ? date.format('MMM Do, HH:mm')
+      : date.format('dddd, MMM D');
+  }, [chartPeriod]);
+
+  const calculateStatsTotals = useCallback((data) => {
+    let totalVolume = 0;
+    let totalCount = 0;
+
+    if (data && Array.isArray(data)) {
+      data.forEach((item) => {
+        totalVolume += item.total_volume / 1e8;
+        totalCount += item.count;
+      });
+    }
+
+    return { totalVolume, totalCount };
+  }, []);
+
+  const calculateTotalEarnings = useCallback((data) => {
+    let totalEarnings = 0;
+
+    if (data?.intervals) {
+      data.intervals.forEach((interval) => {
+        interval.thornames?.forEach((thorname) => {
+          totalEarnings += +thorname.volumeUSD / 1e2;
+        });
+      });
+    }
+
+    return totalEarnings;
+  }, []);
+
   const mapInterfaceName = useCallback((s) => {
+    if (!s) return undefined;
+    
     let ifc = interfaces[s.toLowerCase()];
     
     if (!ifc) {
@@ -124,401 +214,422 @@ const AffiliatesChart = () => {
     };
   }, []);
 
-  const formatValue = useCallback((value) => {
-    const numValue = Math.abs(value);
-    
-    if (numValue >= 1e9) {
-      return `$${(numValue / 1e9).toFixed(2)}B`;
-    } else if (numValue >= 1e6) {
-      return `$${(numValue / 1e6).toFixed(2)}M`;
-    } else if (numValue >= 1e3) {
-      return `$${(numValue / 1e3).toFixed(2)}K`;
-    }
-    return `$${numValue.toFixed(2)}`;
-  }, []);
-
-  const formatDate = useCallback((interval) => {
-    const timestamp = +interval.startTime * 1e3;
-    const date = moment.utc(timestamp).local();
-    return chartPeriod === '24h'
-      ? date.format('MMM Do, HH:mm')
-      : date.format('dddd, MMM D');
-  }, [chartPeriod]);
-
-  const fillArrayWithZero = useCallback((array, length) => {
-    while (array.length < length) {
-      array.push(0);
-    }
-    return array;
-  }, []);
-
-  const calculateStatsTotals = useCallback((data) => {
-    let totalVolume = 0;
-    let totalCount = 0;
-
-    if (data && Array.isArray(data)) {
-      data.forEach((item) => {
-        totalVolume += item.total_volume / 1e8;
-        totalCount += item.count;
-      });
-    }
-
-    return { totalVolume, totalCount };
-  }, []);
-
-  const calculateTotalEarnings = useCallback((data) => {
-    let totalEarnings = 0;
-
-    if (data?.intervals) {
-      data.intervals.forEach((interval) => {
-        interval.thornames.forEach((thorname) => {
-          totalEarnings += +thorname.volumeUSD / 1e2;
-        });
-      });
-    }
-
-    return totalEarnings;
-  }, []);
-
   const formatAffiliateHistory = useCallback((data) => {
-    if (!data?.intervals) return null;
+    if (!data?.intervals || data.intervals.length === 0) {
+      console.log('No history data available');
+      return { labels: [], series: [] };
+    }
 
-    const xAxis = [];
-    const thornames = [];
-    const others = [];
+    const labels = [];
+    const seriesMap = new Map();
 
-    data.intervals.forEach((interval, index) => {
-      if (index === data.intervals.length - 1) return;
+    data.intervals.forEach((interval, intervalIndex) => {
+      if (intervalIndex === data.intervals.length - 1) return;
 
       const date = formatDate(interval);
-      xAxis.push(date);
+      labels.push(date);
 
-      let filteredNames = interval.thornames.reduce((acc, thorname) => {
-        const key = ['t', 'tl', 'T'].includes(thorname.thorname)
-          ? 't'
-          : ['ti', 'te', 'tr', 'td', 'tb', 't1'].includes(thorname.thorname)
-            ? 'ti'
-            : ['va', 'vi', 'v0'].includes(thorname.thorname)
-              ? 'va'
-              : thorname.thorname;
+      const groupedThornames = interval.thornames?.reduce((acc, thorname) => {
+        if (!thorname.thorname) return acc;
 
-        if (acc[key]) {
-          acc[key].volumeUSD += +thorname.volumeUSD;
-          acc[key].count += +thorname.count;
+        let key;
+        const thornameLower = thorname.thorname.toLowerCase();
+        
+        if (['t', 'tl'].includes(thornameLower)) {
+          key = 't';
+        } else if (['ti', 'te', 'tr', 'td', 'tb', 't1'].includes(thornameLower)) {
+          key = 'ti';
+        } else if (['va', 'vi', 'v0'].includes(thornameLower)) {
+          key = 'va';
         } else {
-          acc[key] = {
-            volumeUSD: +thorname.volumeUSD,
-            thorname: key,
-            count: +thorname.count,
-          };
+          key = thorname.thorname;
         }
+
+        if (!acc[key]) {
+          acc[key] = 0;
+        }
+        
+        acc[key] += (+thorname.volumeUSD || 0) / 1e2;
+        
         return acc;
       }, {});
 
-      filteredNames = orderBy(
-        Object.values(filteredNames),
-        [(o) => +o.volumeUSD],
-        ['desc']
-      );
+      if (!groupedThornames) return;
 
-      const topNames = 5;
-      let otherTotal = 0;
-
-      for (let ti = 0; ti < filteredNames.length; ti++) {
-        if (topNames < ti) {
-          otherTotal += +filteredNames[ti]?.volumeUSD / 1e2;
-          if (filteredNames.length - 1 === ti) {
-            others.push(otherTotal);
-          }
-          continue;
+      Object.entries(groupedThornames).forEach(([name, value]) => {
+        if (!seriesMap.has(name)) {
+          seriesMap.set(name, new Array(labels.length - 1).fill(0));
         }
-
-        const thornameIndex = thornames.findIndex(
-          (t) => t.name === filteredNames[ti].thorname
-        );
-
-        if (thornameIndex >= 0) {
-          if (thornames[thornameIndex].data.length < index + 1) {
-            thornames[thornameIndex].data = fillArrayWithZero(
-              thornames[thornameIndex].data,
-              index
-            );
-          }
-          thornames[thornameIndex].data.push(
-            +filteredNames[ti]?.volumeUSD / 1e2
-          );
-        } else {
-          let dataArray = [];
-          if (index > 0) {
-            dataArray = fillArrayWithZero(dataArray, index);
-          }
-          dataArray.push(+filteredNames[ti]?.volumeUSD / 1e2);
-          thornames.push({
-            name: filteredNames[ti].thorname,
-            data: dataArray,
-          });
+        
+        const seriesData = seriesMap.get(name);
+        while (seriesData.length < labels.length - 1) {
+          seriesData.push(0);
         }
-      }
+        seriesData.push(value);
+      });
     });
 
-    const series = [
-      ...thornames.map((thorname, index) => ({
-        name: thorname.name,
-        data: thorname.data,
-      })),
-      {
-        name: 'Others',
-        data: others,
-      },
-    ];
+    const seriesArray = Array.from(seriesMap.entries()).map(([name, data]) => ({
+      name,
+      data,
+      total: data.reduce((sum, val) => sum + val, 0)
+    }));
 
-    return { labels: xAxis, series };
-  }, [formatDate, fillArrayWithZero]);
+    const sortedSeries = orderBy(seriesArray, ['total'], ['desc']);
+
+    const topSeries = sortedSeries.slice(0, 5);
+    const otherSeries = sortedSeries.slice(5);
+
+    const othersData = [];
+    if (labels.length > 0 && otherSeries.length > 0) {
+      for (let i = 0; i < labels.length; i++) {
+        let otherTotal = 0;
+        otherSeries.forEach(series => {
+          otherTotal += series.data[i] || 0;
+        });
+        othersData.push(otherTotal);
+      }
+    }
+
+    const finalSeries = topSeries.map(series => ({
+      name: series.name,
+      type: 'bar',
+      stack: 'Total',
+      data: series.data
+    }));
+
+    if (othersData.length > 0 && othersData.some(val => val > 0)) {
+      finalSeries.push({
+        name: 'Others',
+        type: 'bar',
+        stack: 'Total',
+        data: othersData
+      });
+    }
+
+    return {
+      labels,
+      series: finalSeries
+    };
+  }, [formatDate]);
 
   const formatAffiliateStats = useCallback((data) => {
-    if (!data || !Array.isArray(data) || data.length === 0) return null;
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      console.log('No stats data available');
+      return { labels: [], series: [] };
+    }
 
-    const xAxis = [];
-    const thornames = [];
-    const others = [];
+    const labels = [];
+    const seriesMap = new Map();
 
-    data.forEach((interval, index) => {
-      if (index === data.length - 1) return;
+    data.forEach((interval, intervalIndex) => {
+      if (intervalIndex === data.length - 1) return;
 
       const date = formatDate(interval);
-      xAxis.push(date);
+      labels.push(date);
 
-      let filteredNames = {};
+      const groupedAffiliates = interval.affiliates?.reduce((acc, affiliate) => {
+        if (!affiliate.affiliate) return acc;
 
-      const affiliateIncludes = (affiliates, affiliateEntry) => {
-        const affiliatesSplit = affiliateEntry.split('/');
-        return affiliatesSplit.some((aff) => affiliates.includes(aff));
-      };
-
-      const ignoreAggregator = (affiliates) => {
-        const affiliatesSplit = affiliates.split('/');
-        if (
-          affiliates.length > 0 &&
-          (affiliatesSplit.includes('-_') || affiliatesSplit.includes('ro'))
-        ) {
-          return affiliatesSplit.find((aff) => aff !== '-_' && aff !== 'ro');
+        let key;
+        const affiliateStr = affiliate.affiliate.toString();
+        
+        if (affiliateStr.includes('/')) {
+          const parts = affiliateStr.split('/');
+          const filteredParts = parts.filter(part => 
+            !['-_', 'ro'].includes(part.toLowerCase())
+          );
+          key = filteredParts[0] || 'No Affiliate';
+        } else {
+          const affiliateLower = affiliateStr.toLowerCase();
+          
+          if (['t', 'tl'].includes(affiliateLower)) {
+            key = 't';
+          } else if (['ti', 'te', 'tr', 'td', 'tb', 't1'].includes(affiliateLower)) {
+            key = 'ti';
+          } else if (['va', 'vi', 'v0'].includes(affiliateLower)) {
+            key = 'va';
+          } else if (['-_', 'ro'].includes(affiliateLower)) {
+            key = 'No Affiliate';
+          } else {
+            key = affiliateStr;
+          }
         }
-        return affiliates;
-      };
-
-      filteredNames = interval.affiliates.reduce((acc, affiliate) => {
-        let key = affiliateIncludes(['t', 'tl', 'T'], affiliate.affiliate)
-          ? 't'
-          : affiliateIncludes(
-                ['ti', 'te', 'tr', 'td', 'tb', 't1'],
-                affiliate.affiliate
-              )
-            ? 'ti'
-            : affiliateIncludes(['va', 'vi', 'v0'], affiliate.affiliate)
-              ? 'va'
-              : ignoreAggregator(affiliate.affiliate);
 
         if (key === '') {
           key = 'No Affiliate';
         }
 
-        if (acc[key]) {
-          acc[key].volume += +affiliate.volume;
-          acc[key].count += +affiliate.count;
-        } else {
-          acc[key] = {
-            volume: +affiliate.volume,
-            affiliate: key,
-            count: +affiliate.count,
-          };
+        if (!acc[key]) {
+          acc[key] = 0;
         }
+        
+        acc[key] += (+affiliate.volume || 0) / 1e8;
+        
         return acc;
       }, {});
 
-      filteredNames = orderBy(
-        Object.values(filteredNames),
-        [(o) => +o.volume],
-        ['desc']
-      );
+      if (!groupedAffiliates) return;
 
-      const topNames = 5;
-      let otherTotal = 0;
-
-      for (let ti = 0; ti < filteredNames.length; ti++) {
-        if (topNames < ti) {
-          otherTotal += +filteredNames[ti]?.volume / 1e8;
-          if (filteredNames.length - 1 === ti) {
-            others.push(otherTotal);
-          }
-          continue;
+      Object.entries(groupedAffiliates).forEach(([name, value]) => {
+        if (!seriesMap.has(name)) {
+          seriesMap.set(name, new Array(labels.length - 1).fill(0));
         }
-
-        const thornameIndex = thornames.findIndex(
-          (t) => t.name === filteredNames[ti].affiliate
-        );
-
-        if (thornameIndex >= 0) {
-          if (thornames[thornameIndex].data.length < index + 1) {
-            thornames[thornameIndex].data = fillArrayWithZero(
-              thornames[thornameIndex].data,
-              index
-            );
-          }
-          thornames[thornameIndex].data.push(+filteredNames[ti]?.volume / 1e8);
-        } else {
-          let dataArray = [];
-          if (index > 0) {
-            dataArray = fillArrayWithZero(dataArray, index);
-          }
-          dataArray.push(+filteredNames[ti]?.volume / 1e8);
-          thornames.push({
-            name: filteredNames[ti].affiliate,
-            data: dataArray,
-          });
+        
+        const seriesData = seriesMap.get(name);
+        while (seriesData.length < labels.length - 1) {
+          seriesData.push(0);
         }
-      }
+        seriesData.push(value);
+      });
     });
 
-    const series = [
-      ...thornames.map((thorname, index) => ({
-        name: thorname.name,
-        data: thorname.data,
-      })),
-      {
-        name: 'Others',
-        data: others,
-      },
-    ];
+    const seriesArray = Array.from(seriesMap.entries()).map(([name, data]) => ({
+      name,
+      data,
+      total: data.reduce((sum, val) => sum + val, 0)
+    }));
 
-    return { labels: xAxis, series };
-  }, [formatDate, fillArrayWithZero]);
+    const sortedSeries = orderBy(seriesArray, ['total'], ['desc']);
+
+    const topSeries = sortedSeries.slice(0, 5);
+    const otherSeries = sortedSeries.slice(5);
+
+    const othersData = [];
+    if (labels.length > 0 && otherSeries.length > 0) {
+      for (let i = 0; i < labels.length; i++) {
+        let otherTotal = 0;
+        otherSeries.forEach(series => {
+          otherTotal += series.data[i] || 0;
+        });
+        othersData.push(otherTotal);
+      }
+    }
+
+    const finalSeries = topSeries.map(series => ({
+      name: series.name,
+      type: 'bar',
+      stack: 'Total',
+      data: series.data
+    }));
+
+    if (othersData.length > 0 && othersData.some(val => val > 0)) {
+      finalSeries.push({
+        name: 'Others',
+        type: 'bar',
+        stack: 'Total',
+        data: othersData
+      });
+    }
+
+    return {
+      labels,
+      series: finalSeries
+    };
+  }, [formatDate]);
 
   const createTooltipFormatter = useCallback((label = 'Fees') => {
-    return (params) => {
+    return function (params: any) {
+      if (!params || !Array.isArray(params)) return '';
+
       const sortedParams = params
-        .filter((a) => a.value)
-        .sort((a, b) => {
+        .filter((a: any) => a.value && a.value > 0)
+        .sort((a: any, b: any) => {
           if (a.seriesName === 'Others') return 1;
           if (b.seriesName === 'Others') return -1;
           return b.value - a.value;
         });
 
-      const totalFees = params.reduce((sum, c) => sum + (c.value || 0), 0);
+      const totalFees = params.reduce((sum: number, c: any) => sum + (c.value || 0), 0);
 
       let tooltipContent = `
-        <div class="tooltip-header">${params[0].name}</div>
-        <div class="tooltip-body">
+        <div class="${styles.tooltipHeader}">
+          <span>${params[0]?.axisValue || ''}</span>
+        </div>
+        <div class="${styles.tooltipBody}">
       `;
 
-      sortedParams.forEach((p) => {
+      sortedParams.forEach((p: any) => {
         const interfaceDetail = mapInterfaceName(p.seriesName);
         
+        let formattedValue = '';
+        const value = p.value || 0;
+        
+        if (value >= 1e9) {
+          formattedValue = `$${(value / 1e9).toFixed(1)}B`;
+        } else if (value >= 1e6) {
+          formattedValue = `$${(value / 1e6).toFixed(1)}M`;
+        } else if (value >= 1e3) {
+          formattedValue = `$${(value / 1e3).toFixed(1)}K`;
+        } else {
+          formattedValue = `$${value.toFixed(0)}`;
+        }
+
         tooltipContent += `
-          <span>
-            <div class="tooltip-item">
-              <div class="data-color" style="background-color: ${p.color}"></div>
+          <span class="${styles.tooltipItem} ${styles.space}">
+            <span class="${styles.seriesNameColor}">
+              <span class="${styles.dataColor}" style="background-color: ${p.color};"></span>
               ${
-                interfaceDetail?.icons
-                  ? `<img class="tooltip-interface-icon" src="${theme === 'light' ? interfaceDetail.icons.url : interfaceDetail.icons.urlDark}"/>`
-                  : `<span style="text-align: left;">${p.seriesName}</span>`
+                interfaceDetail?.icons?.url
+                  ? `<img style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;" src="${theme === 'light' ? interfaceDetail.icons.url : interfaceDetail.icons.urlDark}" alt="${p.seriesName}"/>`
+                  : `<span>${p.seriesName}</span>`
               }
-            </div>
-            <b>${formatValue(p.value)}</b>
+            </span>
+            <span>${formattedValue}</span>
           </span>
         `;
       });
 
+      let totalFormatted = '';
+      if (totalFees >= 1e9) {
+        totalFormatted = `$${(totalFees / 1e9).toFixed(1)}B`;
+      } else if (totalFees >= 1e6) {
+        totalFormatted = `$${(totalFees / 1e6).toFixed(1)}M`;
+      } else if (totalFees >= 1e3) {
+        totalFormatted = `$${(totalFees / 1e3).toFixed(1)}K`;
+      } else {
+        totalFormatted = `$${totalFees.toFixed(0)}`;
+      }
+
       tooltipContent += `
         </div>
-        <span style="border-top: 1px solid var(--border-color); margin: 2px 0;"></span>
-        <hr>
-        <span>
+        <div class="${styles.tooltipTotal}">
           <span>Total ${label}</span>
-          <b>${formatValue(totalFees)}</b>
-        </span>
+          <b>${totalFormatted}</b>
+        </div>
       `;
 
       return tooltipContent;
     };
-  }, [mapInterfaceName, theme, formatValue]);
+  }, [mapInterfaceName, theme, styles]);
 
   const fetchAllData = useCallback(async () => {
     try {
+      console.log('Fetching data with params:', {
+        affiliate,
+        chartCount,
+        chartInterval,
+        chartPeriod
+      });
+
       setLoading(true);
       setIsTableLoading(true);
 
+      const historyParams = {
+        count: chartCount,
+        interval: chartInterval
+      };
+
+      const statsParams = {
+        count: chartCount,
+        interval: chartInterval
+      };
+
+      if (affiliate) {
+        historyParams.thorname = affiliate;
+        statsParams.thorname = affiliate;
+      }
+
       const [historyData, statsData, swapsData] = await Promise.all([
-        getAffiliateHistory(affiliate, chartCount, chartInterval),
-        getAffiliateStats(affiliate, chartCount, chartInterval),
-        getSwapsByThorname(affiliate, chartPeriod),
+        getAffiliateHistory(historyParams).catch(err => {
+          console.error('Error fetching affiliate history:', err);
+          return null;
+        }),
+        getAffiliateStats(statsParams).catch(err => {
+          console.error('Error fetching affiliate stats:', err);
+          return null;
+        }),
+        getSwapsByThorname({
+          thorname: affiliate,
+          period: chartPeriod
+        }).catch(err => {
+          console.error('Error fetching swaps:', err);
+          return { actions: [] };
+        }),
       ]);
 
-      processAllData(historyData, statsData, swapsData);
+      const historyChartData = formatAffiliateHistory(historyData);
+      const statsChartData = formatAffiliateStats(statsData);
+      
+      console.log('Processed Charts:', {
+        historyChartData,
+        statsChartData
+      });
+
+      setAffiliateChartData(historyChartData);
+      setAffiliateStatsChartData(statsChartData);
+      setAffiliateSwaps(swapsData?.actions || []);
+
+      setAffiliateChartKey(prev => prev + 1);
+      setAffiliateStatsChartKey(prev => prev + 1);
+
+      const { totalVolume, totalCount } = calculateStatsTotals(statsData);
+      const totalEarnings = calculateTotalEarnings(historyData);
+      const volumePerSwap = totalCount > 0 ? totalVolume / totalCount : 0;
+
+      const formatNumber = (num) => {
+        if (num >= 1e9) return `${(num / 1e9).toFixed(1)}B`;
+        if (num >= 1e6) return `${(num / 1e6).toFixed(1)}M`;
+        if (num >= 1e3) return `${(num / 1e3).toFixed(1)}K`;
+        return num.toFixed(0);
+      };
+
+      setAffiliateGeneralStats([
+        {
+          name: 'Volume',
+          value: '$' + formatNumber(totalVolume),
+        },
+        {
+          name: 'Swaps',
+          value: formatNumber(totalCount),
+        },
+        {
+          name: 'Earnings',
+          value: '$' + formatNumber(totalEarnings),
+        },
+        {
+          name: 'Volume per Swap',
+          value: '$' + formatNumber(volumePerSwap),
+        },
+      ]);
+
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error in fetchAllData:', error);
     } finally {
       setLoading(false);
       setIsTableLoading(false);
     }
-  }, [affiliate, chartCount, chartInterval, chartPeriod]);
-
-  const processAllData = useCallback((historyData, statsData, swapsData) => {
-    const historyChartData = formatAffiliateHistory(historyData);
-    const statsChartData = formatAffiliateStats(statsData);
-    
-    setAffiliateChart(historyChartData);
-    setAffiliateStatsChart(statsChartData);
-    setAffiliateSwaps(swapsData);
-
-    setAffiliateChartKey(prev => prev + 1);
-    setAffiliateStatsChartKey(prev => prev + 1);
-
-    updateStatsFromData(historyData, statsData);
-  }, [formatAffiliateHistory, formatAffiliateStats]);
-
-  const updateStatsFromData = useCallback((historyData, statsData) => {
-    const { totalVolume, totalCount } = calculateStatsTotals(statsData);
-    const totalEarnings = calculateTotalEarnings(historyData);
-    const volumePerSwap = totalCount > 0 ? totalVolume / totalCount : 0;
-
-    const formatNumber = (num) => {
-      if (num >= 1e9) return `${(num / 1e9).toFixed(1)}B`;
-      if (num >= 1e6) return `${(num / 1e6).toFixed(1)}M`;
-      if (num >= 1e3) return `${(num / 1e3).toFixed(1)}K`;
-      return num.toFixed(0);
-    };
-
-    setAffiliateGeneralStats([
-      {
-        name: 'Volume',
-        value: '$' + formatNumber(totalVolume),
-      },
-      {
-        name: 'Swaps',
-        value: formatNumber(totalCount),
-      },
-      {
-        name: 'Earnings',
-        value: '$' + formatNumber(totalEarnings),
-      },
-      {
-        name: 'Volume per Swap',
-        value: '$' + formatNumber(volumePerSwap),
-      },
-    ]);
-  }, [calculateStatsTotals, calculateTotalEarnings]);
+  }, [
+    affiliate, 
+    chartCount, 
+    chartInterval, 
+    chartPeriod, 
+    formatAffiliateHistory, 
+    formatAffiliateStats, 
+    calculateStatsTotals, 
+    calculateTotalEarnings
+  ]);
 
   useEffect(() => {
-    const affiliateParam = searchParams.get('affiliate');
-    const currentAffiliate = affiliateList()
-      .find((aff) => aff.id === affiliateParam)
-      ?.thornames?.join(',') || affiliateParam || '';
-    
-    setAffiliate(currentAffiliate);
-    setSelectedFilter(affiliateParam || '');
-    
-    fetchAllData();
-  }, [searchParams, fetchAllData]);
+    const affiliateParamValue = searchParams.get('affiliate');
+    const periodParam = searchParams.get('period');
+
+    if (affiliateParamValue !== affiliateParam) {
+      const affiliateObj = affiliateList().find((aff) => aff.id === affiliateParamValue);
+      const currentAffiliate = affiliateObj?.thornames?.join(',') || affiliateParamValue || '';
+      
+      setAffiliate(currentAffiliate);
+      setAffiliateParam(affiliateParamValue || '');
+      setSelectedFilter(affiliateParamValue || '');
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (affiliate !== undefined) {
+      console.log('Affiliate changed, fetching data:', affiliate);
+      fetchAllData();
+    }
+  }, [affiliate, chartCount, chartInterval, chartPeriod]);
 
   const onPeriodChange = useCallback((newPeriod) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -540,29 +651,13 @@ const AffiliatesChart = () => {
     setIsDropdownOpen(prev => !prev);
   }, []);
 
-  const formatVolume = useCallback((row) => {
-    const inPrice = +row?.metadata?.swap?.inPriceUSD ?? 0;
-    const inAmount = +row?.in[0]?.coins[0].amount ?? 0;
-    return formatValue(inPrice * inAmount);
-  }, [formatValue]);
-
-  const downloadAffiliateSwaps = useCallback((data) => {
-    let swapsData = data;
-    if (data.actions && Array.isArray(data.actions)) {
-      swapsData = data.actions;
-    } else if (Array.isArray(data)) {
-      swapsData = data;
-    } else {
-      console.error('Unexpected data structure:', data);
-      return;
-    }
-
-    if (!swapsData.length) {
+  const downloadAffiliateSwaps = useCallback(() => {
+    if (!affiliateSwaps || affiliateSwaps.length === 0) {
       console.error('No swaps data available for CSV download.');
       return;
     }
 
-    const csvData = swapsData.map((swap) => {
+    const csvData = affiliateSwaps.map((swap) => {
       const inPrice = +swap?.metadata?.swap?.inPriceUSD ?? 0;
       const inAmount = +swap?.in[0]?.coins[0]?.amount ?? 0;
       const volume = inPrice * inAmount;
@@ -571,20 +666,14 @@ const AffiliatesChart = () => {
       const firstNonAffiliateOut = nonAffiliateOuts[0];
 
       return {
-        hash:
-          swap.tx?.hash ||
-          swap.hash ||
-          swap.txHash ||
-          swap.in?.[0]?.txID ||
-          swap.tx?.id ||
-          '',
+        hash: swap.tx?.hash || swap.hash || swap.txHash || swap.in?.[0]?.txID || swap.tx?.id || '',
         date: swap.tx?.date
           ? moment.unix(swap.tx.date).format('YYYY-MM-DD HH:mm:ss')
           : swap.date
             ? moment(swap.date / 1e6).format('YYYY-MM-DD HH:mm:ss')
-            : '',
+            : moment().format('YYYY-MM-DD HH:mm:ss'),
         volume: volume / 1e8,
-        volumeUSD: formatValue(volume / 1e8),
+        volumeUSD: formatValue(volume),
         from: swap.in?.[0]?.address || '',
         to: firstNonAffiliateOut?.address || '',
         inAsset: swap.in[0]?.coins[0]?.asset || '',
@@ -621,16 +710,16 @@ const AffiliatesChart = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [affiliate, chartPeriod, formatValue]);
+  }, [affiliateSwaps, affiliate, chartPeriod, formatValue]);
 
   const downloadAffiliateFeesChart = useCallback(() => {
-    if (!affiliateChart) {
+    if (!affiliateChartData.series || affiliateChartData.series.length === 0) {
       console.error('No chart data available for CSV download.');
       return;
     }
 
-    const series = affiliateChart.series;
-    const xAxis = affiliateChart.labels;
+    const series = affiliateChartData.series || [];
+    const xAxis = affiliateChartData.labels || [];
 
     if (!xAxis || !Array.isArray(xAxis)) {
       console.error('Invalid chart data structure.');
@@ -639,9 +728,9 @@ const AffiliatesChart = () => {
 
     const csvData = [];
     xAxis.forEach((date, index) => {
-      const row = { date };
+      const row = { Date: date };
       series.forEach((s) => {
-        const value = s.data[index] || 0;
+        const value = s.data?.[index] || 0;
         if (s.name && s.name !== 'undefined') {
           row[s.name] = value;
         }
@@ -676,16 +765,16 @@ const AffiliatesChart = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [affiliateChart, affiliate, chartPeriod]);
+  }, [affiliateChartData, affiliate, chartPeriod]);
 
   const downloadAffiliateSwapsChart = useCallback(() => {
-    if (!affiliateStatsChart) {
+    if (!affiliateStatsChartData.series || affiliateStatsChartData.series.length === 0) {
       console.error('No chart data available for CSV download.');
       return;
     }
 
-    const series = affiliateStatsChart.series;
-    const xAxis = affiliateStatsChart.labels;
+    const series = affiliateStatsChartData.series || [];
+    const xAxis = affiliateStatsChartData.labels || [];
 
     if (!xAxis || !Array.isArray(xAxis)) {
       console.error('Invalid chart data structure.');
@@ -694,9 +783,9 @@ const AffiliatesChart = () => {
 
     const csvData = [];
     xAxis.forEach((date, index) => {
-      const row = { date };
+      const row = { Date: date };
       series.forEach((s) => {
-        const value = s.data[index] || 0;
+        const value = s.data?.[index] || 0;
         if (s.name && s.name !== 'undefined') {
           row[s.name] = value;
         }
@@ -731,7 +820,7 @@ const AffiliatesChart = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [affiliateStatsChart, affiliate, chartPeriod]);
+  }, [affiliateStatsChartData, affiliate, chartPeriod]);
 
   const handleClickOutside = useCallback((event) => {
     const dropdown = document.querySelector('.dropdown-container');
@@ -747,33 +836,9 @@ const AffiliatesChart = () => {
     };
   }, [handleClickOutside]);
 
-  const affiliateChartOptions = useMemo(() => ({
-    tooltip: {
-      formatter: createTooltipFormatter('Fees'),
-    },
-    legend: {
-      show: false,
-    },
-    yAxis: {
-      show: false,
-    },
-  }), [createTooltipFormatter]);
-
-  const affiliateStatsChartOptions = useMemo(() => ({
-    tooltip: {
-      formatter: createTooltipFormatter('Volume'),
-    },
-    legend: {
-      show: false,
-    },
-    yAxis: {
-      show: false,
-    },
-  }), [createTooltipFormatter]);
-
   return (
-    <div className="header-affiliate">
-      <div className="header-controls">
+    <div className={styles.headerAffiliate}>
+      <div className={styles.headerControls}>
         <Nav
           activeMode={chartPeriod}
           navItems={chartPeriods}
@@ -792,70 +857,108 @@ const AffiliatesChart = () => {
 
       <CardsHeader tableGeneralStats={affiliateGeneralStats} />
       
-      <div className="charts-container">
-        <div className="chart-item">
+      <div className={styles.chartsContainer}>
+        <div className={styles.chartItem}>
           <Card title="Fees Stats">
-            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className={styles.cardHeader}>
               <h3>Fees Stats</h3>
-              <div className="csv-download" title="Download CSV" onClick={downloadAffiliateFeesChart}>
+              <div className={styles.csvDownload} title="Download CSV" onClick={downloadAffiliateFeesChart}>
                 <FileDownloadIcon className="clickable" style={{ cursor: 'pointer' }} />
               </div>
             </div>
             
-            <div className="card-content">
-              {affiliateChart && !loading ? (
+            <div className={styles.cardContent}>
+              {loading ? (
+                <ChartLoader barCount={15} />
+              ) : affiliateChartData.series && affiliateChartData.series.length > 0 ? (
                 <EChartsWrapper
-                  key={affiliateChartKey}
+                  key={`affiliate-chart-${affiliateChartKey}`}
                   type="bar"
-                  data={affiliateChart}
-                  options={affiliateChartOptions}
+                  data={affiliateChartData}
+                  options={{
+                    tooltip: {
+                      formatter: createTooltipFormatter('Fees')
+                    },
+                    legend: {
+                      show: false
+                    }
+                  }}
                   height="400px"
                 />
               ) : (
-                <ChartLoader barCount={15} />
+                <div style={{
+                  height: '400px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#999',
+                  fontSize: '16px',
+                  fontWeight: '500'
+                }}>
+                  No fee data available
+                </div>
               )}
             </div>
           </Card>
         </div>
 
-        <div className="chart-item">
+        <div className={styles.chartItem}>
           <Card title="Swaps Stats">
-            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className={styles.cardHeader}>
               <h3>Swaps Stats</h3>
-              <div className="csv-download" title="Download CSV" onClick={downloadAffiliateSwapsChart}>
+              <div className={styles.csvDownload} title="Download CSV" onClick={downloadAffiliateSwapsChart}>
                 <FileDownloadIcon className="clickable" style={{ cursor: 'pointer' }} />
               </div>
             </div>
             
-            <div className="card-content">
-              {affiliateStatsChart && !loading ? (
+            <div className={styles.cardContent}>
+              {loading ? (
+                <ChartLoader barCount={15} />
+              ) : affiliateStatsChartData.series && affiliateStatsChartData.series.length > 0 ? (
                 <EChartsWrapper
-                  key={affiliateStatsChartKey}
+                  key={`stats-chart-${affiliateStatsChartKey}`}
                   type="bar"
-                  data={affiliateStatsChart}
-                  options={affiliateStatsChartOptions}
+                  data={affiliateStatsChartData}
+                  options={{
+                    tooltip: {
+                      formatter: createTooltipFormatter('Volume')
+                    },
+                    legend: {
+                      show: false
+                    }
+                  }}
                   height="400px"
                 />
               ) : (
-                <ChartLoader barCount={15} />
+                <div style={{
+                  height: '400px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#999',
+                  fontSize: '16px',
+                  fontWeight: '500'
+                }}>
+                  No swap data available
+                </div>
               )}
             </div>
           </Card>
         </div>
       </div>
 
-      <div className="affiliate-table-section">
-        <div className="table-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+      <div className={styles.affiliateTableSection}>
+        <div className={styles.tableHeader}>
           <Header title="Top Swaps" />
-          <div className="csv-download" title="Download CSV" onClick={() => downloadAffiliateSwaps(affiliateSwaps)}>
+          <div className={styles.csvDownload} title="Download CSV" onClick={downloadAffiliateSwaps}>
             <FileDownloadIcon className="clickable" style={{ cursor: 'pointer' }} />
           </div>
         </div>
         
         <Transactions
-          txs={affiliateSwaps}
-          loading={!affiliateSwaps || isTableLoading}
-          columns={tableColumns}
+          txs={{ actions: affiliateSwaps }}
+          loading={isTableLoading}
+          props={tableColumns}
         />
       </div>
     </div>
