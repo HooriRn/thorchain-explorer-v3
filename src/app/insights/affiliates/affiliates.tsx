@@ -7,6 +7,7 @@ import { orderBy } from "lodash";
 import { useTheme } from "@/lib/store";
 import EChartsWrapper from "@/components/charts/EChartsWrapper";
 import ChartLoader from "@/components/ChartLoader";
+import TableLoader from "@/components/TableLoader";
 import CardsHeader from "@/components/CardsHeader";
 import AffiliateDropdown from "@/app/insights/affiliates/components/AffiliateDropdown";
 import Transactions from "@/components/Transactions";
@@ -17,6 +18,13 @@ import Header from "@/components/Header";
 import { getAffiliateHistory, getSwapsByThorname, getAffiliateStats } from "@/lib/api";
 import { affiliateList, affiliateMap, interfaces } from "@/utils";
 import styles from "./Affiliate.module.css";
+
+interface CustomTableColumn {
+  label: string;
+  field: string;
+  renderCell: (item: any) => React.ReactElement;
+  sortFn?: (array: any[]) => any[];
+}
 
 const AffiliatesChart = () => {
   const router = useRouter();
@@ -36,7 +44,7 @@ const AffiliatesChart = () => {
   const [affiliate, setAffiliate] = useState('');
   const [affiliateParam, setAffiliateParam] = useState('');
   
-  const [affiliateSwaps, setAffiliateSwaps] = useState([]);
+  const [affiliateSwaps, setAffiliateSwaps] = useState<any[]>([]);
   const [affiliateGeneralStats, setAffiliateGeneralStats] = useState([
     { name: 'Volume', value: '-' },
     { name: 'Swaps', value: '-' },
@@ -60,77 +68,64 @@ const AffiliatesChart = () => {
     [chartPeriod]
   );
 
-  const chartCount = useMemo(() => 
-    parseInt(chartPeriod) || 24, 
-    [chartPeriod]
-  );
+  const chartCount = useMemo(() => {
+    if (chartPeriod === '24h') return 24;
+    if (chartPeriod === '14d') return 14;
+    if (chartPeriod === '30d') return 30;
+    return 24;
+  }, [chartPeriod]);
 
   const affiliateListOptions = useMemo(() => 
     affiliateList().map(({ id }) => id), 
     []
   );
 
-  const sortByVolume = useCallback((rowX, rowY) => {
-    const getVolumeFromRow = (row) => {
-      const inPrice = +row?.metadata?.swap?.inPriceUSD ?? 0;
-      const inAmount = +row?.in[0]?.coins[0]?.amount ?? 0;
-      return inPrice * inAmount;
-    };
+  const sortByVolumeFn = useCallback((array: any[]) => {
+    return array.sort((rowX, rowY) => {
+      const getVolumeFromRow = (row: any) => {
+        if (!row || !row.in || !Array.isArray(row.in) || row.in.length === 0) {
+          return 0;
+        }
+        
+        const inPrice = +row?.metadata?.swap?.inPriceUSD || 0;
+        const inAmount = +row?.in[0]?.coins?.[0]?.amount || 0;
+        
+        if (isNaN(inPrice) || isNaN(inAmount)) {
+          return 0;
+        }
+        
+        return inPrice * inAmount;
+      };
 
-    const volumeX = getVolumeFromRow(rowX);
-    const volumeY = getVolumeFromRow(rowY);
-    return volumeX < volumeY ? -1 : volumeX > volumeY ? 1 : 0;
+      const volumeX = getVolumeFromRow(rowX);
+      const volumeY = getVolumeFromRow(rowY);
+      return volumeY - volumeX; 
+    });
   }, []);
 
-  const tableColumns = useMemo(() => [
-    {
-      label: 'Hash',
-      field: 'hash',
-      renderCell: (item) => {
-        const hash = item?.tx?.hash || item?.hash || '';
-        return <span className={styles.mono}>{hash.slice(0, 8)}...</span>;
-      }
-    },
-    {
-      label: 'Date',
-      field: 'date',
-      renderCell: (item) => {
-        const date = item?.tx?.date 
-          ? moment.unix(item.tx.date).format('YYYY-MM-DD HH:mm')
-          : moment().format('YYYY-MM-DD HH:mm');
-        return <span>{date}</span>;
-      }
-    },
-    {
-      label: 'From',
-      field: 'from',
-      renderCell: (item) => {
-        const from = item?.in?.[0]?.address || '';
-        return <span className={styles.mono}>{from.slice(0, 8)}...</span>;
-      }
-    },
-    {
-      label: 'To',
-      field: 'to',
-      renderCell: (item) => {
-        const to = item?.out?.[0]?.address || '';
-        return <span className={styles.mono}>{to.slice(0, 8)}...</span>;
-      }
-    },
+  const tableColumns: CustomTableColumn[] = useMemo(() => [
     {
       label: 'Volume',
       field: 'volume',
-      sortFn: sortByVolume,
-      renderCell: (item) => {
-        const inPrice = +item?.metadata?.swap?.inPriceUSD ?? 0;
-        const inAmount = +item?.in[0]?.coins[0]?.amount ?? 0;
+      sortFn: sortByVolumeFn, 
+      renderCell: (item: any) => {
+        const inPrice = +item?.metadata?.swap?.inPriceUSD || 0;
+        const inAmount = +item?.in[0]?.coins?.[0]?.amount || 0;
         const volume = inPrice * inAmount;
         return <span className={styles.mono}>{formatValue(volume)}</span>;
       }
     },
-  ], [sortByVolume]);
+  ], [sortByVolumeFn]);
 
-  const formatValue = useCallback((value) => {
+  const getTableLoaderColumns = useCallback(() => {
+    return tableColumns.map((col) => ({
+      label: col.label,
+      field: col.field,
+      type: "text",
+    }));
+  }, [tableColumns]);
+
+  const formatValue = useCallback((value: number) => {
     const numValue = Math.abs(value) / 1e8;
     
     if (numValue >= 1e9) {
@@ -145,7 +140,7 @@ const AffiliatesChart = () => {
     return `$${numValue.toFixed(4)}`;
   }, []);
 
-  const formatDate = useCallback((interval) => {
+  const formatDate = useCallback((interval: any) => {
     const timestamp = +interval.startTime * 1e3;
     const date = moment.utc(timestamp).local();
     return chartPeriod === '24h'
@@ -153,12 +148,12 @@ const AffiliatesChart = () => {
       : date.format('dddd, MMM D');
   }, [chartPeriod]);
 
-  const calculateStatsTotals = useCallback((data) => {
+  const calculateStatsTotals = useCallback((data: any) => {
     let totalVolume = 0;
     let totalCount = 0;
 
     if (data && Array.isArray(data)) {
-      data.forEach((item) => {
+      data.forEach((item: any) => {
         totalVolume += item.total_volume / 1e8;
         totalCount += item.count;
       });
@@ -167,12 +162,12 @@ const AffiliatesChart = () => {
     return { totalVolume, totalCount };
   }, []);
 
-  const calculateTotalEarnings = useCallback((data) => {
+  const calculateTotalEarnings = useCallback((data: any) => {
     let totalEarnings = 0;
 
     if (data?.intervals) {
-      data.intervals.forEach((interval) => {
-        interval.thornames?.forEach((thorname) => {
+      data.intervals.forEach((interval: any) => {
+        interval.thornames?.forEach((thorname: any) => {
           totalEarnings += +thorname.volumeUSD / 1e2;
         });
       });
@@ -181,7 +176,7 @@ const AffiliatesChart = () => {
     return totalEarnings;
   }, []);
 
-  const mapInterfaceName = useCallback((s) => {
+  const mapInterfaceName = useCallback((s: string) => {
     if (!s) return undefined;
     
     let ifc = interfaces[s.toLowerCase()];
@@ -194,8 +189,8 @@ const AffiliatesChart = () => {
     }
 
     const icons = {
-      url: undefined,
-      urlDark: undefined,
+      url: undefined as string | undefined,
+      urlDark: undefined as string | undefined,
     };
 
     if (ifc.icon) {
@@ -214,22 +209,22 @@ const AffiliatesChart = () => {
     };
   }, []);
 
-  const formatAffiliateHistory = useCallback((data) => {
+  const formatAffiliateHistory = useCallback((data: any) => {
     if (!data?.intervals || data.intervals.length === 0) {
       console.log('No history data available');
       return { labels: [], series: [] };
     }
 
-    const labels = [];
-    const seriesMap = new Map();
+    const labels: string[] = [];
+    const seriesMap = new Map<string, number[]>();
 
-    data.intervals.forEach((interval, intervalIndex) => {
+    data.intervals.forEach((interval: any, intervalIndex: number) => {
       if (intervalIndex === data.intervals.length - 1) return;
 
       const date = formatDate(interval);
       labels.push(date);
 
-      const groupedThornames = interval.thornames?.reduce((acc, thorname) => {
+      const groupedThornames = interval.thornames?.reduce((acc: Record<string, number>, thorname: any) => {
         if (!thorname.thorname) return acc;
 
         let key;
@@ -261,7 +256,7 @@ const AffiliatesChart = () => {
           seriesMap.set(name, new Array(labels.length - 1).fill(0));
         }
         
-        const seriesData = seriesMap.get(name);
+        const seriesData = seriesMap.get(name)!;
         while (seriesData.length < labels.length - 1) {
           seriesData.push(0);
         }
@@ -280,7 +275,7 @@ const AffiliatesChart = () => {
     const topSeries = sortedSeries.slice(0, 5);
     const otherSeries = sortedSeries.slice(5);
 
-    const othersData = [];
+    const othersData: number[] = [];
     if (labels.length > 0 && otherSeries.length > 0) {
       for (let i = 0; i < labels.length; i++) {
         let otherTotal = 0;
@@ -313,22 +308,22 @@ const AffiliatesChart = () => {
     };
   }, [formatDate]);
 
-  const formatAffiliateStats = useCallback((data) => {
+  const formatAffiliateStats = useCallback((data: any) => {
     if (!data || !Array.isArray(data) || data.length === 0) {
       console.log('No stats data available');
       return { labels: [], series: [] };
     }
 
-    const labels = [];
-    const seriesMap = new Map();
+    const labels: string[] = [];
+    const seriesMap = new Map<string, number[]>();
 
-    data.forEach((interval, intervalIndex) => {
+    data.forEach((interval: any, intervalIndex: number) => {
       if (intervalIndex === data.length - 1) return;
 
       const date = formatDate(interval);
       labels.push(date);
 
-      const groupedAffiliates = interval.affiliates?.reduce((acc, affiliate) => {
+      const groupedAffiliates = interval.affiliates?.reduce((acc: Record<string, number>, affiliate: any) => {
         if (!affiliate.affiliate) return acc;
 
         let key;
@@ -376,7 +371,7 @@ const AffiliatesChart = () => {
           seriesMap.set(name, new Array(labels.length - 1).fill(0));
         }
         
-        const seriesData = seriesMap.get(name);
+        const seriesData = seriesMap.get(name)!;
         while (seriesData.length < labels.length - 1) {
           seriesData.push(0);
         }
@@ -395,7 +390,7 @@ const AffiliatesChart = () => {
     const topSeries = sortedSeries.slice(0, 5);
     const otherSeries = sortedSeries.slice(5);
 
-    const othersData = [];
+    const othersData: number[] = [];
     if (labels.length > 0 && otherSeries.length > 0) {
       for (let i = 0; i < labels.length; i++) {
         let otherTotal = 0;
@@ -511,25 +506,34 @@ const AffiliatesChart = () => {
         chartInterval,
         chartPeriod
       });
-
+  
       setLoading(true);
       setIsTableLoading(true);
-
+  
       const historyParams = {
         count: chartCount,
         interval: chartInterval
       };
-
+  
       const statsParams = {
         count: chartCount,
         interval: chartInterval
       };
-
+  
       if (affiliate) {
         historyParams.thorname = affiliate;
         statsParams.thorname = affiliate;
       }
-
+  
+      console.log('API Params:', { historyParams, statsParams, affiliate });
+  
+      const swapsPromise = getSwapsByThorname(affiliate, chartPeriod);
+      
+      console.log('Calling getSwapsByThorname with:', {
+        thorname: affiliate,
+        period: chartPeriod
+      });
+  
       const [historyData, statsData, swapsData] = await Promise.all([
         getAffiliateHistory(historyParams).catch(err => {
           console.error('Error fetching affiliate history:', err);
@@ -539,11 +543,9 @@ const AffiliatesChart = () => {
           console.error('Error fetching affiliate stats:', err);
           return null;
         }),
-        getSwapsByThorname({
-          thorname: affiliate,
-          period: chartPeriod
-        }).catch(err => {
+        swapsPromise.catch(err => {
           console.error('Error fetching swaps:', err);
+          console.error('Full error details:', err.response?.data || err.message);
           return { actions: [] };
         }),
       ]);
@@ -558,7 +560,24 @@ const AffiliatesChart = () => {
 
       setAffiliateChartData(historyChartData);
       setAffiliateStatsChartData(statsChartData);
-      setAffiliateSwaps(swapsData?.actions || []);
+      
+      const swapsActions = swapsData?.actions || [];
+      
+      const validSwaps = swapsActions.filter(action => {
+        return action && typeof action === 'object';
+      });
+      
+      if (swapsActions.length > 0 && validSwaps.length === 0) {
+        console.warn('All swaps data is invalid. Sample:', swapsActions[0]);
+      }
+      
+      console.log('Setting affiliateSwaps:', {
+        originalCount: swapsActions.length,
+        validCount: validSwaps.length,
+        validSwaps: validSwaps
+      });
+      
+      setAffiliateSwaps(validSwaps);
 
       setAffiliateChartKey(prev => prev + 1);
       setAffiliateStatsChartKey(prev => prev + 1);
@@ -567,7 +586,7 @@ const AffiliatesChart = () => {
       const totalEarnings = calculateTotalEarnings(historyData);
       const volumePerSwap = totalCount > 0 ? totalVolume / totalCount : 0;
 
-      const formatNumber = (num) => {
+      const formatNumber = (num: number) => {
         if (num >= 1e9) return `${(num / 1e9).toFixed(1)}B`;
         if (num >= 1e6) return `${(num / 1e6).toFixed(1)}M`;
         if (num >= 1e3) return `${(num / 1e3).toFixed(1)}K`;
@@ -625,19 +644,28 @@ const AffiliatesChart = () => {
   }, [searchParams]);
 
   useEffect(() => {
+    console.log('Current affiliate state:', {
+      affiliate,
+      affiliateParam,
+      selectedFilter,
+      affiliateSwapsLength: affiliateSwaps.length
+    });
+    
     if (affiliate !== undefined) {
-      console.log('Affiliate changed, fetching data:', affiliate);
+      console.log('Fetching data for affiliate:', affiliate);
       fetchAllData();
     }
   }, [affiliate, chartCount, chartInterval, chartPeriod]);
 
-  const onPeriodChange = useCallback((newPeriod) => {
+
+
+  const onPeriodChange = useCallback((newPeriod: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('period', newPeriod);
     router.push(`?${params.toString()}`);
   }, [router, searchParams]);
 
-  const onAffiliateChange = useCallback((affiliateValue) => {
+  const onAffiliateChange = useCallback((affiliateValue: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (affiliateValue) {
       params.set('affiliate', affiliateValue);
@@ -654,15 +682,18 @@ const AffiliatesChart = () => {
   const downloadAffiliateSwaps = useCallback(() => {
     if (!affiliateSwaps || affiliateSwaps.length === 0) {
       console.error('No swaps data available for CSV download.');
+      alert('No swap data available to download.');
       return;
     }
 
-    const csvData = affiliateSwaps.map((swap) => {
-      const inPrice = +swap?.metadata?.swap?.inPriceUSD ?? 0;
-      const inAmount = +swap?.in[0]?.coins[0]?.amount ?? 0;
+    console.log('Downloading CSV with', affiliateSwaps.length, 'swaps');
+
+    const csvData = affiliateSwaps.map((swap: any) => {
+      const inPrice = +swap?.metadata?.swap?.inPriceUSD || 0;
+      const inAmount = +swap?.in[0]?.coins[0]?.amount || 0;
       const volume = inPrice * inAmount;
 
-      const nonAffiliateOuts = swap.out?.filter((out) => !out.affiliate) || [];
+      const nonAffiliateOuts = swap.out?.filter((out: any) => !out.affiliate) || [];
       const firstNonAffiliateOut = nonAffiliateOuts[0];
 
       return {
@@ -685,9 +716,9 @@ const AffiliatesChart = () => {
 
     const csvContent = [
       Object.keys(csvData[0]).join(','),
-      ...csvData.map((row) =>
+      ...csvData.map((row: any) =>
         Object.values(row)
-          .map((value) => `"${value}"`)
+          .map((value: any) => `"${value}"`)
           .join(',')
       ),
     ].join('\n');
@@ -715,6 +746,7 @@ const AffiliatesChart = () => {
   const downloadAffiliateFeesChart = useCallback(() => {
     if (!affiliateChartData.series || affiliateChartData.series.length === 0) {
       console.error('No chart data available for CSV download.');
+      alert('No chart data available to download.');
       return;
     }
 
@@ -726,10 +758,10 @@ const AffiliatesChart = () => {
       return;
     }
 
-    const csvData = [];
-    xAxis.forEach((date, index) => {
-      const row = { Date: date };
-      series.forEach((s) => {
+    const csvData: any[] = [];
+    xAxis.forEach((date: string, index: number) => {
+      const row: any = { Date: date };
+      series.forEach((s: any) => {
         const value = s.data?.[index] || 0;
         if (s.name && s.name !== 'undefined') {
           row[s.name] = value;
@@ -740,9 +772,9 @@ const AffiliatesChart = () => {
 
     const csvContent = [
       Object.keys(csvData[0]).join(','),
-      ...csvData.map((row) =>
+      ...csvData.map((row: any) =>
         Object.values(row)
-          .map((value) => `"${value}"`)
+          .map((value: any) => `"${value}"`)
           .join(',')
       ),
     ].join('\n');
@@ -770,6 +802,7 @@ const AffiliatesChart = () => {
   const downloadAffiliateSwapsChart = useCallback(() => {
     if (!affiliateStatsChartData.series || affiliateStatsChartData.series.length === 0) {
       console.error('No chart data available for CSV download.');
+      alert('No chart data available to download.');
       return;
     }
 
@@ -781,10 +814,10 @@ const AffiliatesChart = () => {
       return;
     }
 
-    const csvData = [];
-    xAxis.forEach((date, index) => {
-      const row = { Date: date };
-      series.forEach((s) => {
+    const csvData: any[] = [];
+    xAxis.forEach((date: string, index: number) => {
+      const row: any = { Date: date };
+      series.forEach((s: any) => {
         const value = s.data?.[index] || 0;
         if (s.name && s.name !== 'undefined') {
           row[s.name] = value;
@@ -795,9 +828,9 @@ const AffiliatesChart = () => {
 
     const csvContent = [
       Object.keys(csvData[0]).join(','),
-      ...csvData.map((row) =>
+      ...csvData.map((row: any) =>
         Object.values(row)
-          .map((value) => `"${value}"`)
+          .map((value: any) => `"${value}"`)
           .join(',')
       ),
     ].join('\n');
@@ -822,9 +855,9 @@ const AffiliatesChart = () => {
     document.body.removeChild(link);
   }, [affiliateStatsChartData, affiliate, chartPeriod]);
 
-  const handleClickOutside = useCallback((event) => {
+  const handleClickOutside = useCallback((event: MouseEvent) => {
     const dropdown = document.querySelector('.dropdown-container');
-    if (dropdown && !dropdown.contains(event.target)) {
+    if (dropdown && !dropdown.contains(event.target as Node)) {
       setIsDropdownOpen(false);
     }
   }, []);
@@ -843,7 +876,7 @@ const AffiliatesChart = () => {
           activeMode={chartPeriod}
           navItems={chartPeriods}
           preText="Period :"
-          onUpdateActiveMode={onPeriodChange}
+          onActiveModeChange={onPeriodChange}
         />
 
         <AffiliateDropdown
@@ -859,14 +892,19 @@ const AffiliatesChart = () => {
       
       <div className={styles.chartsContainer}>
         <div className={styles.chartItem}>
-          <Card title="Fees Stats">
-            <div className={styles.cardHeader}>
-              <h3>Fees Stats</h3>
-              <div className={styles.csvDownload} title="Download CSV" onClick={downloadAffiliateFeesChart}>
+          <Card 
+            title="Fees Stats"
+            header={
+              <div 
+                className={styles.csvDownload} 
+                title="Download CSV" 
+                onClick={downloadAffiliateFeesChart}
+                style={{ marginLeft: 'auto' }}
+              >
                 <FileDownloadIcon className="clickable" style={{ cursor: 'pointer' }} />
               </div>
-            </div>
-            
+            }
+          >
             <div className={styles.cardContent}>
               {loading ? (
                 <ChartLoader barCount={15} />
@@ -903,14 +941,19 @@ const AffiliatesChart = () => {
         </div>
 
         <div className={styles.chartItem}>
-          <Card title="Swaps Stats">
-            <div className={styles.cardHeader}>
-              <h3>Swaps Stats</h3>
-              <div className={styles.csvDownload} title="Download CSV" onClick={downloadAffiliateSwapsChart}>
+          <Card 
+            title="Swaps Stats"
+            header={
+              <div 
+                className={styles.csvDownload} 
+                title="Download CSV" 
+                onClick={downloadAffiliateSwapsChart}
+                style={{ marginLeft: 'auto' }}
+              >
                 <FileDownloadIcon className="clickable" style={{ cursor: 'pointer' }} />
               </div>
-            </div>
-            
+            }
+          >
             <div className={styles.cardContent}>
               {loading ? (
                 <ChartLoader barCount={15} />
@@ -955,11 +998,29 @@ const AffiliatesChart = () => {
           </div>
         </div>
         
-        <Transactions
-          txs={{ actions: affiliateSwaps }}
-          loading={isTableLoading}
-          props={tableColumns}
-        />
+        {isTableLoading ? (
+          <Card>
+            <TableLoader cols={getTableLoaderColumns()} />
+          </Card>
+        ) : affiliateSwaps.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '40px',
+            color: '#666',
+            backgroundColor: '#fafafa',
+            borderRadius: '8px',
+            marginTop: '20px'
+          }}>
+            <h3>No swap transactions found</h3>
+            <p>Try selecting a different affiliate or time period.</p>
+          </div>
+        ) : (
+          <Transactions
+            txs={{ actions: affiliateSwaps }}
+            loading={false}
+            props={tableColumns as any[]} 
+          />
+        )}
       </div>
     </div>
   );

@@ -513,9 +513,17 @@ export class MiddlewareAPI {
     thorname: string,
     period = "30d"
   ): Promise<SwapByThorname[]> {
+    const params: Record<string, any> = {
+      period,
+    };
+
+    if (thorname && thorname.trim() !== '') {
+      params.thorname = thorname;
+    }
+
     const response = await apiClient.getExternal<SwapByThorname[]>(
       `${this.config.SERVER_URL}swaps`,
-      { thorname, period }
+      params
     );
     return response.data;
   }
