@@ -84,6 +84,11 @@ const PoolsMain: React.FC = () => {
     { text: "Staged Pools", mode: "staged" },
   ];
 
+const gotoPool = (pool: string) => {
+  const encodedPool = encodeURIComponent(pool);
+  router.push(`/pool/poolName?asset=${encodedPool}`);
+};
+
   const formatAsset = (asset: string) => {
     return showAsset(asset, false);
   };
@@ -114,7 +119,15 @@ const PoolsMain: React.FC = () => {
       renderCell: (item: PoolData) => (
         <div className={styles["assetCell"]}>
           <AssetIcon asset={item.asset} />
-          <span className={styles["clickable"]}>{formatAsset(item.asset)}</span>
+          <span 
+            className={styles["clickable"]}
+            onClick={(e) => {
+              e.stopPropagation();
+              gotoPool(item.asset);
+            }}
+          >
+            {formatAsset(item.asset)}
+          </span>
         </div>
       ),
     }),
@@ -375,13 +388,13 @@ const PoolsMain: React.FC = () => {
     }
   };
 
-  const gotoPool = (asset: string) => {
-    router.push(`/pool/${asset}`);
-  };
-
   const getRowProps = (item: TableDataType) => ({
-    onClick: () => gotoPool((item as PoolData).asset),
+    onClick: () => {
+      const poolAsset = (item as PoolData).asset;
+      gotoPool(poolAsset);
+    },
     style: { cursor: "pointer" },
+    className: styles.clickableRow,
   });
 
   useEffect(() => {

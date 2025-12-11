@@ -35,17 +35,12 @@ import ArrowRightIcon from "@/assets/images/arrow-right.svg";
 import {
   useRunePrice,
   usePools,
-  useChainsHeight,
   useTheme,
   useSetRunePrice,
-  useSetChainsHeight,
 } from "@/lib/store";
 
 import {
   isMainnet,
-  normalFormat,
-  assetColorPalette,
-  showAsset,
 } from "@/utils/global";
 import { assetFromString } from "@/utils/index";
 import { blockTime } from "@/lib/utils";

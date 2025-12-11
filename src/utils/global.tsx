@@ -4,6 +4,7 @@ import {
   AssetCurrencySymbol,
   isSynthAsset,
 } from "@xchainjs/xchain-util";
+import { useRouter } from "next/navigation";
 import compare from "semver/functions/compare";
 import moment from "moment";
 import ColorHash from "color-hash";
@@ -260,7 +261,8 @@ export const gotoNode = (router, signer) => {
   router.push(`/node/${signer}`);
 };
 
-export const gotoPool = (router, pool) => {
+export const gotoPool = (pool: string) => {
+  const router = useRouter();
   router.push(`/pool/${pool}`);
 };
 
