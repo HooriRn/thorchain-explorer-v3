@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { useParams, Routes, Route } from 'react-router-dom';
+import { useParams } from "next/navigation";
 import { useRunePrice} from "@/lib/store";
 import CardsHeader from '@/components/CardsHeader';
 import {

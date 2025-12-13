@@ -1,7 +1,9 @@
 "use client"
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useParams } from "next/navigation";
+import {
+  useRunePrice,
+} from "@/lib/store";
 import { orderBy, sumBy } from 'lodash';
 import Address from '@/components/transactions/Address';
 import CardsHeader from '@/components/CardsHeader';
@@ -9,7 +11,7 @@ import Card from '@/components/ui/Card';
 import PieChart from '@/components/PieChart';
 import TableLoader from '@/components/TableLoader';
 import { Table, TableColumn, createCustomColumn } from '@/components/table';
-import { numberFilter, percentFilter } from '../filters';
+import { formatNumberToString, formatPercentToString } from "@/utils/format";
 import { formatAsset, showAsset} from "@/utils/global";
 import AssetIcon from '@/components/AssetIcon';
 import RuneIcon from '@/assets/images/rune.svg';
@@ -32,11 +34,10 @@ const PoolLP = () => {
   const [lpPositions, setLpPositions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [runePieData, setRunePieData] = useState([]);
+  const runePrice = useRunePrice();
   const [poolDetail, setPoolDetail] = useState(null);
   const [rows, setRows] = useState<LpPositionData[]>([]);
 
-  const runePrice = useSelector((state) => state.runePrice);
 
   const [lpGeneralStats, setLpGeneralStats] = useState([
     {
@@ -146,7 +147,7 @@ const PoolLP = () => {
         sortKey: 'ownershipPercentage',
         minWidth: 120,
         renderCell: (item: LpPositionData) => (
-          <span>{percentFilter(item.ownershipPercentage, 3)}</span>
+          <span>{formatPercentToString(item.ownershipPercentage, 3)}</span>
         ),
       }),
       createCustomColumn<LpPositionData>('Last Height added', {
@@ -268,11 +269,11 @@ const PoolLP = () => {
       setLpGeneralStats([
         {
           name: 'Balance Rune',
-          value: numberFilter(balanceRune / 1e8, '0a'),
+          value: formatNumberToString(balanceRune / 1e8, '0a'),
         },
         {
           name: 'Balance Asset',
-          value: numberFilter(balanceAsset / 1e8, '0a'),
+          value: formatNumberToString(balanceAsset / 1e8, '0a'),
         },
       ]);
     } else {
@@ -294,11 +295,11 @@ const PoolLP = () => {
   };
 
   const formatNumber = (number) => {
-    return numberFilter(number, '0,0.0000');
+    return formatNumberToString(number, '0,0.0000');
   };
 
   const formatBlock = (number) => {
-    return numberFilter(number, '0,0');
+    return formatNumberToString(number, '0,0');
   };
 
   const formatAddress = (address) => {
@@ -318,7 +319,7 @@ const PoolLP = () => {
       <div class="tooltip-body">
         <span>
           <span>Value</span>
-          <b>$${numberFilter(param.value, '0,0.00 a')}</b>
+          <b>$${formatNumberToString(param.value, '0,0.00 a')}</b>
         </span>
       </div>
     `;

@@ -1,0 +1,15 @@
+.pool-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--card-bg-color);
+    color: var(--sec-font-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-12);
+  }
+  .pool-overview {
+    width: 100%;
+    .chart-wrapper {
+      border-color: transparent;
+    }
+  }

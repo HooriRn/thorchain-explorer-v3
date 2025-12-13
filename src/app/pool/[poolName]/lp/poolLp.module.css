@@ -1,0 +1,13 @@
+.lp-container {
+    border: none;
+    padding: var(--space-0);
+  }
+  
+  .pie-chart-container {
+    display: flex;
+    margin-bottom: var(--space-20);
+  }
+  
+  .table-card {
+    margin-top: var(--space-20);
+  }

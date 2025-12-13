@@ -36,13 +36,37 @@ export class InfraAPI {
   }
 
   async getInfraEarnings(params: InfraEarningsParams): Promise<InfraEarnings[]> {
-    const response = await apiClient.getExternal<InfraEarnings[]>(
-      `${this.config.SERVER_URL}earnings`,
-      {
-        params,
+    console.log('getInfraEarnings called with params:', params);
+    console.log('SERVER_URL:', this.config.SERVER_URL);
+    
+    try {
+      const response = await apiClient.getExternal<InfraEarnings[]>(
+        `${this.config.SERVER_URL}earnings`,
+        {
+          params: params
+        }
+      );
+      
+      console.log('Infra earnings response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error in getInfraEarnings:', error);
+      
+      const fullUrl = `${this.config.SERVER_URL}earnings?interval=${params.interval}&count=${params.count}`;
+      console.log('Trying direct URL:', fullUrl);
+      
+      const directResponse = await fetch(fullUrl, {
+        headers: {
+          'x-client-id': 'thorchain.net'
+        }
+      });
+      
+      if (directResponse.ok) {
+        return await directResponse.json();
       }
-    )
-    return response.data
+      
+      throw error;
+    }
   }
 
   async getTHORLastBlock(): Promise<THORLastBlock> {

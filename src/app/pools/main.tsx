@@ -84,10 +84,11 @@ const PoolsMain: React.FC = () => {
     { text: "Staged Pools", mode: "staged" },
   ];
 
-const gotoPool = (pool: string) => {
-  const encodedPool = encodeURIComponent(pool);
-  router.push(`/pool/poolName?asset=${encodedPool}`);
-};
+  const gotoPool = (pool: string) => {
+    const encodedPool = encodeURIComponent(pool);
+    router.push(`/pool/${encodedPool}`);
+  };
+  
 
   const formatAsset = (asset: string) => {
     return showAsset(asset, false);

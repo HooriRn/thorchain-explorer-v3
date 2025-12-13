@@ -26,11 +26,11 @@ useEffect( () =>{
 
 const goNext = () => {
   api.getACtions({
-    limit:50;
-    asset: poolName;
-    nextPageToken: nextPageToken;
-    prevPageToken: prevPageToken;
-    type: 'swap';
+    limit:50,
+    asset: poolName,
+    nextPageToken: nextPageToken,
+    prevPageToken: prevPageToken,
+    type: 'swap',
   })
   .thn((res) =>{
     setTxs(res.data);

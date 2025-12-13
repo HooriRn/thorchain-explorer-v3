@@ -187,11 +187,20 @@ export class MidgardAPI {
 
   async getEarningHistory(count = 30): Promise<EarningsHistory[]> {
     if (process.env.NETWORK === 'mainnet') {
-      return await getInfraEarnings({
+      const params = {
         interval: 'day',
-        count,
-      })
+        count: count
+      };
+      
+      console.log('Fetching infra earnings with params:', params);
+      
+      try {
+        return await getInfraEarnings(params);
+      } catch (error) {
+        console.error('Error fetching from infra, falling back to local API:', error);
+      }
     }
+    
     const response = await apiClient.get<EarningsHistory[]>(
       `history/earnings?interval=day&count=${count || 60}`
     );
