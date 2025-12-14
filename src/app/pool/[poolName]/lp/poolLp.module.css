@@ -11,3 +11,9 @@
   .table-card {
     margin-top: var(--space-20);
   }
+
+  .runeCur {
+    height: 1rem;
+    fill: currentColor;
+    font-size: 1rem;
+  }
