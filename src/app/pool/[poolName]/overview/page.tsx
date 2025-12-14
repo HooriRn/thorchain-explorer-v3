@@ -341,16 +341,16 @@ const PoolOverview = () => {
             return Number(p?.value || 0);
           };
 
-          const header = `<div class="tooltip-header">${date}</div>`;
+          const header = `<div class="${styles['tooltip-header']}">${date}</div>`;
           
           const bodyLines = params.map((p: any) => {
             const value = valueOf(p);
             if (value <= 0) return "";
             
             return `
-              <span class="tooltip-item space">
-                <span class="series-name-color">
-                  <span class="data-color" style="background-color: ${p.color};"></span>
+              <span class="${styles['tooltip-item']} ${styles['space']}">
+                <span class="${styles['series-name-color']}">
+                  <span class="${styles['data-color']}" style="background-color: ${p.color};"></span>
                   <span>${p.seriesName}</span>
                 </span>
                 <span>${formatValue(value)}</span>
@@ -360,14 +360,14 @@ const PoolOverview = () => {
           const total = params.reduce((sum, p) => sum + valueOf(p), 0);
           
           const totalLine = `
-            <span class="tooltip-item space" style="border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px;">
+            <span class="${styles['tooltip-item']} ${styles['space']}" style="border-top: 1px solid var(--border-color); margin-top: 4px; padding-top: 4px;">
               <span>Total</span>
               <span>${formatValue(total)}</span>
             </span>`;
 
           return `
             ${header}
-            <div class="tooltip-body">
+            <div class="${styles['tooltip-body']}">
               ${bodyLines.join("")}
               ${totalLine}
             </div>`;
@@ -490,14 +490,14 @@ const PoolOverview = () => {
             return Number(p?.value || 0);
           };
 
-          const header = `<div class="tooltip-header">${date}</div>`;
+          const header = `<div class="${styles['tooltip-header']}">${date}</div>`;
           
           const bodyLines = params.map((p: any) => {
             const value = valueOf(p);
             return `
-              <span class="tooltip-item space">
-                <span class="series-name-color">
-                  <span class="data-color" style="background-color: ${p.color};"></span>
+              <span class="${styles['tooltip-item']} ${styles['space']}">
+                <span class="${styles['series-name-color']}">
+                  <span class="${styles['data-color']}" style="background-color: ${p.color};"></span>
                   <span>${p.seriesName}</span>
                 </span>
                 <span>${formatValue(value, false)} ${p.seriesName.includes('Asset') ? showAsset(pool?.asset || '') : 'RUNE'}</span>
@@ -513,14 +513,14 @@ const PoolOverview = () => {
           }, 0);
 
           const totalLine = `
-            <span class="tooltip-item space" style="border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px;">
+            <span class="${styles['tooltip-item']} ${styles['space']}" style="border-top: 1px solid var(--border-color); margin-top: 4px; padding-top: 4px;">
               <span>Total Depth (USD)</span>
               <span>${formatValue(totalDepthUSD)}</span>
             </span>`;
 
           return `
             ${header}
-            <div class="tooltip-body">
+            <div class="${styles['tooltip-body']}">
               ${bodyLines.join("")}
               ${totalLine}
             </div>`;
@@ -682,7 +682,7 @@ const PoolOverview = () => {
             return Number(p?.value || 0);
           };
 
-          const header = `<div class="tooltip-header">${date}</div>`;
+          const header = `<div class="${styles['tooltip-header']}">${date}</div>`;
           
           const sortedParams = [...params].sort((a, b) => valueOf(b) - valueOf(a));
           
@@ -691,9 +691,9 @@ const PoolOverview = () => {
             if (value <= 0) return "";
             
             return `
-              <span class="tooltip-item space">
-                <span class="series-name-color">
-                  <span class="data-color" style="background-color: ${p.color};"></span>
+              <span class="${styles['tooltip-item']} ${styles['space']}">
+                <span class="${styles['series-name-color']}">
+                  <span class="${styles['data-color']}" style="background-color: ${p.color};"></span>
                   <span>${p.seriesName}</span>
                 </span>
                 <span>${formatValue(value)}</span>
@@ -703,20 +703,20 @@ const PoolOverview = () => {
           const totalVolume = sortedParams.reduce((sum, p) => sum + valueOf(p), 0);
           
           const totalLine = `
-            <span class="tooltip-item space" style="border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px;">
+            <span class="${styles['tooltip-item']} ${styles['space']}" style="border-top: 1px solid var(--border-color); margin-top: 4px; padding-top: 4px;">
               <span>Total Volume</span>
               <span>${formatValue(totalVolume)}</span>
             </span>`;
           
           const countLine = `
-            <span class="tooltip-item space">
+            <span class="${styles['tooltip-item']} ${styles['space']}">
               <span>Swap Count</span>
               <span>${number(swapCount, '0,0')}</span>
             </span>`;
 
           return `
             ${header}
-            <div class="tooltip-body">
+            <div class="${styles['tooltip-body']}">
               ${bodyLines.join("")}
               ${totalLine}
               ${countLine}
@@ -842,7 +842,7 @@ const PoolOverview = () => {
   if (!poolNameString) {
     return (
       <Page className={styles.page} suppressHydrationWarning>
-        <div className={styles.cardsContainer}>
+        <div className={styles['cards-container']}>
           <Card title="Error">
             <div className={styles.errorContainer}>
               <p>Pool name is required</p>
@@ -855,7 +855,7 @@ const PoolOverview = () => {
 
   return (
     <Page className={styles.page} suppressHydrationWarning>
-      <div className={styles.cardsContainer}>
+      <div className={styles['cards-container']}>
         <InfoCard 
           options={poolDetailStats} 
           inner={true}
@@ -865,7 +865,7 @@ const PoolOverview = () => {
           {renderEarningsChart()}
         </Card>
       </div>
-      <div className={styles.cardsContainer}>
+      <div className={styles['cards-container']}>
         <Card title={`${showAsset(poolNameString)} Depth`}>
           {renderDepthChart()}
         </Card>
@@ -873,7 +873,7 @@ const PoolOverview = () => {
           {renderSwapsChart()}
         </Card>
       </div>
-      <div className={styles.footerStat}>
+      <div className={styles['footer-stat']}>
         <small>
           <sup>*</sup>
           All of the stat are based on 30 days period
