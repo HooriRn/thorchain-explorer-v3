@@ -9,7 +9,7 @@ import CardsHeader from "@/components/CardsHeader";
 import Card from "@/components/ui/Card";
 import TableLoader from "@/components/TableLoader";
 import { Table, TableColumn, createCustomColumn } from "@/components/table";
-import { formatNumberToString, formatPercentToString } from "@/utils/format";
+import { formatNumberToString, formatPercentToString, formatVueNumber } from "@/utils/format";
 import { showAsset } from "@/utils/global";
 import RuneIcon from "@/assets/images/rune.svg";
 import styles from "./PoolLP.module.css";
@@ -18,6 +18,7 @@ import { getLpPositions, getPoolDetail } from "@/lib/api";
 import { useTheme } from "@/lib/store";
 import { getChartColor, getCurrentChartTheme } from "@/utils/global";
 import PieChart from "@/components/PieChart";
+
 
 interface LpPositionData {
   position: string;
@@ -35,8 +36,8 @@ interface PieChartData {
   name: string;
   value: number;
   ownership?: number;
-  color?: string; 
-  vol?: number; 
+  color?: string;
+  vol?: number;
 }
 
 interface PoolDetailData {
@@ -64,7 +65,7 @@ const PoolLP = () => {
   const params = useParams();
   const poolName = params?.poolName;
   const runePrice = useRunePrice();
-  const theme = useTheme(); 
+  const theme = useTheme();
 
   const [lpPositions, setLpPositions] = useState<LpPositionResponse[]>([]);
   const [poolDetail, setPoolDetail] = useState<PoolDetailData | null>(null);
@@ -88,10 +89,26 @@ const PoolLP = () => {
     return poolName;
   }, [poolName]);
 
-  const columns = useMemo((): TableColumn<LpPositionData>[] => {
-    const formatNumber = (num: number) => formatNumberToString(num, "0,0.0000");
-    const formatBlock = (num: number) => formatNumberToString(num, "0,0");
+  const formatNumber = (value: number | string) => {
+    if (value === "Not Added") return value;
+    return formatNumberToString(Number(value), "0,0.0000");
+  };
 
+  const formatBlock = (value: number) => {
+    return formatNumberToString(value, "0,0");
+  };
+
+  const formatAddress = (value?: string) => {
+    return value || "Not Assigned";
+  };
+
+  const runeCur = () => {
+    return (
+      <RuneIcon className={styles.runeCur} style={{ marginRight: "4px" }} />
+    );
+  };
+
+  const columns = useMemo((): TableColumn<LpPositionData>[] => {
     return [
       createCustomColumn<LpPositionData>("Position", {
         sortKey: "position",
@@ -131,11 +148,7 @@ const PoolLP = () => {
         minWidth: 150,
         className: "mono",
         renderCell: (item: LpPositionData) => (
-          <span className="mono">
-            {item.asset_add === "Not Added"
-              ? "Not Added"
-              : formatNumber(item.asset_add as number)}
-          </span>
+          <span className="mono">{formatNumber(item.asset_add)}</span>
         ),
       }),
       createCustomColumn<LpPositionData>("Rune added", {
@@ -146,7 +159,10 @@ const PoolLP = () => {
           <span className="mono">
             {item.rune_add === "Not Added"
               ? "Not Added"
-              : `RUNE ${formatNumber(item.rune_add as number)}`}
+              : <>
+                  {runeCur()}
+                  {formatNumber(item.rune_add)}
+                </>}
           </span>
         ),
       }),
@@ -163,8 +179,8 @@ const PoolLP = () => {
         minWidth: 150,
         className: "mono",
         renderCell: (item: LpPositionData) => (
-          <div className={`mono ${styles.cellContent}`}>
-            <RuneIcon className={styles.runeCur} />
+          <div className="mono">
+            {runeCur()}
             {formatNumber(item.claimableRune)}
           </div>
         ),
@@ -202,14 +218,10 @@ const PoolLP = () => {
       setError(null);
 
       try {
-        console.log(`Fetching LP data for pool: ${poolNameString}`);
-
         const results = await Promise.allSettled([
           getLpPositions(poolNameString),
           getPoolDetail(poolNameString),
         ]);
-
-        console.log("API Results:", results);
 
         const [lpPositionsRes, poolDetailRes] = results;
 
@@ -234,37 +246,20 @@ const PoolLP = () => {
           const lpPositionsData = lpPositionsRes.value as any;
           const poolDetailData = poolDetailRes.value as PoolDetailData;
 
-          console.log("LP Positions Data:", lpPositionsData);
-          console.log("Pool Detail Data:", poolDetailData);
-
           if (!lpPositionsData || !Array.isArray(lpPositionsData)) {
             setError("Invalid LP positions data format");
-            console.error(
-              "LP positions data is not an array:",
-              lpPositionsData
-            );
             return;
           }
 
           if (!poolDetailData) {
             setError("Invalid pool detail data format");
-            console.error("Pool detail data is null:", poolDetailData);
             return;
           }
 
           setLpPositions(lpPositionsData);
           setPoolDetail(poolDetailData);
 
-          const { formattedRows, pieData } = formatLPData(
-            lpPositionsData,
-            poolDetailData
-          );
-          console.log("Formatted Rows:", formattedRows);
-          console.log("Pie Data:", pieData);
-
-          setRows(formattedRows);
-          setRunePieData(pieData);
-
+          formatLP(lpPositionsData, poolDetailData);
           updateGeneralStats(poolDetailData);
         } else {
           setError("Failed to fetch required data");
@@ -280,26 +275,30 @@ const PoolLP = () => {
     fetchData();
   }, [poolNameString, runePrice]);
 
-  const formatLPData = (
-    positions: LpPositionResponse[],
-    poolDetail: PoolDetailData
-  ): { formattedRows: LpPositionData[]; pieData: PieChartData[] } => {
+  const checkPositionType = (position: LpPositionResponse): string => {
+    let pos = "";
+    if (position?.asset_address) {
+      pos = "Asymmetrical Asset";
+    }
+    if (position?.rune_address) {
+      pos = "Asymmetrical Rune";
+    }
+    if (position?.asset_address && position?.rune_address) {
+      pos = "Symmetrical";
+    }
+    return pos;
+  };
+
+  const formatLP = (positions: LpPositionResponse[], poolDetail: PoolDetailData) => {
     const lpUnits = poolDetail.LP_units || 0;
     const balanceRune = poolDetail.balance_rune || 0;
     const balanceAsset = poolDetail.balance_asset || 0;
 
-    const pieData: PieChartData[] = [];
+    const runeData: PieChartData[] = [];
     const formattedRows: LpPositionData[] = [];
-
-    console.log(
-      `Formatting LP Data: LP Units=${lpUnits}, Balance Rune=${balanceRune}, Balance Asset=${balanceAsset}`
-    );
 
     positions.forEach((position, index) => {
       const userUnits = position?.units || 0;
-      console.log(
-        `Position ${index}: units=${userUnits}, rune_address=${position?.rune_address}, asset_address=${position?.asset_address}`
-      );
 
       const assetClaimable =
         lpUnits > 0 ? ((userUnits / lpUnits) * balanceAsset) / 1e8 : 0;
@@ -333,50 +332,36 @@ const PoolLP = () => {
           getCurrentChartTheme(theme)
         );
 
-        pieData.push({
+        runeData.push({
           name: address || `Position ${index + 1}`,
           value: value,
           ownership: ownershipPercentage,
           color: color,
-          vol: value, 
+          vol: value,
         });
-
-        console.log(
-          `Pie data for ${address}: value=${value}, ownership=${ownershipPercentage}, color=${color}`
-        );
       }
     });
 
-    const sortedPieData = orderBy(pieData, "value", "desc");
-    const topPieData = sortedPieData.slice(0, 6);
-    const othersValue = sumBy(sortedPieData.slice(6), "value");
+    const sortedRows = orderBy(formattedRows, "ownershipPercentage", "desc");
+    setRows(sortedRows);
 
-    if (othersValue > 0) {
-      topPieData.push({
-        name: "Other positions",
-        value: othersValue,
-        color: getChartColor(6, getCurrentChartTheme(theme)),
-        vol: othersValue,
-      });
-    }
-
-    console.log("Final Pie Data:", topPieData);
-
-    return {
-      formattedRows,
-      pieData: topPieData,
-    };
+    createRunePieData(runeData);
   };
 
-  const checkPositionType = (position: LpPositionResponse): string => {
-    if (position?.asset_address && position?.rune_address) {
-      return "Symmetrical";
-    } else if (position?.asset_address) {
-      return "Asymmetrical Asset";
-    } else if (position?.rune_address) {
-      return "Asymmetrical Rune";
-    }
-    return "Unknown";
+  const createRunePieData = (runeData: PieChartData[]) => {
+    const topRuneData = orderBy(runeData, "ownership", "desc").slice(0, 10);
+    const othersValue = sumBy(runeData.slice(10), "value");
+
+    const finalPieData = [
+      ...topRuneData,
+      {
+        name: "Others",
+        value: othersValue,
+        color: getChartColor(6, getCurrentChartTheme(theme)),
+      },
+    ];
+
+    setRunePieData(finalPieData);
   };
 
   const updateGeneralStats = (poolDetail: PoolDetailData) => {
@@ -387,7 +372,7 @@ const PoolLP = () => {
       const stats: GeneralStatsItem[] = [
         {
           name: "Balance Rune",
-          value: formatNumberToString(balanceRune / 1e8, "0a"),
+          value: formatVueNumber(balanceRune / 1e8, "0a"),
         },
         {
           name: "Balance Asset",
@@ -395,60 +380,27 @@ const PoolLP = () => {
         },
       ];
 
-      console.log("Updated General Stats:", stats);
       setLpGeneralStats(stats);
     }
   };
 
-  const totalRuneFormatter = (value: any, name: string) => {
-    const pool = runePieData.find((p) => p.name === name);
-    if (!pool) {
-      return `$${formatNumberToString(value, {
-        decimalScale: 1,
+  const totalRuneFormatter = (param: any) => {
+    const formatNumber = (value: number) => {
+      return formatNumberToString(value, {
+        decimalScale: 2,
         notation: "compact",
-      })}`;
-    }
-
-    const formatValue = (val: number) => {
-      if (val >= 1e9) {
-        return `$${(val / 1e9).toFixed(1)}B`;
-      } else if (val >= 1e6) {
-        return `$${(val / 1e6).toFixed(1)}M`;
-      } else if (val >= 1e3) {
-        return `$${(val / 1e3).toFixed(1)}K`;
-      } else {
-        return `$${val.toFixed(0)}`;
-      }
+      });
     };
-
-    const formattedValue = formatValue(pool.value);
-    const formattedOwnership = formatPercentToString(
-      pool.ownership || 0,
-      3
-    );
 
     return `
       <div class="tooltip-header">
-        <span>${name}</span>
+        <div class="data-color" style="background-color: ${param.color || "#ccc"}"></div>
+        ${param.name || "Unknown"}
       </div>
       <div class="tooltip-body">
-        <span class="tooltip-item space">
-          <span class="series-name-color">
-            <span class="data-color" style="background-color: ${
-              pool.color || "#ccc"
-            };"></span>
-            <span>Value</span>
-          </span>
-          <span>${formattedValue}</span>
-        </span>
-        <span class="tooltip-item space">
-          <span class="series-name-color">
-            <span class="data-color" style="background-color: ${
-              pool.color || "#ccc"
-            };"></span>
-            <span>Ownership</span>
-          </span>
-          <span>${formattedOwnership}</span>
+        <span>
+          <span>Value</span>
+          <b>$${formatNumber(param.value)}</b>
         </span>
       </div>
     `;
@@ -467,13 +419,19 @@ const PoolLP = () => {
     `,
   };
 
-  console.log("Current State:", {
+  const tableProps = {
+    columns,
+    data: rows,
     loading,
-    error,
-    rowsCount: rows.length,
-    pieDataCount: runePieData.length,
-    generalStats: lpGeneralStats,
-  });
+    enableSort: true,
+    enableSelect: false,
+    customTheme,
+    className: "vgt-table net-table",
+    onSortChange: (action: any, state: any) => {
+    },
+    onRowSelectChange: (action: any, state: any) => {
+    },
+  };
 
   return (
     <div>
@@ -481,22 +439,36 @@ const PoolLP = () => {
       <div className={styles.pieChartContainer}>
         <Card
           title="Address Distribution"
-          isLoading={loading}
+          isLoading={!runePieData || runePieData.length === 0}
         >
-          {loading ? (
-            <div className={styles.loadingContainer}>
-              <div className={styles.loaderWrapper}>
-                {/* می‌توانید از spinner دلخواه استفاده کنید */}
-                <div>Loading chart...</div>
-              </div>
-            </div>
-          ) : runePieData.length > 0 ? (
+          {runePieData && runePieData.length > 0 ? (
             <PieChart 
               pieData={runePieData} 
               formatter={totalRuneFormatter}
               height="200px"
               showLoading={false}
               showLegend={false}
+              extra={{
+                center: ["50%", "50%"],
+                label: {
+                  show: true,
+                  position: "outside",
+                  formatter: function (params: any) {
+                    const name = params.name;                    
+                  },
+                  fontSize: 12,
+                  color: theme === "dark" || theme === "BlueElectra" ? "#e6e6e6" : "#333333",
+                },
+                labelLine: {
+                  show: true,
+                  length: 15,
+                  length2: 10,
+                  lineStyle: {
+                    color: theme === "dark" || theme === "BlueElectra" ? "#999999" : "#cccccc",
+                    width: 1,
+                  },
+                },
+              }}
             />
           ) : (
             <div className={styles.noData}>
@@ -508,24 +480,14 @@ const PoolLP = () => {
       <Card className={styles.tableCard}>
         {error ? (
           <div className={styles.baseContainer}>
-            <span style={{ color: "red" }}>Error: {error}</span>
+            <span>Can't fetch the pool LPs</span>
           </div>
         ) : (
           <div className={`${styles.baseContainer} ${styles.lpContainer}`}>
             {loading ? (
               <TableLoader cols={columns as any} rows={Array(10).fill({})} />
             ) : rows.length > 0 ? (
-              <Table
-                columns={columns}
-                data={rows}
-                loading={loading}
-                onSortChange={(action, state) => {}}
-                onRowSelectChange={(action, state) => {}}
-                enableSort={true}
-                enableSelect={false}
-                customTheme={customTheme}
-                className="vgt-table net-table"
-              />
+              <Table {...tableProps} />
             ) : (
               <div className={styles.noData}>
                 <p>No LP positions found for this pool</p>

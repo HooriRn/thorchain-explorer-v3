@@ -1,11 +1,11 @@
-.lp-container {
+.lpContainer{
     border: none;
     padding: var(--space-0);
   }
   
-  .pie-chart-container {
+  .pieChartContainer {
     display: flex;
-    margin-bottom: var(--space-20);
+    margin-bottom: var(--space-20) !important;
   }
   
   .table-card {
@@ -13,7 +13,7 @@
   }
 
   .runeCur {
-    height: 1rem;
+    height: 0.7rem;
     fill: currentColor;
     font-size: 1rem;
   }

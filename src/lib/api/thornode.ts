@@ -398,13 +398,15 @@ export class ThornodeAPI {
     return response.data;
   }
 
-  async getSavers(poolName?: string): Promise<Saver[]> {
-    const url = poolName
-      ? `${this.config.THORNODE_URL}thorchain/savers/${poolName}`
-      : `${this.config.THORNODE_URL}thorchain/savers`;
-    const response = await apiClient.getExternal<Saver[]>(url);
+
+  async getSavers(poolName: string): Promise<Saver[]> {
+    const response = await apiClient.getExternal<Saver[]>(
+      `${this.config.THORNODE_URL}thorchain/pool/${poolName}/savers`
+    );
     return response.data;
   }
+  
+
 
   async getPol(): Promise<Pol> {
     const response = await apiClient.getExternal<Pol>(
