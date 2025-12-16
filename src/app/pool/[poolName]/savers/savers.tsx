@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { orderBy, sumBy } from "lodash";
 import Address from "@/components/transactions/Address";
@@ -11,7 +11,7 @@ import { Table, TableColumn, createCustomColumn } from "@/components/table";
 import { number, percent, formatNumberToString } from "@/utils/format";
 import { getLastBlockHeight, getSavers } from "@/lib/api";
 import { useTheme } from "@/lib/store";
-import { getChartColor, getCurrentChartTheme } from "@/utils/global";
+import { getChartColor, getCurrentChartTheme, showAsset } from "@/utils/global";
 
 interface SaverDetail {
   asset_address: string;
@@ -28,9 +28,15 @@ interface SaverDetail {
 }
 
 interface SaversContentProps {
-  saversData?: {
+  saversData: {
     filled?: number;
     assetPriceUSD?: number;
+    asset?: string;
+    earned?: number;
+    saversCount?: number;
+    saversDepth?: number;
+    saversReturn?: number;
+    [key: string]: any;
   };
 }
 
@@ -38,9 +44,18 @@ interface PieChartData {
   name: string;
   value: number;
   color?: string;
+  formattedValue?: string;
 }
 
-const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
+interface TableSortOptions {
+  enabled: boolean;
+  initialSortBy?: {
+    field: string;
+    type: "asc" | "desc";
+  };
+}
+
+const SaversContent: React.FC<SaversContentProps> = ({ saversData }) => {
   const params = useParams();
   const theme = useTheme();
   
@@ -53,7 +68,23 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
   const [error, setError] = useState<string | null>(null);
   const [saverDetails, setSaverDetails] = useState<SaverDetail[]>([]);
   const [saversPie, setSaversPie] = useState<PieChartData[]>([]);
-  const [lastBlockHeight, setLastBlockHeight] = useState<number>();
+  const [lastBlockHeight, setLastBlockHeight] = useState<number>(0);
+
+  const baseAmountFormatOrZero = useCallback((value: number) => {
+    if (value === undefined || value === null || isNaN(value)) return "-";
+    return number(value, "0,0.0000");
+  }, []);
+
+  const normalFormat = useCallback((value: number) => {
+    if (value === undefined || value === null || isNaN(value)) return "-";
+    return number(value, "0,0");
+  }, []);
+
+  const formatAddress = useCallback((address: string) => {
+    if (!address) return "Unknown";
+    if (address.length <= 20) return address;
+    return `${address.substring(0, 10)}...${address.substring(address.length - 10)}`;
+  }, []);
 
   const columns = useMemo((): TableColumn<SaverDetail>[] => {
     return [
@@ -69,6 +100,7 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
         sortKey: "asset_deposit_value",
         minWidth: 150,
         className: "mono",
+        sortable: true,
         renderCell: (item: SaverDetail) => (
           <span className="mono">
             {baseAmountFormatOrZero(item.asset_deposit_value)}
@@ -79,6 +111,7 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
         sortKey: "asset_redeem_value",
         minWidth: 150,
         className: "mono",
+        sortable: true,
         renderCell: (item: SaverDetail) => (
           <span className="mono">
             {baseAmountFormatOrZero(item.asset_redeem_value)}
@@ -89,6 +122,7 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
         sortKey: "asset_earned",
         minWidth: 120,
         className: "mono",
+        sortable: true,
         renderCell: (item: SaverDetail) => (
           <span className="mono">
             {baseAmountFormatOrZero(item.asset_earned)}
@@ -99,6 +133,7 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
         sortKey: "growth_pct",
         minWidth: 150,
         className: "mono",
+        sortable: true,
         renderCell: (item: SaverDetail) => (
           <span className="mono">{percent(item.growth_pct, 2)}</span>
         ),
@@ -107,6 +142,7 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
         sortKey: "APR",
         minWidth: 150,
         className: "mono",
+        sortable: true,
         renderCell: (item: SaverDetail) => (
           <span className="mono">{percent(item.APR, 2)}</span>
         ),
@@ -115,12 +151,13 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
         sortKey: "last_add_height",
         minWidth: 150,
         className: "mono",
+        sortable: true,
         renderCell: (item: SaverDetail) => (
           <span className="mono">{normalFormat(item.last_add_height)}</span>
         ),
       }),
     ];
-  }, []);
+  }, [baseAmountFormatOrZero, normalFormat]);
 
   useEffect(() => {
     if (!poolName) {
@@ -130,6 +167,29 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
     }
     updateSavers();
   }, [poolName]);
+
+  const calcAPR = useCallback((saverDetail: any): number => {
+    if (!lastBlockHeight || !saverDetail.last_add_height) {
+      return 0;
+    }
+    
+    const lastAddHeight = Number(saverDetail.last_add_height);
+    if (!lastAddHeight) return 0;
+    
+    const diffHeight = lastBlockHeight - lastAddHeight;
+    if (diffHeight <= 0) return 0;
+    
+    const depositValue = Number(saverDetail.asset_deposit_value || 0);
+    const redeemValue = Number(saverDetail.asset_redeem_value || 0);
+    
+    if (depositValue <= 0) return 0;
+    
+    const growthRate = (redeemValue / depositValue) - 1;
+    const periodPerYear = 5256000 / diffHeight;
+    
+    const apr = growthRate * periodPerYear * 100;
+    return apr > 0 ? apr : 0;
+  }, [lastBlockHeight]);
 
   const updateSavers = async () => {
     setLoading(true);
@@ -153,8 +213,9 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
         const btcChainData = Array.isArray(blockHeightResult.data) 
           ? blockHeightResult.data.find((e: any) => e.chain === "BTC")
           : null;
-        setLastBlockHeight(btcChainData?.thorchain);
-        console.log("Block height data:", btcChainData);
+        if (btcChainData?.thorchain) {
+          setLastBlockHeight(Number(btcChainData.thorchain));
+        }
       }
 
       if (!saversResult?.data) {
@@ -181,8 +242,6 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
 
   const formatSaversData = (savers: any[]) => {
     try {
-      console.log("Formatting savers data:", savers.length);
-
       const formattedSaverDetails = orderBy(
         savers,
         [(o) => Number(o.asset_redeem_value || 0)],
@@ -238,26 +297,27 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
         const topSavers = savers.slice(0, 10);
         const othersValue = sumBy(savers.slice(10), (o: SaverDetail) => o.value || 0);
 
-        pieData = [
-          ...topSavers.map((item) => ({
-            name: item.asset_address || "Unknown",
-            value: item.value || 0,
-            color: item.color,
-          })),
-        ];
+        pieData = topSavers.map((item, index) => ({
+          name: item.asset_address || "Unknown",
+          value: item.value || 0,
+          color: item.color || getChartColor(index, getCurrentChartTheme(theme)),
+          formattedValue: formatNumberToString(item.value || 0, { notation: 'compact', currency: 'USD' })
+        }));
 
         if (othersValue > 0) {
           pieData.push({
             name: "Others",
             value: othersValue,
-            color: getChartColor(6, getCurrentChartTheme(theme)),
+            color: getChartColor(10, getCurrentChartTheme(theme)),
+            formattedValue: formatNumberToString(othersValue, { notation: 'compact', currency: 'USD' })
           });
         }
       } else {
-        pieData = savers.map((item) => ({
+        pieData = savers.map((item, index) => ({
           name: item.asset_address || "Unknown",
           value: item.value || 0,
-          color: item.color,
+          color: item.color || getChartColor(index, getCurrentChartTheme(theme)),
+          formattedValue: formatNumberToString(item.value || 0, { notation: 'compact', currency: 'USD' })
         }));
       }
 
@@ -269,51 +329,27 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
     }
   };
 
-  const calcAPR = (saverDetail: any) => {
-    if (!lastBlockHeight || !saverDetail.last_add_height) {
-      return 0;
-    }
-    
-    const lastAddHeight = Number(saverDetail.last_add_height);
-    if (!lastAddHeight) return 0;
-    
-    const diffHeight = lastBlockHeight - lastAddHeight;
-    if (diffHeight <= 0) return 0;
-    
-    const depositValue = Number(saverDetail.asset_deposit_value || 0);
-    const redeemValue = Number(saverDetail.asset_redeem_value || 0);
-    
-    if (depositValue <= 0) return 0;
-    
-    const growthRate = (redeemValue / depositValue) - 1;
-    const periodPerYear = 5256000 / diffHeight;
-    
-    return growthRate * periodPerYear * 100; 
-  };
-
   const totalSaverFormatter = (param: any) => {
     try {
-      const formatNumber = (value: number) => {
-        return formatNumberToString(value || 0, {
-          decimalScale: 2,
-          notation: "compact",
-        });
-      };
-
       const address = param.name || param.data?.name || "Unknown";
       const value = param.value || param.data?.value || 0;
       const color = param.color || param.data?.color || "#ccc";
 
+      const formattedValue = formatNumberToString(value, {
+        decimalScale: 2,
+        notation: "compact",
+      });
+
       return `
         <div class="tooltip-header">
-          <div class="data-color" style="background-color: ${color}"></div>
-          ${formatAddress(address)}
+          <div class="data-color" style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px;"></div>
+          <span class="address-text">${formatAddress(address)}</span>
         </div>
         <div class="tooltip-body">
-          <span>
-            <span>Value</span>
-            <b>$${formatNumber(value)}</b>
-          </span>
+          <div class="tooltip-row">
+            <span class="tooltip-label">Value:</span>
+            <span class="tooltip-value">$${formattedValue}</span>
+          </div>
         </div>
       `;
     } catch (error) {
@@ -322,69 +358,83 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
     }
   };
 
-  const baseAmountFormatOrZero = (value: number) => {
-    if (value === undefined || value === null || isNaN(value)) return "-";
-    return number(value, "0,0.0000");
+  const sortOptions: TableSortOptions = {
+    enabled: true,
+    initialSortBy: { field: "asset_deposit_value", type: "desc" },
   };
 
-  const normalFormat = (value: number) => {
-    if (value === undefined || value === null || isNaN(value)) return "-";
-    return number(value, "0,0");
-  };
-
-  const formatAddress = (address: string) => {
-    if (!address) return "Unknown";
-    return address.length > 20 ? `${address.substring(0, 10)}...${address.substring(address.length - 10)}` : address;
+  const paginationOptions = {
+    enabled: true,
+    perPage: 50,
+    perPageDropdownEnabled: true,
+    perPageDropdown: [25, 50, 100],
   };
 
   const customTheme = {
     HeaderCell: `
+      font-weight: 600;
+      color: var(--sec-font-color);
+      padding: 16px 12px;
+      border-bottom: 2px solid var(--border-color);
+      
       &:last-child {
         text-align: right;
       }
     `,
     Cell: `
+      padding: 12px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--font-color);
+      
       &:last-child {
         text-align: right;
       }
     `,
   };
 
-  console.log("Component state:", {
-    loading,
-    error,
-    saverDetailsCount: saverDetails.length,
-    saversPieCount: saversPie.length,
-    poolName,
-    hasSaversData: !!saversData,
-  });
+  if (loading && saverDetails.length === 0) {
+    return (
+      <div className="savers-content">
+        <div className="chart-edition savers-distro">
+          <Card title="Address Distribution" isLoading={true} className="inner-pie-chart">
+            <div className="chart-placeholder"></div>
+          </Card>
+          {saversData?.filled != null && (
+            <Card title="Savers Cap Filled" isLoading={true} className="savers-filled-card">
+              <div className="progress-placeholder"></div>
+            </Card>
+          )}
+        </div>
+        <Card>
+          <TableLoader cols={columns as any} rows={Array(10).fill({})} />
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div>
+    <div className="savers-content">
       <div className="chart-edition savers-distro">
         <Card
           title="Address Distribution"
-          isLoading={loading}
+          isLoading={loading && saversPie.length === 0}
           className="inner-pie-chart"
         >
           {error ? (
-            <div style={{ padding: "20px", textAlign: "center", color: "#ff6b6b" }}>
+            <div className="error-message">
               <span>Error: {error}</span>
-            </div>
-          ) : loading ? (
-            <div style={{ padding: "20px", textAlign: "center" }}>
-              <span>Loading chart data...</span>
             </div>
           ) : saversPie.length > 0 ? (
             <PieChart 
               pieData={saversPie} 
               formatter={totalSaverFormatter}
-              height="200px"
+              height="300px"
               showLoading={false}
-              showLegend={false}
+              showLegend={true}
+              legendPosition="bottom"
             />
           ) : (
-            <div style={{ padding: "20px", textAlign: "center", color: "#666" }}>
+            <div className="no-data-message">
               <p>No saver data available for this pool</p>
             </div>
           )}
@@ -392,49 +442,63 @@ const SaversContent: React.FC<SaversContentProps> = ({ saversData = {} }) => {
         
         {saversData?.filled != null && (
           <Card title="Savers Cap Filled" className="savers-filled-card">
-            <Progress width={(saversData.filled || 0) * 100} />
-            <h4>
-              {percent(saversData.filled || 0, 2)}
-              Total Savers Filled
-            </h4>
+            <div className="progress-container">
+              <Progress width={(saversData.filled || 0) * 100} />
+              <div className="progress-info">
+                <h4>{percent(saversData.filled || 0, 2)} Total Savers Filled</h4>
+                <p className="progress-subtitle">
+                  {saversData.asset ? `${showAsset(saversData.asset)} Saver Capacity` : 'Saver Capacity'}
+                </p>
+              </div>
+            </div>
           </Card>
         )}
       </div>
       
       <Card>
         {error ? (
-          <div style={{ padding: "20px", textAlign: "center" }}>
-            <span style={{ color: "#ff6b6b" }}>Error: {error}</span>
+          <div className="table-error">
+            <span>Error: {error}</span>
+            <button 
+              onClick={updateSavers} 
+              className="retry-button"
+            >
+              Retry
+            </button>
           </div>
-        ) : loading ? (
-          <TableLoader cols={columns as any} rows={Array(10).fill({})} />
         ) : saverDetails.length > 0 ? (
           <Table
             columns={columns}
             data={saverDetails}
             loading={loading}
-            onSortChange={() => {}}
-            onRowSelectChange={() => {}}
+            onSortChange={(sortBy: any) => {
+              console.log("Sort changed:", sortBy);
+            }}
+            onRowSelectChange={(selectedRows: any) => {
+              console.log("Selected rows:", selectedRows);
+            }}
             enableSort={true}
             enableSelect={false}
-            pagination={{
-              enabled: true,
-              perPage: 50,
-              perPageDropdownEnabled: true,
-            }}
-            sortOptions={{
-              enabled: true,
-              initialSortBy: { field: "asset_deposit_value", type: "desc" },
-            }}
+            pagination={paginationOptions}
+            sortOptions={sortOptions}
             customTheme={customTheme}
             className="vgt-table net-table"
+            rowKey="asset_address"
           />
         ) : (
-          <div style={{ padding: "20px", textAlign: "center", color: "#666" }}>
+          <div className="no-savers-message">
             <p>No savers found for pool: {poolName}</p>
-            {poolName && <p style={{ fontSize: "0.9em", marginTop: "10px" }}>
-              Try checking if this pool has savers or try refreshing the page.
-            </p>}
+            {poolName && (
+              <div className="no-savers-actions">
+                <p>Try checking if this pool has savers or try refreshing the page.</p>
+                <button 
+                  onClick={updateSavers} 
+                  className="refresh-button"
+                >
+                  Refresh Data
+                </button>
+              </div>
+            )}
           </div>
         )}
       </Card>

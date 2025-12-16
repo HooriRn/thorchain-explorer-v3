@@ -1,142 +1,219 @@
-"use client"
+"use client";
 
-import api, { getActions } from "@/lib/api";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react"
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useParams, useSearchParams } from "next/navigation";
 import Transactions from "@/components/Transactions";
 import Pagination from "@/components/Pagination";
 import NewPagination from "@/components/NewPagination";
+import { getActions } from "@/lib/api";
 
 
+const PoolTransactions = () => {
+  const searchParams = useSearchParams();
+  const params = useParams();
+  const poolName = params?.poolName;
+  
+  const [transactions, setTransactions] = useState<any>(undefined);
+  const [count, setCount] = useState<number>(-1);
+  const [error, setError] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [nextPageToken, setNextPageToken] = useState<string | undefined>(undefined);
+  const [prevPageToken, setPrevPageToken] = useState<string | undefined>(undefined);
 
-const PoolTransactions = () =>{
-const poolName= useParams();
-const [txs,setTxs] = useState(undefined);
-const [count,setCount] = useState(undefined);
-const [offset,setOffset] = useState(undefined);
-const [error,setError] = useState(false);
-const [loading, setLoading] = useState(true);
-const [currentPage, setCurrentPage] = useState(1);
-const [nextPageToken, setNextPageToken] = useState(undefined);
-const [prevPageToken, setPrevPageToken] = useState(undefined);
+  const poolNameString = useMemo(() => {
+    if (!poolName) return '';
+    if (Array.isArray(poolName)) return poolName[0];
+    return poolName;
+  }, [poolName]);
 
-useEffect( () =>{
-  getActions(0);
-}, [poolName]);
+  const assetToTrade = (poolAsset: string): string => {
+    if (poolAsset.includes('BTC')) return 'BTC.BTC';
+    if (poolAsset.includes('ETH')) return 'ETH.ETH';
+    if (poolAsset.includes('BNB')) return 'BNB.BNB';
+    return 'THOR.RUNE'; 
+  };
 
-const goNext = () => {
-  api.getACtions({
-    limit:50,
-    asset: poolName,
-    nextPageToken: nextPageToken,
-    prevPageToken: prevPageToken,
-    type: 'swap',
-  })
-  .thn((res) =>{
-    setTxs(res.data);
-    setNextPageToken(res.data.meta?.nextPageToken);
-    setPrevPageToken(res.data.meta?.setPrevPageToken);
-    setError(false);
-    setLoading(false);
-  })
-.catch((error) =>{
-  if (error.message  === 'cancel'){
+  const goNext = useCallback(() => {
+    if (!nextPageToken || loading) return;
+
     setLoading(true);
-    return;
-  }
-  setError(true);
-  console.error(error)
-});
-}
-
-const goPrev = () => {
-  api.getActions({
-    limit: 50,
-    asset: poolName,
-    prevPageToken: prevPageToken,
-    nextPageToken: undefined,
-    type: 'swap',
-  })
-  .then((res) => {
-    setTxs(res.data);
-    setNextPageToken(res.data.meta?.nextPageToken);
-    setPrevPageToken(res.data.meta?.prevPageToken);
-    setError(false);
-    setLoading(false); 
-  })
-  .catch((error) => {
-    if (error.message === 'cancel') {
-      setLoading(true); 
-      return;
-    }
-    setError(true);
-    console.error(error);
-  });
-};
-const onPageChange = (page) => {
-  setCurrentPage(page);
-  getActions((page - 1) * 50);
-};
-
-const getActions = (offset = 0) => {
-  setLoading(true); 
-  setOffset(offset);
-  
-  const tradeAsset = assetToTrade(poolName);
-  
-  api.getActions({
-    limit: 50,
-    offset,
-    asset: [poolName, tradeAsset].join(','),
-    type: 'swap',
-  })
-  .then((res) => {
-    setTxs(res.data);
-    setNextPageToken(res.data.meta?.nextPageToken);
-    setPrevPageToken(res.data.meta?.prevPageToken);
-    setCount(res.data.count);
-    setError(false);
-    setLoading(false);
-  })
-  .catch((error) => {
-    if (error.message === 'cancel') {
-      setLoading(true);
-      return;
-    }
-    setError(true);
-    console.error(error);
-  });
-};
-
-return (
-  <div>
-    <div>
-      {error ? (
-        <div className="error-container">
-          Can't Fetch the actions! Please Try again Later.
-        </div>
-      ) : (
-        <Transactions txs={txs} loading={loading} />
-      )}
-    </div>
     
-    {txs && txs.actions && count > -1 ? (
-      <NewPagination
-        totalRows={count}
-        perPage={50}
-        currentPage={currentPage}
-        onChange={onPageChange}
-      />
-    ) : txs && txs.actions ? (
-      <Pagination
-        loading={loading}
-        meta={txs?.actions}
-        onNextPage={goNext}
-        onPrevPage={goPrev}
-      />
-    ) : null}
-  </div>
-);
+    getActions({
+      limit: 50,
+      asset: poolNameString,
+      nextPageToken: nextPageToken,
+      prevPageToken: undefined,
+      type: 'swap',
+    })
+      .then((res: any) => {
+        if (res?.data) {
+          setTransactions(res.data);
+          setNextPageToken(res.data.meta?.nextPageToken);
+          setPrevPageToken(res.data.meta?.prevPageToken);
+          setError(false);
+        } else {
+          setTransactions(res);
+          setNextPageToken(res?.meta?.nextPageToken);
+          setPrevPageToken(res?.meta?.prevPageToken);
+          setError(false);
+        }
+      })
+      .catch((error: any) => {
+        if (error.message === 'cancel') {
+          setLoading(true);
+          return;
+        }
+        setError(true);
+        console.error(error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [nextPageToken, loading, poolNameString]);
+
+  const goPrev = useCallback(() => {
+    if (!prevPageToken || loading) return;
+
+    setLoading(true);
+    
+    getActions({
+      limit: 50,
+      asset: poolNameString,
+      prevPageToken: prevPageToken,
+      nextPageToken: undefined,
+      type: 'swap',
+    })
+      .then((res: any) => {
+        if (res?.data) {
+          setTransactions(res.data);
+          setNextPageToken(res.data.meta?.nextPageToken);
+          setPrevPageToken(res.data.meta?.prevPageToken);
+          setError(false);
+        } else {
+          setTransactions(res);
+          setNextPageToken(res?.meta?.nextPageToken);
+          setPrevPageToken(res?.meta?.prevPageToken);
+          setError(false);
+        }
+      })
+      .catch((error: any) => {
+        if (error.message === 'cancel') {
+          setLoading(true);
+          return;
+        }
+        setError(true);
+        console.error(error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [prevPageToken, loading, poolNameString]);
+
+  const onPageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    getActionsWithOffset((page - 1) * 50);
+  }, []);
+
+  const getActionsWithOffset = useCallback((offset: number = 0) => {
+    if (!poolNameString) return;
+    
+    setLoading(true);
+    
+    const tradeAsset = assetToTrade(poolNameString);
+    
+    getActions({
+      limit: 50,
+      offset,
+      asset: [poolNameString, tradeAsset].join(','),
+      type: 'swap',
+    })
+      .then((res: any) => {
+        if (res?.data) {
+          setTransactions(res.data);
+          setNextPageToken(res.data.meta?.nextPageToken);
+          setPrevPageToken(res.data.meta?.prevPageToken);
+          setCount(res.data.count || -1);
+          setError(false);
+        } else {
+          setTransactions(res);
+          setNextPageToken(res?.meta?.nextPageToken);
+          setPrevPageToken(res?.meta?.prevPageToken);
+          setCount(res?.count || -1);
+          setError(false);
+        }
+      })
+      .catch((error: any) => {
+        if (error.message === 'cancel') {
+          setLoading(true);
+          return;
+        }
+        setError(true);
+        console.error(error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [poolNameString]);
+
+  useEffect(() => {
+    if (poolNameString) {
+      getActionsWithOffset(0);
+    }
+  }, [poolNameString, getActionsWithOffset]);
+
+  useEffect(() => {
+    const pageParam = searchParams.get('page');
+    if (pageParam) {
+      const page = parseInt(pageParam);
+      setCurrentPage(page);
+      getActionsWithOffset((page - 1) * 50);
+    }
+  }, [searchParams, getActionsWithOffset]);
+
+  const transactionsData = useMemo(() => {
+    return transactions || { actions: [] };
+  }, [transactions]);
+
+  return (
+    <div>
+      <div>
+        {error ? (
+          <div style={{
+            padding: '20px',
+            textAlign: 'center',
+            color: '#dc2626',
+            backgroundColor: '#fee2e2',
+            borderRadius: '8px',
+            margin: '20px 0'
+          }}>
+            Can't Fetch the actions! Please Try again Later.
+          </div>
+        ) : (
+          <Transactions 
+            txs={transactionsData} 
+            loading={loading} 
+          />
+        )}
+      </div>
+      
+      {transactions && transactions.actions && count > -1 ? (
+        <NewPagination
+          totalRows={count}
+          perPage={50}
+          currentPage={currentPage}
+          onChange={onPageChange}
+        />
+      ) : transactions && transactions.actions ? (
+        <Pagination
+          loading={loading}
+          meta={transactions}
+          onNextPage={goNext}
+          onPrevPage={goPrev}
+        />
+      ) : null}
+    </div>
+  );
 };
 
 export default PoolTransactions;
