@@ -1,0 +1,94 @@
+.navPoolHeader {
+  display: flex;
+  margin-bottom: var(--space-16);
+}
+
+.navPoolHeader a {
+  padding: var(--space-8) var(--space-12);
+  margin: var(--space-0) 0.1rem;
+  color: var(--font-color);
+  text-decoration: none;
+  border-radius: var(--radius-s);
+}
+
+.navPoolHeader a:first-of-type {
+  margin-left: var(--space-0);
+}
+
+.navPoolHeader a:hover {
+  background-color: var(--active-bg-color);
+}
+
+.navPoolHeader .nuxtLinkExactActive {
+  background-color: var(--active-bg-color);
+  color: var(--sec-font-color);
+}
+
+.saversStatHeader {
+  display: grid;
+  gap: 15px;
+  margin-bottom: var(--space-16);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-rows: auto;
+}
+
+.saversStatCard {
+  padding: var(--space-32) var(--space-0);
+  border-radius: var(--radius-lg);
+  background-color: var(--card-bg-color);
+  border: 1px solid var(--border-color);
+}
+
+.saversStatCard .value {
+  color: var(--sec-font-color);
+  font-size: var(--font-size-xl);
+  text-align: center;
+}
+
+.saversStatCard .name {
+  color: var(--font-color);
+  text-align: center;
+}
+
+.saversStatCard .extraText {
+  font-size: var(--font-size-mobile);
+  text-align: center;
+}
+
+.saversFilledCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-14);
+  min-width: 350px;
+}
+
+.chartEdition {
+  margin-bottom: var(--space-14);
+  display: flex;
+  gap: var(--space-14);
+  flex-wrap: wrap;
+  margin: var(--space-14) var(--space-10);
+}
+
+@media (min-width: 1024px) {
+  .chartEdition {
+    margin: var(--space-14) var(--space-0);
+  }
+}
+
+.cardContainer {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  margin: var(--space-0);
+}
+
+@media (min-width: 1024px) {
+  .cardContainer {
+    margin: auto;
+  }
+}
+
+.chartEdition h4 {
+  color: var(--sec-font-color);
+  text-align: center;
+}
