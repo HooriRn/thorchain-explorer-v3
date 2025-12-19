@@ -96,6 +96,7 @@ export {
 
 export {
   getDashboardData,
+  getContractsLabel,
   getDashboardPlots,
   getExtraNodesInfo,
   getTCY,

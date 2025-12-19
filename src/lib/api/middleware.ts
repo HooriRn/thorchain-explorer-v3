@@ -140,6 +140,9 @@ export interface SwapByThorname {
 export interface AffiliateStat {
   [key: string]: any;
 }
+export interface ContractsLabel {
+  [key: string]: any;
+}
 
 export class MiddlewareAPI {
   private network: string;
@@ -527,10 +530,16 @@ export class MiddlewareAPI {
     );
     return response.data;
   }
+  async getContractsLabel(): Promise<ContractsLabel> {
+    const response = await apiClient.getExternal<ContractsLabel>(
+      `${this.config.SERVER_URL}api/contractsLabel`
+    );
+    return response.data;
+  }
 }
 
 export const middlewareAPI = new MiddlewareAPI();
-
+export const getContractsLabel = () => middlewareAPI.getContractsLabel();
 export const getDashboardData = () => middlewareAPI.getDashboardData();
 export const getDashboardPlots = () => middlewareAPI.getDashboardPlots();
 export const getExtraNodesInfo = () => middlewareAPI.getExtraNodesInfo();
