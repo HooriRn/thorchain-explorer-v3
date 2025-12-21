@@ -81,6 +81,12 @@
   margin-top: 2px;
 }
 
+.metricIcon {
+  display: flex;
+  align-items: center;
+  margin-right: 0.25rem;
+}
+
 .metricItem.withSeparator {
   border-top: 1px solid var(--border);
 }

@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
 import { orderBy } from "lodash";
@@ -12,6 +18,13 @@ import ArrowDownIcon from "@/assets/images/arrow-down-.svg";
 import ArrowUpIcon from "@/assets/images/arrow-up-.svg";
 import ExternalIcon from "@/assets/images/external.svg";
 import styles from "./balance.module.css";
+import { assetFromString } from "@/utils";
+import { bnOrZero } from "@xchainjs/xchain-util";
+import { getExplorerAddressUrl } from "@/utils/index";
+import { baseChainAsset, numberFormat, balanceFormat } from "@/utils/global";
+import { formatCurrency } from "@/utils/global";
+import validator from "@swyftx/api-crypto-address-validator";
+const { validate } = validator;
 
 const Balance = ({ state, loading, address }) => {
   const [selectedToken, setSelectedToken] = useState(null);
@@ -29,25 +42,15 @@ const Balance = ({ state, loading, address }) => {
   const nodes = useAppStore((state) => state.nodesData);
   const dropdownRef = useRef(null);
 
-  const sortedGroupedTokens = useMemo(() => {
-    return Object.entries(groupedTokens).map(([type, tokens]) => ({
-      type,
-      tokens: orderBy(
-        tokens,
-        [(token) => parseFloat(token.value)],
-        [sortDirection[type]]
-      ),
-    }));
-  }, [sortDirection]);
-
-  const totalValue = useMemo(() => {
-    const total = otherTokens.reduce(
-      (sum, token) => sum + Number(token.value),
-      0
-    );
-    const count = otherTokens.length;
-    return { total, count };
-  }, [otherTokens]);
+  const getAssetType = useCallback((asset) => {
+    if (asset?.synth) {
+      return "Synth";
+    } else if (asset?.trade) {
+      return "Trade";
+    } else {
+      return "Native";
+    }
+  }, []);
 
   const tokenRows = useMemo(() => {
     if (!state) {
@@ -58,7 +61,7 @@ const Balance = ({ state, loading, address }) => {
     for (let i = 0; i < state.length; i++) {
       const e = state[i];
       let poolAsset;
-      
+
       pools?.forEach((p) => {
         const pa = assetFromString(p.asset);
         if (pa.chain === e.asset?.chain && pa?.ticker === e.asset?.ticker) {
@@ -82,7 +85,7 @@ const Balance = ({ state, loading, address }) => {
     }
 
     return ret;
-  }, [state, pools, runePrice]);
+  }, [state, pools, runePrice, getAssetType]);
 
   const runeToken = useMemo(() => {
     return tokenRows.find(
@@ -109,6 +112,26 @@ const Balance = ({ state, loading, address }) => {
         acc[type].push(token);
         return acc;
       }, {});
+  }, [otherTokens, getAssetType]);
+
+  const sortedGroupedTokens = useMemo(() => {
+    return Object.entries(groupedTokens).map(([type, tokens]) => ({
+      type,
+      tokens: orderBy(
+        tokens,
+        [(token) => parseFloat(token.value)],
+        [sortDirection[type]]
+      ),
+    }));
+  }, [groupedTokens, sortDirection]);
+
+  const totalValue = useMemo(() => {
+    const total = otherTokens.reduce(
+      (sum, token) => sum + Number(token.value),
+      0
+    );
+    const count = otherTokens.length;
+    return { total, count };
   }, [otherTokens]);
 
   const isNodeAddress = useMemo(() => {
@@ -116,9 +139,7 @@ const Balance = ({ state, loading, address }) => {
   }, [nodes, address]);
 
   const totalBond = useMemo(() => {
-    const foundNode = nodes?.find(
-      (node) => node.node_address === address
-    );
+    const foundNode = nodes?.find((node) => node.node_address === address);
     return foundNode ? foundNode.total_bond : undefined;
   }, [nodes, address]);
 
@@ -126,7 +147,7 @@ const Balance = ({ state, loading, address }) => {
     if (!nodes) {
       return undefined;
     }
-    
+
     const ret = { total: 0 };
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
@@ -175,34 +196,42 @@ const Balance = ({ state, loading, address }) => {
     return data;
   }, [runeToken, totalBond, bonds]);
 
-  const chartExtraSeries = useMemo(() => ({
-    center: ["50%", "45%"],
-    radius: ["35%", "60%"],
-    label: {
-      show: false,
-    },
-  }), []);
+  const chartExtraSeries = useMemo(
+    () => ({
+      center: ["50%", "45%"],
+      radius: ["35%", "60%"],
+      label: {
+        show: false,
+      },
+    }),
+    []
+  );
 
-  const chartExtra = useMemo(() => ({
-    legend: {
-      show: true,
-      type: "plain",
-      orient: "vertical",
-      x: "center",
-      y: "bottom",
-      icon: "circle",
-      textStyle: {
-        color: "var(--font-color)",
+  const chartExtra = useMemo(
+    () => ({
+      legend: {
+        show: true,
+        type: "plain",
+        orient: "vertical",
+        x: "center",
+        y: "bottom",
+        icon: "circle",
+        textStyle: {
+          color: "var(--font-color)",
+        },
       },
-    },
-    tooltip: {
-      trigger: "item",
-      confine: true,
-      formatter: (a) => {
-        return `${a.name}: <small>${numberFormat(a?.data?.value)} RUNE</small> <span class='mono'>(${a.percent}%)</span>`;
+      tooltip: {
+        trigger: "item",
+        confine: true,
+        formatter: (a) => {
+          return `${a.name}: <small>${numberFormat(
+            a?.data?.value
+          )} RUNE</small> <span class='mono'>(${a.percent}%)</span>`;
+        },
       },
-    },
-  }), []);
+    }),
+    []
+  );
 
   const explorers = useMemo(() => {
     const blockChains = [
@@ -246,30 +275,23 @@ const Balance = ({ state, loading, address }) => {
     return explorers;
   }, [address]);
 
-  const getAssetType = useCallback((asset) => {
-    if (asset?.synth) {
-      return "Synth";
-    } else if (asset?.trade) {
-      return "Trade";
-    } else {
-      return "Native";
-    }
-  }, []);
-
   const toggleDropdown = useCallback(() => {
     setIsOpen((prev) => !prev);
   }, []);
 
-  const filteredTokens = useCallback((tokens) => {
-    return tokens.filter((token) => {
-      const nameMatch = showAsset(token.asset)
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const valueMatch = token.value.toString().includes(searchQuery);
-      const priceMatch = token.price.toString().includes(searchQuery);
-      return nameMatch || valueMatch || priceMatch;
-    });
-  }, [searchQuery]);
+  const filteredTokens = useCallback(
+    (tokens) => {
+      return tokens.filter((token) => {
+        const nameMatch = showAsset(token.asset)
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
+        const valueMatch = token.value.toString().includes(searchQuery);
+        const priceMatch = token.price.toString().includes(searchQuery);
+        return nameMatch || valueMatch || priceMatch;
+      });
+    },
+    [searchQuery]
+  );
 
   const selectToken = useCallback((token) => {
     setSelectedToken(token);
@@ -304,6 +326,17 @@ const Balance = ({ state, loading, address }) => {
     };
   }, []);
 
+  const SkeletonItem = ({ loading, children, className = "" }) => {
+    if (loading) {
+      return (
+        <div className={`${className} ${styles.skeleton}`}>
+          <div className={styles.skeletonLine}></div>
+        </div>
+      );
+    }
+    return <div className={className}>{children}</div>;
+  };
+
   if (state && explorers.length === 0) {
     return (
       <Card>
@@ -311,11 +344,16 @@ const Balance = ({ state, loading, address }) => {
           <div className={styles["balance-content-wrapper"]}>
             <div className={styles["balance-info"]}>
               <span className={styles["title-balance"]}>Balances</span>
-              
+
               <div className={styles["balance-label"]}>
                 <span>RUNE Balance</span>
-                <SkeletonItem loading={loading} className={styles["balance-content"]}>
-                  {runeToken && runeToken.price > 0 && !isNaN(runeToken.price) ? (
+                <SkeletonItem
+                  loading={loading}
+                  className={styles["balance-content"]}
+                >
+                  {runeToken &&
+                  runeToken.price > 0 &&
+                  !isNaN(runeToken.price) ? (
                     <>
                       <AssetIcon
                         asset={{ ticker: "RUNE", chain: "THOR" }}
@@ -324,7 +362,10 @@ const Balance = ({ state, loading, address }) => {
                       />
                       <span
                         className={styles.mono}
-                        title={runeToken && formatCurrency(runeToken.quantity * runeToken.price)}
+                        title={
+                          runeToken &&
+                          formatCurrency(runeToken.quantity * runeToken.price)
+                        }
                       >
                         {balanceFormat(runeToken.quantity)} RUNE
                       </span>
@@ -338,7 +379,10 @@ const Balance = ({ state, loading, address }) => {
               {isNodeAddress && (
                 <div className={styles["balance-label"]}>
                   <span>Node Balance</span>
-                  <SkeletonItem loading={loading || !nodes} className={styles["balance-content"]}>
+                  <SkeletonItem
+                    loading={loading || !nodes}
+                    className={styles["balance-content"]}
+                  >
                     <AssetIcon
                       asset={{ ticker: "RUNE", chain: "THOR" }}
                       height="16px"
@@ -369,7 +413,10 @@ const Balance = ({ state, loading, address }) => {
 
               <div className={styles["balance-label"]}>
                 <span>Bond Balance</span>
-                <SkeletonItem loading={loading || !nodes} className={styles["balance-content"]}>
+                <SkeletonItem
+                  loading={loading || !nodes}
+                  className={styles["balance-content"]}
+                >
                   <AssetIcon
                     asset={{ ticker: "RUNE", chain: "THOR" }}
                     height="16px"
@@ -392,8 +439,13 @@ const Balance = ({ state, loading, address }) => {
 
               <div className={styles["balance-label"]}>
                 <span>Total Value</span>
-                <SkeletonItem loading={loading} className={styles["balance-content"]}>
-                  {runeToken && runeToken.price > 0 && !isNaN(runeToken.price) ? (
+                <SkeletonItem
+                  loading={loading}
+                  className={styles["balance-content"]}
+                >
+                  {runeToken &&
+                  runeToken.price > 0 &&
+                  !isNaN(runeToken.price) ? (
                     <span className={styles.mono}>
                       {formatCurrency(runeToken.price * totalBalance)}
                     </span>
@@ -415,7 +467,7 @@ const Balance = ({ state, loading, address }) => {
               </div>
             )}
           </div>
-          
+
           {totalValue.count > 0 && (
             <div className={styles["dropdown-container"]} ref={dropdownRef}>
               <label htmlFor="token-dropdown">Other Asset Holdings</label>
@@ -455,63 +507,87 @@ const Balance = ({ state, loading, address }) => {
                   />
                   <div className={styles["dropdown-options"]}>
                     <div className={styles["options-container"]}>
-                      {sortedGroupedTokens.every(group => 
-                        filteredTokens(group.tokens).length === 0
+                      {sortedGroupedTokens.every(
+                        (group) => filteredTokens(group.tokens).length === 0
                       ) ? (
                         <div className={styles["no-results"]}>
                           Could not find any matches!
                         </div>
                       ) : (
-                        sortedGroupedTokens.map((group) => (
-                          filteredTokens(group.tokens).length > 0 && (
-                            <div key={group.type}>
-                              <div className={styles["token-group-header"]}>
-                                {group.type} Assets ({filteredTokens(group.tokens).length})
-                                <div className={styles["sort-controls"]}>
-                                  <span onClick={() => changeSort(group.type)}>
-                                    {sortDirection[group.type] === "desc" ? (
-                                      <ArrowDownIcon className={styles["arrow-icon"]} />
-                                    ) : (
-                                      <ArrowUpIcon className={styles["arrow-icon"]} />
-                                    )}
-                                  </span>
+                        sortedGroupedTokens.map(
+                          (group) =>
+                            filteredTokens(group.tokens).length > 0 && (
+                              <div key={group.type}>
+                                <div className={styles["token-group-header"]}>
+                                  {group.type} Assets (
+                                  {filteredTokens(group.tokens).length})
+                                  <div className={styles["sort-controls"]}>
+                                    <span
+                                      onClick={() => changeSort(group.type)}
+                                    >
+                                      {sortDirection[group.type] === "desc" ? (
+                                        <ArrowDownIcon
+                                          className={styles["arrow-icon"]}
+                                        />
+                                      ) : (
+                                        <ArrowUpIcon
+                                          className={styles["arrow-icon"]}
+                                        />
+                                      )}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
 
-                              {filteredTokens(group.tokens).map((token) => (
-                                <div
-                                  key={token.asset}
-                                  className={styles["dropdown-option"]}
-                                  onClick={() => selectToken(token)}
-                                >
-                                  <div className={styles["token-info"]}>
-                                    <div className={styles["token-name"]}>
-                                      <AssetIcon asset={token.asset} showChain={false} />
-                                      <span style={{ lineHeight: 1 }}>
-                                        {showAsset(token.asset)}
-                                      </span>
+                                {filteredTokens(group.tokens).map((token) => (
+                                  <div
+                                    key={token.asset}
+                                    className={styles["dropdown-option"]}
+                                    onClick={() => selectToken(token)}
+                                  >
+                                    <div className={styles["token-info"]}>
+                                      <div className={styles["token-name"]}>
+                                        <AssetIcon
+                                          asset={token.asset}
+                                          showChain={false}
+                                        />
+                                        <span style={{ lineHeight: 1 }}>
+                                          {showAsset(token.asset)}
+                                        </span>
+                                      </div>
+                                      <div className={styles["token-quantity"]}>
+                                        {token.quantity} {token.asset.ticker}
+                                      </div>
                                     </div>
-                                    <div className={styles["token-quantity"]}>
-                                      {token.quantity} {token.asset.ticker}
+                                    <div className={styles["token-value"]}>
+                                      {token.price > 0 &&
+                                      !isNaN(token.price) ? (
+                                        <>
+                                          <span>
+                                            $
+                                            {numberFormat(
+                                              token.value,
+                                              "0,0.00"
+                                            )}
+                                          </span>
+                                          <div
+                                            className={styles["token-price"]}
+                                          >
+                                            @
+                                            {numberFormat(
+                                              token.price,
+                                              "0,0.0000"
+                                            )}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <span>-</span>
+                                      )}
                                     </div>
                                   </div>
-                                  <div className={styles["token-value"]}>
-                                    {token.price > 0 && !isNaN(token.price) ? (
-                                      <>
-                                        <span>${numberFormat(token.value, "0,0.00")}</span>
-                                        <div className={styles["token-price"]}>
-                                          @{numberFormat(token.price, "0,0.0000")}
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <span>-</span>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )
-                        ))
+                                ))}
+                              </div>
+                            )
+                        )
                       )}
                     </div>
                   </div>
@@ -535,10 +611,7 @@ const Balance = ({ state, loading, address }) => {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <AssetIcon
-              height="1.2rem"
-              asset={baseChainAsset(explorer.chain)}
-            />
+            <AssetIcon height="1.2rem" asset={baseChainAsset(explorer.chain)} />
             {explorer.chain}
             <ExternalIcon className={styles["ext-icon"]} />
           </a>

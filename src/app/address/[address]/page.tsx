@@ -20,7 +20,7 @@ import Table from "@/components/table/Table";
 import AssetIcon from "@/components/AssetIcon";
 import Link from "next/link";
 import styles from "./address.module.css";
-
+import Transactions from "@/components/Transactions";
 import Balance from "../components/balance/balance";
 import BalanceHistory from "../components/balancehistory/balanceHistory";
 
@@ -667,7 +667,7 @@ const AddressPage = ({ params }) => {
       {!addrTxs && !loading && (
         <div className={styles["error-container"]}>
           Can't Fetch the Address! Please Try again Later.
-        </div>
+        </div> 
       )}
     </Page>
   );

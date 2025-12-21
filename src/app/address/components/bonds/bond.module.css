@@ -1,0 +1,26 @@
+.table-hr {
+  border: 1px solid var(--border-color);
+  margin: var(--space-3) var(--space-0);
+}
+
+.clickable {
+  cursor: pointer;
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.clickable:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+.mono {
+  font-family: "Roboto Mono", "Courier New", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.bond-table {
+  width: 100%;
+}
+

@@ -1,0 +1,136 @@
+.main-stats {
+  padding: var(--space-16);
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  border-radius: var(--radius-s);
+  flex-direction: column;
+}
+
+@media (min-width: 1024px) {
+  .main-stats {
+    flex-direction: row;
+  }
+}
+
+.stat-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-8) 0;
+  gap: var(--space-5);
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .stat-info {
+    flex: 1;
+    justify-content: center;
+    padding: var(--space-8) var(--space-24);
+    flex-direction: column;
+    width: initial;
+  }
+}
+
+.stat-info:first-of-type {
+  padding-left: 0;
+}
+
+.info-title {
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+.info-value {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--font-size-md);
+  color: var(--sec-font-color);
+}
+
+.stat-info.border-left {
+  border-top: 1px solid var(--border-color);
+}
+
+@media (min-width: 1024px) {
+  .stat-info.border-left {
+    border-top: none;
+    border-left: 1px solid var(--border-color);
+  }
+}
+
+.icon-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  justify-content: space-between;
+}
+
+.csv-download svg {
+  fill: var(--sec-font-color);
+  height: 1.2rem;
+  width: 1.2rem;
+}
+
+.csv-download svg:hover {
+  fill: var(--primary-color);
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.rotate {
+  color: var(--sec-font-color);
+  height: 1.4rem;
+  width: 1.4rem;
+  cursor: pointer;
+  align-items: center;
+  display: flex;
+  transition: transform 0.3s ease;
+  transform: rotate(0deg);
+  margin-bottom: 5px;
+}
+
+.rotate.active {
+  transform: rotate(180deg);
+  color: var(--primary-color);
+}
+
+.rotate:hover {
+  color: var(--primary-color);
+}
+
+.rotate h3 {
+  font-size: var(--font-size-md);
+  margin: 0;
+  margin-bottom: var(--space-8);
+  color: var(--sec-font-color);
+}
+
+.toggle-icon {
+  margin-left: 8px;
+  cursor: pointer;
+  color: var(--primary-color);
+}
+
+.toggle-icon:hover {
+  opacity: 0.8;
+}
+
+.distributions-card {
+  margin-top: var(--space-16);
+}
+
+.mono {
+  font-family: "Roboto Mono", "Courier New", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.value-cell {
+  display: flex;
+  align-items: center;
+}
+

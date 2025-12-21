@@ -9,6 +9,8 @@ interface StatsMetric {
   value: number | string | undefined;
   filter: (value: any) => string;
   link?: string;
+  subValue?: string;
+  icon?: React.ReactNode;
 }
 
 interface StatsPanelProps {
@@ -30,12 +32,16 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ metrics }) => {
             <h6 className={styles.metricLabel}>{metric.label}</h6>
             <div className={styles.metricValues}>
               <b className={styles.metricValue}>
+                {metric.icon && <div className={styles.metricIcon}>{metric.icon}</div>}
                 {metric.link ? (
                   <a href={metric.link}>{metric.filter(metric.value)}</a>
                 ) : (
                   metric.filter(metric.value)
                 )}
               </b>
+              {metric.subValue && (
+                <div className={styles.metricSubValue}>{metric.subValue}</div>
+              )}
             </div>
           </div>
         ))}
