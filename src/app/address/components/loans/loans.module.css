@@ -1,0 +1,47 @@
+.ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.asset-cell {
+  max-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.asset-cell span {
+  display: block;
+  font-size: 0.875rem;
+}
+
+.pool-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.pool-cell span {
+  display: block;
+  max-width: 200px;
+}
+
+.table-hr {
+  border: 1px solid var(--border-color);
+  margin: 0.5rem 0;
+}
+
+.center {
+  text-align: center;
+}
+
+.mono {
+  font-family: monospace;
+}
+
+.loans-table {
+  width: 100%;
+}
+
+
+

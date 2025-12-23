@@ -22,7 +22,7 @@ import { assetFromString } from "@/utils";
 import { bnOrZero } from "@xchainjs/xchain-util";
 import { getExplorerAddressUrl } from "@/utils/index";
 import { baseChainAsset, numberFormat, balanceFormat } from "@/utils/global";
-import { formatCurrency } from "@/utils/global";
+import { formatTrendNumber } from "@/utils/format";
 import validator from "@swyftx/api-crypto-address-validator";
 const { validate } = validator;
 
@@ -234,6 +234,8 @@ const Balance = ({ state, loading, address }) => {
   );
 
   const explorers = useMemo(() => {
+    if (!address || typeof address !== "string") return [];
+  
     const blockChains = [
       "btc",
       "eth",
@@ -244,12 +246,20 @@ const Balance = ({ state, loading, address }) => {
       "xrp",
       "trx",
     ];
-
+  
     const explorers = [];
+  
     for (let i = 0; i < blockChains.length; i++) {
       let chain = blockChains[i];
-      const res = validate(address, chain);
-
+  
+      let res = false;
+      try {
+        res = validate(address, chain);
+      } catch (e) {
+        console.error("validate failed:", address, chain);
+        continue;
+      }
+  
       if (res && chain === "eth") {
         const evms = ["ETH", "BSC", "AVAX", "BASE"];
         evms.forEach((e) => {
@@ -259,21 +269,19 @@ const Balance = ({ state, loading, address }) => {
           });
         });
       } else if (res) {
-        if (chain === "atom") {
-          chain = "gaia";
-        }
-        if (chain === "trx") {
-          chain = "tron";
-        }
+        if (chain === "atom") chain = "gaia";
+        if (chain === "trx") chain = "tron";
+  
         explorers.push({
           chain: chain.toUpperCase(),
           url: getExplorerAddressUrl(chain.toUpperCase(), address),
         });
       }
     }
-
+  
     return explorers;
   }, [address]);
+  
 
   const toggleDropdown = useCallback(() => {
     setIsOpen((prev) => !prev);
@@ -364,7 +372,7 @@ const Balance = ({ state, loading, address }) => {
                         className={styles.mono}
                         title={
                           runeToken &&
-                          formatCurrency(runeToken.quantity * runeToken.price)
+                          formatTrendNumber(runeToken.quantity * runeToken.price)
                         }
                       >
                         {balanceFormat(runeToken.quantity)} RUNE
@@ -392,7 +400,7 @@ const Balance = ({ state, loading, address }) => {
                       {totalBond !== undefined ? (
                         <span
                           className={styles.mono}
-                          title={formatCurrency((runePrice * totalBond) / 1e8)}
+                          title={formatTrendNumber((runePrice * totalBond) / 1e8)}
                         >
                           {balanceFormat(totalBond / 1e8)} RUNE
                           <Link
@@ -426,7 +434,7 @@ const Balance = ({ state, loading, address }) => {
                     {bonds && bonds.total !== undefined ? (
                       <span
                         className={styles.mono}
-                        title={formatCurrency(runePrice * bonds.total)}
+                        title={formatTrendNumber(runePrice * bonds.total)}
                       >
                         {balanceFormat(bonds.total)} RUNE
                       </span>
@@ -447,7 +455,7 @@ const Balance = ({ state, loading, address }) => {
                   runeToken.price > 0 &&
                   !isNaN(runeToken.price) ? (
                     <span className={styles.mono}>
-                      {formatCurrency(runeToken.price * totalBalance)}
+                      {formatTrendNumber(runeToken.price * totalBalance)}
                     </span>
                   ) : (
                     <span>-</span>
@@ -484,7 +492,7 @@ const Balance = ({ state, loading, address }) => {
                     ) : (
                       <>
                         <span className={styles["total-value"]}>
-                          {formatCurrency(totalValue.total)}
+                          {formatTrendNumber(totalValue.total)}
                         </span>
                         <span className={styles["count-value"]}>
                           ({totalValue.count} Tokens)

@@ -1,0 +1,55 @@
+.tableContainer {
+    margin: 1rem 0;
+  }
+  
+  .tableRow {
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .tableRow:hover {
+    background-color: var(--hover-bg);
+  }
+  
+  .ellipsis {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  
+  .assetCell {
+    max-width: 200px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .assetCell span {
+    display: block;
+    font-size: var(--font-size-mobile, 0.875rem);
+  }
+  
+  .bubbleContainer {
+    margin-left: 10px;
+    padding: 0.2rem 0.5rem;
+    background-color: var(--light-bg);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+  
+  .poolCell {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  
+  .poolCell span {
+    display: block;
+    max-width: 200px;
+  }
+  
+  .poolCell small {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
