@@ -1,0 +1,7 @@
+.left-section {
+  display: flex;
+  gap: 0.5rem;
+}
+.address-container {
+    display: flex;
+}

@@ -1,0 +1,207 @@
+.addressBarContainer {
+  margin: auto;
+}
+
+.addressBarContent {
+  align-items: center;
+  display: flex;
+  max-width: 100%;
+}
+
+.qrWrapper {
+  position: relative;
+}
+
+.qrShow {
+  border-radius: var(--radius-s);
+  padding: var(--space-10);
+  top: calc(100% + 0.625rem);
+  position: absolute;
+  z-index: 999;
+  border: 1px solid var(--border);
+}
+
+.utility {
+  font-size: var(--font-size-xs);
+  line-height: 0.7rem;
+}
+
+.addressTextContainer {
+  align-items: center;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  display: flex;
+  padding: var(--space-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.addressText {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-weight: bold;
+  color: var(--sec-font-color);
+  gap: 8px;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  line-height: 1.5rem;
+}
+
+
+
+.addressValue {
+  align-items: center;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  display: flex;
+  padding: var(--space-8);
+  font-size: var(--font-size-xxs);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.addressValue::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .addressValue {
+    font-size: var(--font-size-desktop);
+  }
+}
+
+.cellContent {
+  display: flex;
+}
+
+.addressesContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 10px;
+  align-items: center;
+  justify-items: center;
+}
+
+.addresses {
+  display: flex;
+  align-items: center;
+}
+
+.statWrapper .value {
+  color: var(--primary);
+}
+
+.qrCopyWrapper {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.qrCopyWrapper .item {
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  padding: var(--space-8);
+  border-radius: var(--radius-s);
+  display: flex;
+  align-items: center;
+  margin: var(--space-0);
+  max-width: 100%;
+  min-width: 32px;
+  height: 28px;
+  width: 28px;
+}
+
+.qrCopyWrapper .item:not(.txId) {
+  height: 28px;
+  width: 28px;
+}
+
+@media (min-width: 768px) {
+  .qrCopyWrapper .item:not(.txId) {
+    height: 32px;
+    width: 32px;
+  }
+}
+
+.qrCopyWrapper .item span {
+  color: var(--sec-font-color);
+  line-height: 15px;
+  height: 16px;
+}
+
+.qrCopyWrapper .item * {
+  fill: var(--sec-font-color);
+}
+
+.actionButtons {
+  display: flex;
+  overflow: auto;
+  justify-content: flex-start;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--card);
+  margin: 0 10px;
+  gap: 0.5rem;
+}
+
+.actionButton {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  padding: 4.8px 9.6px;
+  color: var(--sec-font-color);
+  font-size: var(--font-size-xxs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+
+.actionButton.active {
+  background-color: var(--primary);
+  color: var(--sec-font-color);
+  border-color: var(--primary);
+}
+
+@media (min-width: 768px) {
+  .actionButton {
+    font-size: var(--font-size-xs);
+    padding: var(--space-5) var(--space-10);
+  }
+}
+
+.actionComponents {
+  margin-bottom: var(--space-16);
+}
+
+.noAddress {
+  color: var(--sec-font-color);
+  font-style: italic;
+}
+
+.errorText {
+  color: #ff4444;
+  font-size: var(--font-size-xs);
+}
+
+.copyButton,
+.qrButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Utility classes */
+.icon {
+  fill: var(--sec-font-color);
+  height: 1.5rem;
+}
+
+.icon.small {
+  height: 0.8rem;
+  width: 0.8rem;
+}

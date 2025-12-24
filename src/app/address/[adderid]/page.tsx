@@ -29,8 +29,7 @@ import { formatVueNumber, formatTrendNumber } from "@/utils/format";
 import Page from "@/components/PageContainer";
 import Card from "@/components/ui/Card";
 import Avatar from "@/components/Avatar";
-import Copy from "@/components/Copy";
-import QrBtn from "@/components/QrBtn";
+import Address from "@/components/AddressBar"; 
 import AdvancedFilter from "../../txs/components/AdvancedFilter";
 import InfoCard from "@/components/InfoCard";
 import Pagination from "@/components/Pagination";
@@ -528,33 +527,22 @@ const AddressPage: React.FC<AddressPageProps> = ({ params }) => {
   }, [nodesData, fillNodesAddresses]);
 
   return (
-    <Page className={styles["address-container"]}>
+    <div className={styles["address-container"]}>
       <div className={styles["address-section"]}>
         <div className={styles["left-section"]}>
           <div className={styles["address-header"]}>
             <Avatar name={address} />
           </div>
           <div className={styles["address-name"]}>
-            <span
-              className={styles["address-value"]}
-              style={{ color: "var(--sec-font-color)" }}
-              title={labelDebug || label}
-            >
-              {label}
-            </span>
-            {labelDebugMode && (
-              <div style={{ fontSize: "12px", color: "var(--sec-font-color)" }}>
-                Label debug: {labelDebug || "pending"}
-              </div>
-            )}
-            <div className={styles["qr-copy-wrapper"]}>
-              <div className={styles.item}>
-                <Copy strCopy={address} />
-              </div>
-              <div id="qrcode" className={styles.item}>
-                <QrBtn qrcode={address} />
-              </div>
-            </div>
+        <Address
+              address={label}
+              useCustomName={label !== address} 
+              showQRCode={true}
+              showCopyIcon={true}
+              copySize="normal"
+              qrCodeOnlyOnHover={false}
+              disable={false}
+            />
           </div>
         </div>
         <div
@@ -613,12 +601,16 @@ const AddressPage: React.FC<AddressPageProps> = ({ params }) => {
                         src={assetImage(baseChainAsset(addr.chain))}
                         alt={addr.chain}
                       />
-                      <span
-                        className={`${styles.clickable} ${styles.mono}`}
-                        onClick={() => gotoAddr(addr.address)}
-                      >
-                        {addr.address.slice(0, 8)}...{addr.address.slice(-8)}
-                      </span>
+                      <Address
+                        address={addr.address}
+                        showQRCode={false}
+                        showCopyIcon={true}
+                        copySize="small"
+                        qrCodeOnlyOnHover={false}
+                        disable={false}
+                        onSetHovered={() => {}}
+                        onRemoveHovered={() => {}}
+                      />
                     </div>
                   ))}
                 </div>
@@ -630,12 +622,14 @@ const AddressPage: React.FC<AddressPageProps> = ({ params }) => {
                 <div className={styles["addresses-container"]}>
                   {nodeAddresses.map((addr) => (
                     <div key={addr} className={styles.addresses}>
-                      <Link
-                        href={`/node/${addr}`}
-                        className={`${styles.clickable} ${styles.mono}`}
-                      >
-                        {addressFormatV2(addr)}
-                      </Link>
+                      <Address
+                        address={addr}
+                        showQRCode={false}
+                        showCopyIcon={true}
+                        copySize="small"
+                        qrCodeOnlyOnHover={false}
+                        disable={false}
+                      />
                     </div>
                   ))}
                 </div>
@@ -652,12 +646,14 @@ const AddressPage: React.FC<AddressPageProps> = ({ params }) => {
                         src={assetImage(baseChainAsset(r.chain))}
                         alt={r.chain}
                       />
-                      <span
-                        className={`${styles.clickable} ${styles.mono}`}
-                        onClick={() => gotoAddr(r.router)}
-                      >
-                        {r.router.slice(0, 8)}...{r.router.slice(-8)}
-                      </span>
+                      <Address
+                        address={r.router}
+                        showQRCode={false}
+                        showCopyIcon={true}
+                        copySize="small"
+                        qrCodeOnlyOnHover={false}
+                        disable={false}
+                      />
                     </div>
                   ))}
                 </div>
@@ -769,7 +765,7 @@ const AddressPage: React.FC<AddressPageProps> = ({ params }) => {
           Can't Fetch the Address! Please Try again Later.
         </div>
       )}
-    </Page>
+    </div>
   );
 };
 
