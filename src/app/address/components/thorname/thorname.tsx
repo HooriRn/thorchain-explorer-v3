@@ -25,6 +25,7 @@ const ThornamesTable = ({ address }) => {
 
   const checkThornameAddresses = async (names) => {
     if (!names || names.length === 0) {
+      setThornames([]);
       setLoading(false);
       return;
     }
@@ -34,12 +35,12 @@ const ThornamesTable = ({ address }) => {
         try {
           const res = await getThorname(n);
           return {
-            name: res?.name,
-            owner: res?.owner,
-            affiliate_collector_rune: res?.affiliate_collector_rune,
-            preferred_asset: res?.preferred_asset,
-            expire_block_height: res?.expire_block_height,
-            aliases: res?.aliases,
+            name: res?.data?.name || res?.name,
+            owner: res?.data?.owner || res?.owner,
+            affiliate_collector_rune: res?.data?.affiliate_collector_rune || res?.affiliate_collector_rune,
+            preferred_asset: res?.data?.preferred_asset || res?.preferred_asset,
+            expire_block_height: res?.data?.expire_block_height || res?.expire_block_height,
+            aliases: res?.data?.aliases || res?.aliases,
           };
         } catch (error) {
           console.error(`Error fetching thorname ${n}:`, error);
@@ -56,6 +57,7 @@ const ThornamesTable = ({ address }) => {
       setThornames(successfulResults);
     } catch (error) {
       console.error('Error checking thorname addresses:', error);
+      setThornames([]);
     } finally {
       setLoading(false);
     }
@@ -63,17 +65,20 @@ const ThornamesTable = ({ address }) => {
 
   const rlookThorname = async () => {
     try {
+      setLoading(true);
       const res = await getRevThorname(address);
-      const names = res;
+      const names = res?.data || res || [];
       await checkThornameAddresses(names);
     } catch (error) {
-      setLoading(false);
       console.error('Error fetching reverse thorname:', error);
+      setThornames([]);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     if (!address) {
+      setThornames([]);
       setLoading(false);
       return;
     }
@@ -140,7 +145,7 @@ const ThornamesTable = ({ address }) => {
           return (
             <div className={styles.aliasesContainer}>
               {item.aliases.map((al) => (
-                <div key={`asset-${al.chain}`} className={styles.miniBubble}>
+                <div key={`${item.name}-${al.chain}-${al.address}`} className={styles.miniBubble}>
                   <AssetIcon
                     asset={baseChainAsset(al.chain)}
                     height="1.2rem"
@@ -171,8 +176,8 @@ const ThornamesTable = ({ address }) => {
           columns={tableColumns}
           data={thornames || []}
           loading={false}
-          onSortChange={(action, state) => {}}
-          onRowSelectChange={(action, state) => {}}
+          onSortChange={() => {}}
+          onRowSelectChange={() => {}}
           rowProps={getRowProps}
           enableSort={true}
           enableSelect={false}
@@ -181,7 +186,7 @@ const ThornamesTable = ({ address }) => {
         />
       </Card>
 
-      {thornames.length === 0 && (
+      {thornames.length === 0 && !loading && (
         <div className={styles.noDataMessage}>
           <span>NO THORName</span>
         </div>

@@ -1,7 +1,33 @@
 .left-section {
   display: flex;
   gap: 0.5rem;
+  justify-content: space-between;
 }
-.address-container {
-    display: flex;
+.address-header {
+  display: flex;
+  gap: 0.5rem;
+}
+.action-buttons .action-btn {
+  margin: 0.3rem;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--sec-font-color);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4.8px 9.6px;
+  transition: all 0.2s ease;
+}
+.action-btn:hover {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #e6e6e6;
+  color: var(--sec-font-color);
+}
+
+.action-btn:active {
+  background-color: var(--primary);
+  color: var(--sec-font-color);
+  border-color: var(--primary);
 }

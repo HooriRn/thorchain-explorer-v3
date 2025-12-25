@@ -8,7 +8,7 @@ import React, {
   useRef,
 } from "react";
 import Link from "next/link";
-import { useAppStore } from "@/lib/store";
+import { useRunePrice, usePools, useNodesData } from "@/lib/store";
 import { orderBy } from "lodash";
 import Card from "@/components/ui/Card";
 import AssetIcon from "@/components/AssetIcon";
@@ -29,7 +29,6 @@ const { validate } = validator;
 const Balance = ({ state, loading, address }) => {
   const [selectedToken, setSelectedToken] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [runeBalance, setRuneBalance] = useState(null);
   const [sortDirection, setSortDirection] = useState({
     Native: "desc",
     Trade: "desc",
@@ -37,10 +36,18 @@ const Balance = ({ state, loading, address }) => {
   });
   const [searchQuery, setSearchQuery] = useState("");
 
-  const runePrice = useAppStore((state) => state.runePrice);
-  const pools = useAppStore((state) => state.pools);
-  const nodes = useAppStore((state) => state.nodesData);
+  const runePrice = useRunePrice();
+  const pools = usePools();
+  const nodes = useNodesData();
   const dropdownRef = useRef(null);
+
+  console.log('🔍 DEBUG Balance Component:', {
+    stateLength: state?.length || 0,
+    runePrice,
+    poolsCount: pools?.length || 0,
+    nodesCount: nodes?.length || 0,
+    address
+  });
 
   const getAssetType = useCallback((asset) => {
     if (asset?.synth) {
@@ -54,9 +61,12 @@ const Balance = ({ state, loading, address }) => {
 
   const tokenRows = useMemo(() => {
     if (!state) {
+      console.log('🔍 tokenRows: state is null or undefined');
       return [];
     }
 
+    console.log('🔍 tokenRows: processing state with', state.length, 'items');
+    
     const ret = [];
     for (let i = 0; i < state.length; i++) {
       const e = state[i];
@@ -70,28 +80,34 @@ const Balance = ({ state, loading, address }) => {
       });
 
       if (e.asset?.ticker === "RUNE" && e.asset?.chain === "THOR") {
+        console.log('🔍 Found RUNE token in state:', e);
         poolAsset = {
           assetPriceUSD: runePrice,
         };
       }
 
+      const assetValue = bnOrZero(poolAsset?.assetPriceUSD * e.quantity).toFixed(2);
+      
       ret.push({
         asset: e.asset,
         quantity: e.quantity,
         price: bnOrZero(poolAsset?.assetPriceUSD).toFixed(2),
-        value: bnOrZero(poolAsset?.assetPriceUSD * e.quantity).toFixed(2),
+        value: assetValue,
         type: getAssetType(e.asset),
       });
     }
 
+    console.log('🔍 tokenRows result:', ret);
     return ret;
   }, [state, pools, runePrice, getAssetType]);
 
   const runeToken = useMemo(() => {
-    return tokenRows.find(
+    const token = tokenRows.find(
       (token) =>
         token?.asset?.ticker === "RUNE" && token?.asset?.chain === "THOR"
     );
+    console.log('🔍 runeToken found:', token);
+    return token;
   }, [tokenRows]);
 
   const otherTokens = useMemo(() => {
@@ -135,16 +151,21 @@ const Balance = ({ state, loading, address }) => {
   }, [otherTokens]);
 
   const isNodeAddress = useMemo(() => {
-    return nodes?.some((node) => node.node_address === address);
+    const result = nodes?.some((node) => node.node_address === address);
+    console.log('🔍 isNodeAddress:', result, 'for address:', address);
+    return result;
   }, [nodes, address]);
 
   const totalBond = useMemo(() => {
     const foundNode = nodes?.find((node) => node.node_address === address);
-    return foundNode ? foundNode.total_bond : undefined;
+    const bond = foundNode ? foundNode.total_bond : undefined;
+    console.log('🔍 totalBond:', bond);
+    return bond;
   }, [nodes, address]);
 
   const bonds = useMemo(() => {
     if (!nodes) {
+      console.log('🔍 bonds: nodes is null');
       return undefined;
     }
 
@@ -158,6 +179,8 @@ const Balance = ({ state, loading, address }) => {
         ret.total += +bond.bond / 1e8;
       }
     }
+    
+    console.log('🔍 bonds calculated:', ret);
     return ret;
   }, [nodes, address]);
 
@@ -166,6 +189,7 @@ const Balance = ({ state, loading, address }) => {
     if (bonds?.total > 0) {
       ret += bonds.total;
     }
+    console.log('🔍 totalBalance:', ret);
     return ret;
   }, [runeToken, bonds]);
 
@@ -193,6 +217,7 @@ const Balance = ({ state, loading, address }) => {
       });
     }
 
+    console.log('🔍 balanceAllocationData:', data);
     return data;
   }, [runeToken, totalBond, bonds]);
 
@@ -234,7 +259,10 @@ const Balance = ({ state, loading, address }) => {
   );
 
   const explorers = useMemo(() => {
-    if (!address || typeof address !== "string") return [];
+    if (!address || typeof address !== "string") {
+      console.log('🔍 explorers: invalid address');
+      return [];
+    }
   
     const blockChains = [
       "btc",
@@ -279,10 +307,10 @@ const Balance = ({ state, loading, address }) => {
       }
     }
   
+    console.log('🔍 explorers found:', explorers.length);
     return explorers;
   }, [address]);
   
-
   const toggleDropdown = useCallback(() => {
     setIsOpen((prev) => !prev);
   }, []);
@@ -345,48 +373,89 @@ const Balance = ({ state, loading, address }) => {
     return <div className={className}>{children}</div>;
   };
 
-  if (state && explorers.length === 0) {
-    return (
-      <Card>
-        <div className={styles["balance-container"]}>
-          <div className={styles["balance-content-wrapper"]}>
-            <div className={styles["balance-info"]}>
-              <span className={styles["title-balance"]}>Balances</span>
+  console.log('🔍 Rendering logic:', {
+    hasState: !!state,
+    explorersLength: explorers.length,
+    showBalances: state && explorers.length === 0
+  });
 
-              <div className={styles["balance-label"]}>
-                <span>RUNE Balance</span>
-                <SkeletonItem
-                  loading={loading}
-                  className={styles["balance-content"]}
-                >
-                  {runeToken &&
-                  runeToken.price > 0 &&
-                  !isNaN(runeToken.price) ? (
-                    <>
+  return (
+    <div>
+      {state && explorers.length === 0 ? (
+        <Card>
+          <div className={styles["balance-container"]}>
+            <div className={styles["balance-content-wrapper"]}>
+              <div className={styles["balance-info"]}>
+                <span className={styles["title-balance"]}>Balances</span>
+
+                <div className={styles["balance-label"]}>
+                  <span>RUNE Balance</span>
+                  <SkeletonItem
+                    loading={loading}
+                    className={styles["balance-content"]}
+                  >
+                    {runeToken &&
+                    runeToken.price > 0 &&
+                    !isNaN(runeToken.price) ? (
+                      <>
+                        <AssetIcon
+                          asset={{ ticker: "RUNE", chain: "THOR" }}
+                          height="16px"
+                          showChain={false}
+                        />
+                        <span
+                          className={styles.mono}
+                          title={
+                            runeToken &&
+                            formatTrendNumber(runeToken.quantity * runeToken.price)
+                          }
+                        >
+                          {balanceFormat(runeToken.quantity)} RUNE
+                        </span>
+                      </>
+                    ) : (
+                      <span>-</span>
+                    )}
+                  </SkeletonItem>
+                </div>
+
+                {isNodeAddress && (
+                  <div className={styles["balance-label"]}>
+                    <span>Node Balance</span>
+                    <SkeletonItem
+                      loading={loading || !nodes}
+                      className={styles["balance-content"]}
+                    >
                       <AssetIcon
                         asset={{ ticker: "RUNE", chain: "THOR" }}
                         height="16px"
                         showChain={false}
                       />
-                      <span
-                        className={styles.mono}
-                        title={
-                          runeToken &&
-                          formatTrendNumber(runeToken.quantity * runeToken.price)
-                        }
-                      >
-                        {balanceFormat(runeToken.quantity)} RUNE
-                      </span>
-                    </>
-                  ) : (
-                    <span>-</span>
-                  )}
-                </SkeletonItem>
-              </div>
+                      <div className={styles.bonds}>
+                        {totalBond !== undefined ? (
+                          <span
+                            className={styles.mono}
+                            title={formatTrendNumber((runePrice * totalBond) / 1e8)}
+                          >
+                            {balanceFormat(totalBond / 1e8)} RUNE
+                            <Link
+                              href={`/node/${address}`}
+                              className={styles.clickable}
+                              style={{ marginLeft: "0.5rem" }}
+                            >
+                              View Node
+                            </Link>
+                          </span>
+                        ) : (
+                          <span className={styles.mono}>-</span>
+                        )}
+                      </div>
+                    </SkeletonItem>
+                  </div>
+                )}
 
-              {isNodeAddress && (
                 <div className={styles["balance-label"]}>
-                  <span>Node Balance</span>
+                  <span>Bond Balance</span>
                   <SkeletonItem
                     loading={loading || !nodes}
                     className={styles["balance-content"]}
@@ -397,19 +466,12 @@ const Balance = ({ state, loading, address }) => {
                       showChain={false}
                     />
                     <div className={styles.bonds}>
-                      {totalBond !== undefined ? (
+                      {bonds && bonds.total !== undefined ? (
                         <span
                           className={styles.mono}
-                          title={formatTrendNumber((runePrice * totalBond) / 1e8)}
+                          title={formatTrendNumber(runePrice * bonds.total)}
                         >
-                          {balanceFormat(totalBond / 1e8)} RUNE
-                          <Link
-                            href={`/node/${address}`}
-                            className={styles.clickable}
-                            style={{ marginLeft: "0.5rem" }}
-                          >
-                            View Node
-                          </Link>
+                          {balanceFormat(bonds.total)} RUNE
                         </span>
                       ) : (
                         <span className={styles.mono}>-</span>
@@ -417,215 +479,187 @@ const Balance = ({ state, loading, address }) => {
                     </div>
                   </SkeletonItem>
                 </div>
-              )}
 
-              <div className={styles["balance-label"]}>
-                <span>Bond Balance</span>
-                <SkeletonItem
-                  loading={loading || !nodes}
-                  className={styles["balance-content"]}
-                >
-                  <AssetIcon
-                    asset={{ ticker: "RUNE", chain: "THOR" }}
-                    height="16px"
-                    showChain={false}
-                  />
-                  <div className={styles.bonds}>
-                    {bonds && bonds.total !== undefined ? (
-                      <span
-                        className={styles.mono}
-                        title={formatTrendNumber(runePrice * bonds.total)}
-                      >
-                        {balanceFormat(bonds.total)} RUNE
+                <div className={styles["balance-label"]}>
+                  <span>Total Value</span>
+                  <SkeletonItem
+                    loading={loading}
+                    className={styles["balance-content"]}
+                  >
+                    {runeToken &&
+                    runeToken.price > 0 &&
+                    !isNaN(runeToken.price) ? (
+                      <span className={styles.mono}>
+                        {formatTrendNumber(runeToken.price * totalBalance)}
                       </span>
                     ) : (
-                      <span className={styles.mono}>-</span>
+                      <span>-</span>
                     )}
-                  </div>
-                </SkeletonItem>
+                  </SkeletonItem>
+                </div>
               </div>
 
-              <div className={styles["balance-label"]}>
-                <span>Total Value</span>
-                <SkeletonItem
-                  loading={loading}
-                  className={styles["balance-content"]}
-                >
-                  {runeToken &&
-                  runeToken.price > 0 &&
-                  !isNaN(runeToken.price) ? (
-                    <span className={styles.mono}>
-                      {formatTrendNumber(runeToken.price * totalBalance)}
-                    </span>
-                  ) : (
-                    <span>-</span>
-                  )}
-                </SkeletonItem>
-              </div>
-            </div>
-
-            {balanceAllocationData.length > 0 && (
-              <div className={styles["balance-chart-section"]}>
-                <PieChart
-                  pieData={balanceAllocationData}
-                  extraSeries={chartExtraSeries}
-                  extra={chartExtra}
-                  height="200px"
-                />
-              </div>
-            )}
-          </div>
-
-          {totalValue.count > 0 && (
-            <div className={styles["dropdown-container"]} ref={dropdownRef}>
-              <label htmlFor="token-dropdown">Other Asset Holdings</label>
-              <div className={styles["custom-dropdown"]}>
-                <button
-                  className={`${styles["dropdown-button"]} ${
-                    isOpen ? styles["dropdown-open"] : ""
-                  }`}
-                  onClick={toggleDropdown}
-                >
-                  <div className={styles["selected-options"]}>
-                    {selectedToken ? (
-                      <span>{showAsset(selectedToken.asset)}</span>
-                    ) : (
-                      <>
-                        <span className={styles["total-value"]}>
-                          {formatTrendNumber(totalValue.total)}
-                        </span>
-                        <span className={styles["count-value"]}>
-                          ({totalValue.count} Tokens)
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <AngleIcon className={styles["dropdown-icon"]} />
-                </button>
-              </div>
-
-              {isOpen && (
-                <div className={styles["dropdown-modal"]}>
-                  <input
-                    type="text"
-                    placeholder="Search for Token Name"
-                    className={styles["search-input"]}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+              {balanceAllocationData.length > 0 && (
+                <div className={styles["balance-chart-section"]}>
+                  <PieChart
+                    pieData={balanceAllocationData}
+                    extraSeries={chartExtraSeries}
+                    extra={chartExtra}
+                    height="200px"
                   />
-                  <div className={styles["dropdown-options"]}>
-                    <div className={styles["options-container"]}>
-                      {sortedGroupedTokens.every(
-                        (group) => filteredTokens(group.tokens).length === 0
-                      ) ? (
-                        <div className={styles["no-results"]}>
-                          Could not find any matches!
-                        </div>
-                      ) : (
-                        sortedGroupedTokens.map(
-                          (group) =>
-                            filteredTokens(group.tokens).length > 0 && (
-                              <div key={group.type}>
-                                <div className={styles["token-group-header"]}>
-                                  {group.type} Assets (
-                                  {filteredTokens(group.tokens).length})
-                                  <div className={styles["sort-controls"]}>
-                                    <span
-                                      onClick={() => changeSort(group.type)}
-                                    >
-                                      {sortDirection[group.type] === "desc" ? (
-                                        <ArrowDownIcon
-                                          className={styles["arrow-icon"]}
-                                        />
-                                      ) : (
-                                        <ArrowUpIcon
-                                          className={styles["arrow-icon"]}
-                                        />
-                                      )}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {filteredTokens(group.tokens).map((token) => (
-                                  <div
-                                    key={token.asset}
-                                    className={styles["dropdown-option"]}
-                                    onClick={() => selectToken(token)}
-                                  >
-                                    <div className={styles["token-info"]}>
-                                      <div className={styles["token-name"]}>
-                                        <AssetIcon
-                                          asset={token.asset}
-                                          showChain={false}
-                                        />
-                                        <span style={{ lineHeight: 1 }}>
-                                          {showAsset(token.asset)}
-                                        </span>
-                                      </div>
-                                      <div className={styles["token-quantity"]}>
-                                        {token.quantity} {token.asset.ticker}
-                                      </div>
-                                    </div>
-                                    <div className={styles["token-value"]}>
-                                      {token.price > 0 &&
-                                      !isNaN(token.price) ? (
-                                        <>
-                                          <span>
-                                            $
-                                            {numberFormat(
-                                              token.value,
-                                              "0,0.00"
-                                            )}
-                                          </span>
-                                          <div
-                                            className={styles["token-price"]}
-                                          >
-                                            @
-                                            {numberFormat(
-                                              token.price,
-                                              "0,0.0000"
-                                            )}
-                                          </div>
-                                        </>
-                                      ) : (
-                                        <span>-</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )
-                        )
-                      )}
-                    </div>
-                  </div>
                 </div>
               )}
             </div>
-          )}
-        </div>
-      </Card>
-    );
-  }
 
-  return (
-    <Card title="Chain Explorers" className={styles["explorers-card"]}>
-      <div className={styles.explorers}>
-        {explorers.map((explorer) => (
-          <a
-            key={explorer.chain}
-            className={`${styles["explorer-link"]} ${styles["mini-bubble"]} ${styles.info} ${styles.hoverable}`}
-            href={explorer.url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <AssetIcon height="1.2rem" asset={baseChainAsset(explorer.chain)} />
-            {explorer.chain}
-            <ExternalIcon className={styles["ext-icon"]} />
-          </a>
-        ))}
-      </div>
-    </Card>
+            {totalValue.count > 0 && (
+              <div className={styles["dropdown-container"]} ref={dropdownRef}>
+                <label htmlFor="token-dropdown">Other Asset Holdings</label>
+                <div className={styles["custom-dropdown"]}>
+                  <button
+                    className={`${styles["dropdown-button"]} ${
+                      isOpen ? styles["dropdown-open"] : ""
+                    }`}
+                    onClick={toggleDropdown}
+                  >
+                    <div className={styles["selected-options"]}>
+                      {selectedToken ? (
+                        <span>{showAsset(selectedToken.asset)}</span>
+                      ) : (
+                        <>
+                          <span className={styles["total-value"]}>
+                            {formatTrendNumber(totalValue.total)}
+                          </span>
+                          <span className={styles["count-value"]}>
+                            ({totalValue.count} Tokens)
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <AngleIcon className={styles["dropdown-icon"]} />
+                  </button>
+                </div>
+
+                {isOpen && (
+                  <div className={styles["dropdown-modal"]}>
+                    <input
+                      type="text"
+                      placeholder="Search for Token Name"
+                      className={styles["search-input"]}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <div className={styles["dropdown-options"]}>
+                      <div className={styles["options-container"]}>
+                        {sortedGroupedTokens.every(
+                          (group) => filteredTokens(group.tokens).length === 0
+                        ) ? (
+                          <div className={styles["no-results"]}>
+                            Could not find any matches!
+                          </div>
+                        ) : (
+                          sortedGroupedTokens.map(
+                            (group) =>
+                              filteredTokens(group.tokens).length > 0 && (
+                                <div key={group.type}>
+                                  <div className={styles["token-group-header"]}>
+                                    {group.type} Assets (
+                                    {filteredTokens(group.tokens).length})
+                                    <div className={styles["sort-controls"]}>
+                                      <span
+                                        onClick={() => changeSort(group.type)}
+                                      >
+                                        {sortDirection[group.type] === "desc" ? (
+                                          <ArrowDownIcon
+                                            className={styles["arrow-icon"]}
+                                          />
+                                        ) : (
+                                          <ArrowUpIcon
+                                            className={styles["arrow-icon"]}
+                                          />
+                                        )}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {filteredTokens(group.tokens).map((token) => (
+                                    <div
+                                      key={token.asset}
+                                      className={styles["dropdown-option"]}
+                                      onClick={() => selectToken(token)}
+                                    >
+                                      <div className={styles["token-info"]}>
+                                        <div className={styles["token-name"]}>
+                                          <AssetIcon
+                                            asset={token.asset}
+                                            showChain={false}
+                                          />
+                                          <span style={{ lineHeight: 1 }}>
+                                            {showAsset(token.asset)}
+                                          </span>
+                                        </div>
+                                        <div className={styles["token-quantity"]}>
+                                          {token.quantity} {token.asset.ticker}
+                                        </div>
+                                      </div>
+                                      <div className={styles["token-value"]}>
+                                        {token.price > 0 &&
+                                        !isNaN(token.price) ? (
+                                          <>
+                                            <span>
+                                              $
+                                              {numberFormat(
+                                                token.value,
+                                                "0,0.00"
+                                              )}
+                                            </span>
+                                            <div
+                                              className={styles["token-price"]}
+                                            >
+                                              @
+                                              {numberFormat(
+                                                token.price,
+                                                "0,0.0000"
+                                              )}
+                                            </div>
+                                          </>
+                                        ) : (
+                                          <span>-</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )
+                          )
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </Card>
+      ) : (
+        <Card title="Chain Explorers" className={styles["explorers-card"]}>
+          <div className={styles.explorers}>
+            {explorers.map((explorer) => (
+              <a
+                key={explorer.chain}
+                className={`${styles["explorer-link"]} ${styles["mini-bubble"]} ${styles.info} ${styles.hoverable}`}
+                href={explorer.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <AssetIcon height="1.2rem" asset={baseChainAsset(explorer.chain)} />
+                {explorer.chain}
+                <ExternalIcon className={styles["ext-icon"]} />
+              </a>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 };
 

@@ -532,8 +532,7 @@ const AddressPage: React.FC<AddressPageProps> = ({ params }) => {
         <div className={styles["left-section"]}>
           <div className={styles["address-header"]}>
             <Avatar name={address} />
-          </div>
-          <div className={styles["address-name"]}>
+            <div className={styles["address-name"]}>
         <Address
               address={label}
               useCustomName={label !== address} 
@@ -544,8 +543,8 @@ const AddressPage: React.FC<AddressPageProps> = ({ params }) => {
               disable={false}
             />
           </div>
-        </div>
-        <div
+          </div>
+          <div
           className={`${styles["action-types"]} ${styles["desktop-filters"]}`}
         >
           <AdvancedFilter
@@ -553,6 +552,7 @@ const AddressPage: React.FC<AddressPageProps> = ({ params }) => {
             hideAddressFilter={true}
             className={styles["desktop-filters"]}
           />
+        </div>
         </div>
       </div>
 
